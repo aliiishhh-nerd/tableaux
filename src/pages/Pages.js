@@ -3,6 +3,7 @@ import { useApp } from '../hooks/useApp';
 import EventCard from '../components/EventCard';
 import EventDetailModal from '../components/EventDetailModal';
 import { fmtDate, avColor } from '../data/utils';
+import { CalendarExportButtons } from '../data/calendarExport';
 
 /* ---- MY EVENTS PAGE ---- */
 export function EventsPage({ onOpenCreate, onOpenEdit }) {
@@ -87,15 +88,18 @@ export function InvitesPage() {
             <div className="card-header"><div className="card-title">Going To</div></div>
             {going.length === 0 && <div style={{ color: 'var(--ink2)', fontSize: 13 }}>No upcoming events yet.</div>}
             {going.map(e => (
-              <div key={e.id} className="p-row" style={{ cursor: 'pointer' }} onClick={() => setDetailEvent(e)}>
-                <div className="p-left">
+              <div key={e.id} className="p-row">
+                <div className="p-left" style={{ cursor: 'pointer' }} onClick={() => setDetailEvent(e)}>
                   <div className="av av-sm av-teal">{e.type[0]}</div>
                   <div>
                     <div className="p-name">{e.title}</div>
                     <div className="p-sub">📅 {fmtDate(e.date)} · {e.loc}</div>
                   </div>
                 </div>
-                <span className="tag tag-teal">Going</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CalendarExportButtons event={e} compact={true} />
+                  <span className="tag tag-teal">Going</span>
+                </div>
               </div>
             ))}
           </div>
@@ -175,6 +179,18 @@ export function ProfilePage() {
               <div className="form-group"><label className="form-label">Location</label><input className="form-input" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">Bio</label><textarea className="form-input" value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">Food Preferences (comma separated)</label><input className="form-input" value={form.prefs.join(', ')} onChange={e => setForm(f => ({ ...f, prefs: e.target.value.split(',').map(x => x.trim()).filter(Boolean) }))} /></div>
+              <div className="form-group">
+                <label className="form-label">Timezone</label>
+                <select className="form-input" value={form.timezone || 'America/Chicago'} onChange={e => setForm(f => ({ ...f, timezone: e.target.value }))}>
+                  {['America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Phoenix','America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Europe/Berlin','Europe/Rome','Asia/Tokyo','Asia/Shanghai','Asia/Singapore','Asia/Dubai','Australia/Sydney','Pacific/Auckland'].map(tz => {
+                    try {
+                      const offset = new Intl.DateTimeFormat('en',{timeZone:tz,timeZoneName:'short'}).formatToParts(new Date()).find(p=>p.type==='timeZoneName')?.value||'';
+                      const city = tz.split('/').slice(-1)[0].replace('_',' ');
+                      return <option key={tz} value={tz}>{city} ({offset})</option>;
+                    } catch { return <option key={tz} value={tz}>{tz}</option>; }
+                  })}
+                </select>
+              </div>
               <div className="form-group">
                 <label className="form-label">Privacy</label>
                 <div className="pill-row">

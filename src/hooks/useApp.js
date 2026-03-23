@@ -12,6 +12,7 @@ export function AppProvider({ children }) {
     bio: 'Lover of long dinners, natural wine, and good conversation. Hosting since 2019.',
     prefs: ['Italian', 'French', 'Japanese', 'Natural wine'],
     privacy: 'Public', role: 'Both',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago',
   });
 
   function signIn(email) {
@@ -56,16 +57,26 @@ export function AppProvider({ children }) {
   }
 
   // ── POLLS ──────────────────────────────────────────────────────────────────
-  // Poll shape: { id, type ('date'|'food'|'drink'), question, options: [{id, label, votes: [userName], status: 'active'|'rejected'}], locked, winner, allowSuggestions }
+  // Poll shape: { id, type, question, options, locked, winner, allowSuggestions,
+  //              active, opensAt (ISO string|null), closesAt (ISO string|null) }
   function addPoll(eventId, poll) {
     setEvents(prev => prev.map(e => e.id !== eventId ? e : {
-      ...e, polls: [...(e.polls || []), { ...poll, id: Date.now(), locked: false, winner: null }]
+      ...e, polls: [...(e.polls || []), {
+        ...poll, id: Date.now(), locked: false, winner: null,
+        active: true, opensAt: null, closesAt: null
+      }]
     }));
   }
   function updatePoll(eventId, pollId, updater) {
     setEvents(prev => prev.map(e => e.id !== eventId ? e : {
       ...e, polls: (e.polls || []).map(p => p.id !== pollId ? p : updater(p))
     }));
+  }
+  function togglePollActive(eventId, pollId) {
+    updatePoll(eventId, pollId, p => ({ ...p, active: !p.active }));
+  }
+  function setPollSchedule(eventId, pollId, schedObj) {
+    updatePoll(eventId, pollId, p => ({ ...p, ...schedObj }));
   }
   function votePoll(eventId, pollId, optionId, userName) {
     updatePoll(eventId, pollId, p => ({
@@ -98,6 +109,13 @@ export function AppProvider({ children }) {
     setEvents(prev => prev.map(e => e.id !== eventId ? e : {
       ...e, polls: (e.polls || []).filter(p => p.id !== pollId)
     }));
+  }
+  function setPollSchedule(eventId, pollId, schedule) {
+    // schedule: { endsAt: ISO string | null, active: bool }
+    updatePoll(eventId, pollId, p => ({ ...p, ...schedule }));
+  }
+  function togglePollActive(eventId, pollId) {
+    updatePoll(eventId, pollId, p => ({ ...p, active: p.active === false ? true : false }));
   }
 
   // ── COHOSTS ────────────────────────────────────────────────────────────────
@@ -132,6 +150,7 @@ export function AppProvider({ children }) {
       invites, acceptInvite, declineInvite, pendingInvites,
       profile, setProfile,
       addPoll, votePoll, suggestPollOption, reviewPollSuggestion, lockPoll, removePoll,
+      togglePollActive, setPollSchedule, setPollSchedule, togglePollActive,
       addCohost, updateCohostPermissions, removeCohost,
       IMAGES: SEED_IMAGES,
       PLACES: SEED_PLACES,

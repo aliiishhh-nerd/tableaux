@@ -3,6 +3,7 @@ import { useApp } from '../hooks/useApp';
 import { fmtDate, avColor } from '../data/utils';
 import PollsPanel from './PollsPanel';
 import CohostsPanel from './CohostsPanel';
+import { CalendarExportButtons } from '../data/calendarExport';
 
 export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
   const { approveGuest, denyGuest, requestJoin, addPotluckItem, profile } = useApp();
@@ -113,6 +114,7 @@ export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
                 ? <button className="btn btn-outline" onClick={() => { onClose(); onOpenEdit(e.id); }}>✏ Edit Event</button>
                 : <button className="btn btn-primary" onClick={() => requestJoin(e.id, profile.name)}>Request to Join</button>
               }
+              <CalendarExportButtons event={e} compact={true} />
               <button className="btn btn-ghost" onClick={onClose}>Close</button>
             </div>
           </div>
