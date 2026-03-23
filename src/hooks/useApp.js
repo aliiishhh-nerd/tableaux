@@ -110,13 +110,6 @@ export function AppProvider({ children }) {
       ...e, polls: (e.polls || []).filter(p => p.id !== pollId)
     }));
   }
-  function setPollSchedule(eventId, pollId, schedule) {
-    // schedule: { endsAt: ISO string | null, active: bool }
-    updatePoll(eventId, pollId, p => ({ ...p, ...schedule }));
-  }
-  function togglePollActive(eventId, pollId) {
-    updatePoll(eventId, pollId, p => ({ ...p, active: p.active === false ? true : false }));
-  }
 
   // ── COHOSTS ────────────────────────────────────────────────────────────────
   // Cohost shape: { name, email, permissions: { edit, approveGuests, showOnPage } }
@@ -150,7 +143,7 @@ export function AppProvider({ children }) {
       invites, acceptInvite, declineInvite, pendingInvites,
       profile, setProfile,
       addPoll, votePoll, suggestPollOption, reviewPollSuggestion, lockPoll, removePoll,
-      togglePollActive, setPollSchedule, setPollSchedule, togglePollActive,
+      togglePollActive, setPollSchedule,
       addCohost, updateCohostPermissions, removeCohost,
       IMAGES: SEED_IMAGES,
       PLACES: SEED_PLACES,

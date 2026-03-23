@@ -668,16 +668,15 @@ export default function PollsPanel({ event, isHost, userName }) {
 export function InlinePollAdder({ polls = [], onAdd, onRemove }) {
   const [showCreate, setShowCreate] = useState(false);
   const [pendingPolls, setPendingPolls] = useState(polls);
-  const { addPoll: _addPoll, profile } = useApp();
+  const { profile } = useApp();
 
-  // Inline version calls onAdd/onRemove instead of context
-  const fakeContext = { addPoll: (evId, poll) => {
+  function handleAdd(poll) {
     const np = { ...poll, id: Date.now(), locked: false, winner: null };
     const updated = [...pendingPolls, np];
     setPendingPolls(updated);
     onAdd(updated);
     setShowCreate(false);
-  }, profile };
+  }
 
   function handleRemove(id) {
     const updated = pendingPolls.filter(p => p.id !== id);
@@ -708,7 +707,7 @@ export function InlinePollAdder({ polls = [], onAdd, onRemove }) {
         + Add a Poll
       </button>
       {showCreate && (
-        <InlineCreateWrapper onSave={p => { fakeContext.addPoll(null, p); }} onClose={() => setShowCreate(false)} profile={profile} />
+        <InlineCreateWrapper onSave={handleAdd} onClose={() => setShowCreate(false)} profile={profile} />
       )}
     </div>
   );
@@ -716,11 +715,8 @@ export function InlinePollAdder({ polls = [], onAdd, onRemove }) {
 
 // Thin wrapper so InlinePollAdder can call CreatePollModal logic without context
 function InlineCreateWrapper({ onSave, onClose, profile }) {
-  // Temporarily override useApp for this modal — just pass profile through props
-  // We render CreatePollModal but intercept the save
   const [type, setType]         = useState('date');
   const [question, setQuestion] = useState('');
-  const [allowSugg, setAllowSugg] = useState(true);
   const [dateOptions, setDateOptions] = useState([{ date: '', time: '19:00' }, { date: '', time: '19:00' }]);
   const [textOptions, setTextOptions] = useState(['', '']);
   const [restOptions, setRestOptions] = useState([]);
@@ -751,7 +747,7 @@ function InlineCreateWrapper({ onSave, onClose, profile }) {
       builtOptions = filled.map((label, i) => ({ id: i+1, label, votes: [], status: 'active' }));
     }
     const defaults = { date: 'Which date works best?', food: 'What should we eat?', drink: 'What should we drink?', restaurant: 'Where should we dine?' };
-    onSave({ type, question: question.trim() || defaults[type], options: builtOptions, allowSuggestions: allowSugg, timezone: tz });
+    onSave({ type, question: question.trim() || defaults[type], options: builtOptions, allowSuggestions: true, timezone: tz });
     onClose();
   }
 
