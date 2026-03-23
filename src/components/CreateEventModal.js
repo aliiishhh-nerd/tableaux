@@ -4,6 +4,7 @@ import { nextDate } from '../data/utils';
 import ImagePickerModal from './ImagePickerModal';
 import { InlinePollAdder } from './PollsPanel';
 import { InlineCohostAdder } from './CohostsPanel';
+import { InlineMusicAdder } from './MusicPanel';
 
 const SWATCH_COLORS = ['#6C5DD3','#FF6B6B','#0ACF97','#FFAB00','#4DABF7','#11142D'];
 const EVENT_TYPES = ['Dinner Party','Potluck','Restaurant','Brunch'];
@@ -27,6 +28,7 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
   const [invFont, setInvFont]   = useState('sans');
   const [polls, setPolls]       = useState(editing?.polls || []);
   const [cohosts, setCohosts]   = useState(editing?.cohosts || []);
+  const [musicUrl, setMusicUrl] = useState(editing?.music?.url || '');
   const [acResults, setAcResults] = useState([]);
   const [showAc, setShowAc]     = useState(false);
   const [showImgPicker, setShowImgPicker] = useState(false);
@@ -69,6 +71,7 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
       pot: editing ? editing.pot : [],
       polls,
       cohosts,
+      music: { url: musicUrl, suggestions: editing?.music?.suggestions || [] },
     };
     saveEvent(ev);
     onSaved();
@@ -170,6 +173,12 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea className="form-input" placeholder="Set the scene — the mood, the menu, the dress code..." value={desc} onChange={e => setDesc(e.target.value)} />
+            </div>
+
+            {/* MUSIC PLAYLIST */}
+            <div style={{ marginTop: 24 }}>
+              <label className="form-label" style={{ marginBottom: 10 }}>🎵 Music Playlist <span style={{ color: 'var(--ink3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+              <InlineMusicAdder musicUrl={musicUrl} onChange={setMusicUrl} />
             </div>
 
             {/* POLLS */}

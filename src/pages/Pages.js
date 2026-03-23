@@ -4,6 +4,7 @@ import EventCard from '../components/EventCard';
 import EventDetailModal from '../components/EventDetailModal';
 import { fmtDate, avColor } from '../data/utils';
 import { CalendarExportButtons } from '../data/calendarExport';
+import { SocialIconRow, SocialFieldsEditor } from '../components/SocialLinks';
 
 /* ---- MY EVENTS PAGE ---- */
 export function EventsPage({ onOpenCreate, onOpenEdit }) {
@@ -139,6 +140,7 @@ export function ProfilePage() {
               <span className="tag tag-sky">Guest</span>
               <span className="tag tag-gray">{profile.privacy}</span>
             </div>
+            <SocialIconRow socials={profile.socials || {}} website={profile.website || ''} />
           </div>
         </div>
         <button className="btn btn-outline" onClick={() => { setForm({ ...profile }); setEditing(true); }}>Edit Profile</button>
@@ -199,6 +201,13 @@ export function ProfilePage() {
                   ))}
                 </div>
               </div>
+              <div className="divider" />
+              <SocialFieldsEditor
+                socials={form.socials || {}}
+                website={form.website || ''}
+                onChangeSocial={(key, val) => setForm(f => ({ ...f, socials: { ...(f.socials || {}), [key]: val } }))}
+                onChangeWebsite={val => setForm(f => ({ ...f, website: val }))}
+              />
             </div>
             <div className="modal-foot">
               <button className="btn btn-ghost" onClick={() => setEditing(false)}>Cancel</button>

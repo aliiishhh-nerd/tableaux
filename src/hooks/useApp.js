@@ -13,6 +13,8 @@ export function AppProvider({ children }) {
     prefs: ['Italian', 'French', 'Japanese', 'Natural wine'],
     privacy: 'Public', role: 'Both',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago',
+    website: '',
+    socials: { instagram: '', tiktok: '', twitter: '', linkedin: '' },
   });
 
   function signIn(email) {
