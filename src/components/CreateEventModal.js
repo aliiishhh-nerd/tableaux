@@ -242,6 +242,24 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
                 </div>
               </div>
             </div>
+
+            {/* ── POLLS ── */}
+            <div style={{ marginTop: 28 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <label className="form-label" style={{ margin: 0 }}>Polls</label>
+                <span style={{ fontSize: 11, color: 'var(--ink3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>Optional — date, food, or drinks</span>
+              </div>
+              <InlinePollAdder polls={polls} onAdd={setPolls} onRemove={setPolls} />
+            </div>
+
+            {/* ── CO-HOSTS ── */}
+            <div style={{ marginTop: 28 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <label className="form-label" style={{ margin: 0 }}>Co-hosts</label>
+                <span style={{ fontSize: 11, color: 'var(--ink3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>Optional — set permissions per co-host</span>
+              </div>
+              <InlineCohostAdder cohosts={cohosts} onChange={setCohosts} />
+            </div>
           </div>
 
           <div className="modal-foot">

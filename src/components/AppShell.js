@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import { initials } from '../data/utils';
-import FeedPage from './FeedPage';
-import EventsPage from './EventsPage';
-import InvitesPage from './InvitesPage';
-import ProfilePage from './ProfilePage';
-import CreateEventModal from '../components/CreateEventModal';
+import FeedPage from '../pages/FeedPage';
+import EventsPage from '../pages/EventsPage';
+import InvitesPage from '../pages/InvitesPage';
+import ProfilePage from '../pages/ProfilePage';
+import CreateEventModal from './CreateEventModal';
 
 const NAV = [
   { id: 'feed',    path: '/',        icon: '⊞', label: 'Feed',       section: 'Discover' },
