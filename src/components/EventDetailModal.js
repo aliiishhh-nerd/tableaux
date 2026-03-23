@@ -3,7 +3,7 @@ import { useApp } from '../hooks/useApp';
 import { fmtDate, avColor } from '../data/utils';
 
 export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
-  const { approveGuest, denyGuest, requestJoin, addPotluckItem, user, profile } = useApp();
+  const { approveGuest, denyGuest, requestJoin, addPotluckItem, profile } = useApp();
   const [tab, setTab] = useState('overview');
   const [potInput, setPotInput] = useState('');
 

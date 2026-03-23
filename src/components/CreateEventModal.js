@@ -28,9 +28,9 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
   const [showImgPicker, setShowImgPicker] = useState(false);
   const acTimer = useRef(null);
 
-  useEffect(() => {
-    if (editing?.addr) setAddr(editing.addr);
-  }, []);
+useEffect(() => {
+  if (editing?.addr) setAddr(editing.addr);
+}, [editing]);
 
   function handleLocInput(v) {
     setLoc(v);
