@@ -34,7 +34,7 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
 
   useEffect(() => {
     if (editing?.addr) setAddr(editing.addr);
-  }, []);
+  }, [editing]);
 
   function handleLocInput(v) {
     setLoc(v);
