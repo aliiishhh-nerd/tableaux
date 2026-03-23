@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { nextDate } from '../data/utils';
 import ImagePickerModal from './ImagePickerModal';
+import { InlinePollAdder } from './PollsPanel';
+import { InlineCohostAdder } from './CohostsPanel';
 
 const SWATCH_COLORS = ['#6C5DD3','#FF6B6B','#0ACF97','#FFAB00','#4DABF7','#11142D'];
 const EVENT_TYPES = ['Dinner Party','Potluck','Restaurant','Brunch'];
@@ -23,14 +25,16 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
   const [invBg, setInvBg]       = useState(editing?.invBg || '#6C5DD3');
   const [invImg, setInvImg]     = useState(editing?.img || '');
   const [invFont, setInvFont]   = useState('sans');
+  const [polls, setPolls]       = useState(editing?.polls || []);
+  const [cohosts, setCohosts]   = useState(editing?.cohosts || []);
   const [acResults, setAcResults] = useState([]);
   const [showAc, setShowAc]     = useState(false);
   const [showImgPicker, setShowImgPicker] = useState(false);
   const acTimer = useRef(null);
 
-useEffect(() => {
-  if (editing?.addr) setAddr(editing.addr);
-}, [editing]);
+  useEffect(() => {
+    if (editing?.addr) setAddr(editing.addr);
+  }, []);
 
   function handleLocInput(v) {
     setLoc(v);
@@ -63,6 +67,8 @@ useEffect(() => {
       invH: invHeader, invBg,
       guests: editing ? editing.guests : [],
       pot: editing ? editing.pot : [],
+      polls,
+      cohosts,
     };
     saveEvent(ev);
     onSaved();
@@ -164,6 +170,18 @@ useEffect(() => {
             <div className="form-group">
               <label className="form-label">Description</label>
               <textarea className="form-input" placeholder="Set the scene — the mood, the menu, the dress code..." value={desc} onChange={e => setDesc(e.target.value)} />
+            </div>
+
+            {/* POLLS */}
+            <div style={{ marginTop: 24 }}>
+              <label className="form-label" style={{ marginBottom: 12 }}>📊 Polls <span style={{ color: 'var(--ink3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+              <InlinePollAdder polls={polls} onAdd={setPolls} onRemove={setPolls} />
+            </div>
+
+            {/* CO-HOSTS */}
+            <div style={{ marginTop: 24 }}>
+              <label className="form-label" style={{ marginBottom: 12 }}>👥 Co-hosts <span style={{ color: 'var(--ink3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+              <InlineCohostAdder cohosts={cohosts} onChange={setCohosts} />
             </div>
 
             {/* INVITATION EDITOR */}

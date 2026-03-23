@@ -55,6 +55,71 @@ export function AppProvider({ children }) {
     }));
   }
 
+  // ── POLLS ──────────────────────────────────────────────────────────────────
+  // Poll shape: { id, type ('date'|'food'|'drink'), question, options: [{id, label, votes: [userName], status: 'active'|'rejected'}], locked, winner, allowSuggestions }
+  function addPoll(eventId, poll) {
+    setEvents(prev => prev.map(e => e.id !== eventId ? e : {
+      ...e, polls: [...(e.polls || []), { ...poll, id: Date.now(), locked: false, winner: null }]
+    }));
+  }
+  function updatePoll(eventId, pollId, updater) {
+    setEvents(prev => prev.map(e => e.id !== eventId ? e : {
+      ...e, polls: (e.polls || []).map(p => p.id !== pollId ? p : updater(p))
+    }));
+  }
+  function votePoll(eventId, pollId, optionId, userName) {
+    updatePoll(eventId, pollId, p => ({
+      ...p,
+      options: p.options.map(o => {
+        if (o.id !== optionId) return o;
+        const already = o.votes.includes(userName);
+        return { ...o, votes: already ? o.votes.filter(v => v !== userName) : [...o.votes, userName] };
+      })
+    }));
+  }
+  function suggestPollOption(eventId, pollId, label, suggestedBy) {
+    updatePoll(eventId, pollId, p => ({
+      ...p,
+      options: [...p.options, { id: Date.now(), label, votes: [], status: 'pending', suggestedBy }]
+    }));
+  }
+  function reviewPollSuggestion(eventId, pollId, optionId, accept) {
+    updatePoll(eventId, pollId, p => ({
+      ...p,
+      options: accept
+        ? p.options.map(o => o.id === optionId ? { ...o, status: 'active' } : o)
+        : p.options.map(o => o.id === optionId ? { ...o, status: 'rejected' } : o)
+    }));
+  }
+  function lockPoll(eventId, pollId, winnerId) {
+    updatePoll(eventId, pollId, p => ({ ...p, locked: true, winner: winnerId }));
+  }
+  function removePoll(eventId, pollId) {
+    setEvents(prev => prev.map(e => e.id !== eventId ? e : {
+      ...e, polls: (e.polls || []).filter(p => p.id !== pollId)
+    }));
+  }
+
+  // ── COHOSTS ────────────────────────────────────────────────────────────────
+  // Cohost shape: { name, email, permissions: { edit, approveGuests, showOnPage } }
+  function addCohost(eventId, cohost) {
+    setEvents(prev => prev.map(e => e.id !== eventId ? e : {
+      ...e, cohosts: [...(e.cohosts || []), cohost]
+    }));
+  }
+  function updateCohostPermissions(eventId, cohostName, permissions) {
+    setEvents(prev => prev.map(e => e.id !== eventId ? e : {
+      ...e, cohosts: (e.cohosts || []).map(c =>
+        c.name === cohostName ? { ...c, permissions: { ...c.permissions, ...permissions } } : c
+      )
+    }));
+  }
+  function removeCohost(eventId, cohostName) {
+    setEvents(prev => prev.map(e => e.id !== eventId ? e : {
+      ...e, cohosts: (e.cohosts || []).filter(c => c.name !== cohostName)
+    }));
+  }
+
   function acceptInvite(id) { setInvites(prev => prev.map(i => i.id === id ? { ...i, s: 'approved' } : i)); }
   function declineInvite(id) { setInvites(prev => prev.filter(i => i.id !== id)); }
 
@@ -66,6 +131,8 @@ export function AppProvider({ children }) {
       events, saveEvent, approveGuest, denyGuest, requestJoin, addPotluckItem,
       invites, acceptInvite, declineInvite, pendingInvites,
       profile, setProfile,
+      addPoll, votePoll, suggestPollOption, reviewPollSuggestion, lockPoll, removePoll,
+      addCohost, updateCohostPermissions, removeCohost,
       IMAGES: SEED_IMAGES,
       PLACES: SEED_PLACES,
     }}>
