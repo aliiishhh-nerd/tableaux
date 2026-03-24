@@ -287,7 +287,6 @@ export default function GalleryPanel({ event, isHost }) {
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput]     = useState(gallery.name || '');
-  const [showSugg, setShowSugg]       = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const fileRef = useRef(null);
 
@@ -315,7 +314,6 @@ export default function GalleryPanel({ event, isHost }) {
   function saveName() {
     updateGallery({ name: nameInput.trim() });
     setEditingName(false);
-    setShowSugg(false);
   }
 
   function handleFiles(files) {
@@ -365,7 +363,7 @@ export default function GalleryPanel({ event, isHost }) {
                 <input className="form-input" value={nameInput} onChange={e => setNameInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && saveName()} placeholder="Name this gallery..." style={{ flex: 1 }} autoFocus />
                 <button className="btn btn-primary btn-sm" onClick={saveName}>Save</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => { setEditingName(false); setShowSugg(false); }}>Cancel</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setEditingName(false)}>Cancel</button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: 'var(--ink3)' }}>AI suggestions:</span>
@@ -384,7 +382,7 @@ export default function GalleryPanel({ event, isHost }) {
                 <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{approvedPhotos.length} photo{approvedPhotos.length !== 1 ? 's' : ''}</div>
               </div>
               {isHost && (
-                <button onClick={() => { setEditingName(true); setShowSugg(true); }}
+                <button onClick={() => setEditingName(true)}
                   style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid var(--border)', background: 'white', color: 'var(--ink2)', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
                   ✏ Rename
                 </button>
