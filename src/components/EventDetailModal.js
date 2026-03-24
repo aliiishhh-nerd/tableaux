@@ -6,7 +6,6 @@ import CohostsPanel from './CohostsPanel';
 import { CalendarExportButtons } from '../data/calendarExport';
 import MusicPanel from './MusicPanel';
 import GalleryPanel from './GalleryPanel';
-import DiningPassport from './DiningPassport';
 
 export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
   const { approveGuest, denyGuest, requestJoin, addPotluckItem, profile } = useApp();
@@ -34,7 +33,6 @@ export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
     { id: 'polls',    label: 'Polls' + (polls.length > 0 ? ' (' + polls.length + ')' : '') },
     { id: 'music',    label: 'Music' },
     { id: 'photos',   label: 'Photos' + ((e.gallery?.photos || []).filter(p => p.status === 'approved').length > 0 ? ' (' + (e.gallery?.photos || []).filter(p => p.status === 'approved').length + ')' : '') },
-    { id: 'passport', label: 'Passport' },
     { id: 'cohosts',  label: 'Co-hosts' + (cohosts.length > 0 ? ' (' + cohosts.length + ')' : '') },
   ];
 
@@ -206,12 +204,6 @@ export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
         {tab === 'photos' && (
           <div className="det-panel">
             <GalleryPanel event={e} isHost={isHost} />
-          </div>
-        )}
-
-        {tab === 'passport' && (
-          <div className="det-panel">
-            <DiningPassport userName={profile.name} />
           </div>
         )}
 

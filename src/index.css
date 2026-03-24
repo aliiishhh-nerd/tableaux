@@ -438,3 +438,328 @@ select.form-input { cursor: pointer; appearance: none; }
     display: none !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   GLASSMORPHISM + NEON GRADIENT REDESIGN
+   Neon accents with clean light glass surfaces — depth through layering
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── New design tokens ─────────────────────────────────────────────────────── */
+:root {
+  --neon-purple:  #7C3AED;
+  --neon-pink:    #EC4899;
+  --neon-teal:    #06B6D4;
+  --neon-amber:   #F59E0B;
+  --grad-hero:    linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --grad-warm:    linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --grad-teal:    linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --grad-amber:   linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+  --glass-bg:     rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(108, 93, 211, 0.08);
+  --blur:         blur(16px);
+  --glow-indigo:  0 0 20px rgba(124, 58, 237, 0.18);
+  --glow-pink:    0 0 20px rgba(236, 72, 153, 0.18);
+}
+
+/* ── Body + page background ────────────────────────────────────────────────── */
+body {
+  background: #F0F0F8;
+  background-image:
+    radial-gradient(ellipse at 15% 20%, rgba(124, 58, 237, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.04) 0%, transparent 70%);
+  background-attachment: fixed;
+}
+
+/* ── Sidebar glassmorphism ─────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-right: 1px solid var(--glass-border) !important;
+  box-shadow: 4px 0 24px rgba(108, 93, 211, 0.06);
+}
+
+.sidebar .logo-area {
+  background: transparent !important;
+}
+
+/* Sidebar nav items — glass hover */
+.nav-item:hover {
+  background: rgba(108, 93, 211, 0.08) !important;
+  border-radius: var(--r) !important;
+}
+
+.nav-item.active, .nav-item.on {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(108, 93, 211, 0.10)) !important;
+  border-radius: var(--r) !important;
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.2);
+}
+
+/* ── Top nav / header ──────────────────────────────────────────────────────── */
+.top-nav {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--glass-border) !important;
+  box-shadow: 0 2px 16px rgba(108, 93, 211, 0.06);
+}
+
+/* ── Cards — glass surfaces ────────────────────────────────────────────────── */
+.card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  transition: box-shadow 0.25s, transform 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 12px 40px rgba(108, 93, 211, 0.13) !important;
+  transform: translateY(-1px);
+}
+
+/* ── Event cards ────────────────────────────────────────────────────────────── */
+.event-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  transition: box-shadow 0.25s, transform 0.2s;
+  overflow: hidden;
+}
+
+.event-card:hover {
+  box-shadow: 0 16px 48px rgba(108, 93, 211, 0.16) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Stat cards (feed page) ─────────────────────────────────────────────────── */
+.stat-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* ── Modals — glass panel ───────────────────────────────────────────────────── */
+.modal {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: 0 24px 80px rgba(108, 93, 211, 0.18) !important;
+}
+
+.modal-overlay {
+  background: rgba(17, 20, 45, 0.4) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Primary button — neon gradient ─────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #7C3AED, #6C5DD3) !important;
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35) !important;
+  color: white !important;
+  transition: all 0.2s !important;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #6D28D9, #5B4DC5) !important;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35) !important;
+}
+
+/* ── Outline / ghost buttons ────────────────────────────────────────────────── */
+.btn-outline, .btn-ghost {
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(108, 93, 211, 0.25) !important;
+  transition: all 0.2s !important;
+}
+
+.btn-outline:hover, .btn-ghost:hover {
+  background: rgba(124, 58, 237, 0.08) !important;
+  border-color: rgba(108, 93, 211, 0.4) !important;
+}
+
+/* ── Form inputs — glass style ──────────────────────────────────────────────── */
+.form-input {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(108, 93, 211, 0.18) !important;
+  transition: all 0.2s !important;
+}
+
+.form-input:focus {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: var(--neon-purple) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
+  outline: none !important;
+}
+
+/* ── Tags ───────────────────────────────────────────────────────────────────── */
+.tag-indigo {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(108, 93, 211, 0.08)) !important;
+  color: #7C3AED !important;
+  border: 1px solid rgba(124, 58, 237, 0.2) !important;
+}
+
+/* ── Progress bars ──────────────────────────────────────────────────────────── */
+.progress-fill, [class*="prog"] {
+  background: linear-gradient(90deg, #7C3AED, #EC4899) !important;
+}
+
+/* ── Auth page ──────────────────────────────────────────────────────────────── */
+.auth-left {
+  background: linear-gradient(135deg, #1a1a3e 0%, #2d1b69 40%, #7C3AED 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-left::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.auth-left::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.auth-right {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: var(--blur);
+}
+
+/* ── Avatar colors — neon accent ─────────────────────────────────────────────── */
+.av-indigo {
+  background: linear-gradient(135deg, #7C3AED, #6C5DD3) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.av-teal {
+  background: linear-gradient(135deg, #06B6D4, #0ACF97) !important;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+/* ── Pill / pill-row ─────────────────────────────────────────────────────────── */
+.pill.on {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(108, 93, 211, 0.1)) !important;
+  border-color: rgba(124, 58, 237, 0.4) !important;
+  color: #7C3AED !important;
+}
+
+/* ── Section labels ─────────────────────────────────────────────────────────── */
+.sec-label {
+  background: linear-gradient(90deg, #7C3AED, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700 !important;
+}
+
+/* ── Det (event detail) hero tabs ───────────────────────────────────────────── */
+.det-tabs {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.det-tab.on {
+  color: var(--neon-purple) !important;
+  border-bottom-color: var(--neon-purple) !important;
+}
+
+/* ── Feed stat cards ────────────────────────────────────────────────────────── */
+.feed-stat {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* ── Scrollable horizontal strip animation ──────────────────────────────────── */
+.event-card .ev-img {
+  transition: transform 0.35s ease;
+}
+
+.event-card:hover .ev-img {
+  transform: scale(1.03);
+}
+
+/* ── Neon glow on indigo elements ────────────────────────────────────────────── */
+.btn-primary, .av-indigo, .tag-indigo {
+  position: relative;
+}
+
+/* ── Invite hero gradient overlay enhancement ────────────────────────────────── */
+.det-hero-ov {
+  background: linear-gradient(to top, rgba(17, 20, 45, 0.75) 0%, rgba(17, 20, 45, 0.1) 60%, transparent 100%) !important;
+}
+
+/* ── Custom scrollbar — neon tint ────────────────────────────────────────────── */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(124, 58, 237, 0.3), rgba(108, 93, 211, 0.2)) !important;
+  border-radius: 4px;
+}
+
+/* ── Map buttons ─────────────────────────────────────────────────────────────── */
+.map-btn {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(108, 93, 211, 0.2) !important;
+  transition: all 0.2s !important;
+}
+
+.map-btn:hover {
+  background: rgba(124, 58, 237, 0.1) !important;
+  border-color: rgba(124, 58, 237, 0.4) !important;
+}
+
+/* ── Autocomplete dropdown ───────────────────────────────────────────────────── */
+.ac-list {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: 0 12px 40px rgba(108, 93, 211, 0.15) !important;
+}
+
+/* ── Bottom mobile nav ───────────────────────────────────────────────────────── */
+.bottom-nav {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top: 1px solid var(--glass-border) !important;
+  box-shadow: 0 -4px 24px rgba(108, 93, 211, 0.08);
+}
+
+/* ── Dividers ────────────────────────────────────────────────────────────────── */
+.divider {
+  background: linear-gradient(90deg, transparent, rgba(108, 93, 211, 0.2), transparent) !important;
+  height: 1px;
+  border: none;
+}
+

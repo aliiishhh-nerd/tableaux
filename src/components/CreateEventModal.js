@@ -41,14 +41,14 @@ const FIELD_EMOJIS = {
 
 function EmojiPicker({ field, onPick }) {
   return (
-    <div style={{
+    <div className="emoji-picker-wrap" style={{
       position: 'absolute', right: 0, top: '100%', zIndex: 30, marginTop: 4,
       background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--r2)',
       padding: 8, display: 'flex', flexWrap: 'wrap', gap: 4, width: 210,
       boxShadow: '0 8px 24px rgba(17,20,45,0.1)',
     }}>
       {(FIELD_EMOJIS[field] || []).map(em => (
-        <span key={em} onClick={() => onPick(em)}
+        <span key={em} onMouseDown={e => { e.preventDefault(); onPick(em); }}
           style={{ fontSize: 16, padding: 4, borderRadius: 4, cursor: 'pointer', lineHeight: 1 }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--page)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -140,15 +140,18 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
 
   function pickGradient(g) {
     setCoverBg(g.value); setCoverMode('solid'); setCoverEmoji(''); setCustomEmoji('');
+    // Picking a gradient clears any emoji overlay
   }
 
   function pickEmoji(em) {
     setCoverEmoji(em); setCoverMode('emoji'); setCustomEmoji('');
+    // coverBg intentionally kept — emoji overlays on top of gradient
   }
 
   function onCustomEmojiInput(v) {
     setCustomEmoji(v);
     if (v.trim()) { setCoverEmoji(v.trim()); setCoverMode('emoji'); }
+    // gradient background preserved — emoji overlays on top
   }
 
   function togglePotItem(item) {
@@ -194,9 +197,7 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
   const gmUrl = addr ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc + ' ' + addr) : null;
   const amUrl = addr ? 'https://maps.apple.com/?q=' + encodeURIComponent(loc) + '&address=' + encodeURIComponent(addr) : null;
 
-  const coverStyle = coverMode === 'emoji'
-    ? { background: '#11142D' }
-    : { background: coverBg };
+  const coverStyle = { background: coverBg };
 
   return (
     <>

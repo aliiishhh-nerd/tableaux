@@ -5,6 +5,7 @@ import EventDetailModal from '../components/EventDetailModal';
 import { fmtDate, avColor } from '../data/utils';
 import { CalendarExportButtons } from '../data/calendarExport';
 import { SocialIconRow, SocialFieldsEditor } from '../components/SocialLinks';
+import DiningPassport from '../components/DiningPassport';
 
 /* ---- MY EVENTS PAGE ---- */
 export function EventsPage({ onOpenCreate, onOpenEdit }) {
@@ -164,9 +165,12 @@ export function ProfilePage() {
         <p style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.75, marginBottom: 20 }}>{profile.bio}</p>
 
         <div className="sec-label">Food Preferences</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
           {profile.prefs.map(p => <span key={p} className="tag tag-gray">{p}</span>)}
         </div>
+
+        <div className="divider" />
+        <DiningPassport userName={profile.name} />
       </div>
 
       {editing && (
