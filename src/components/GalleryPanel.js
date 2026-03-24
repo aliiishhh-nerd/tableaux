@@ -368,7 +368,7 @@ export default function GalleryPanel({ event, isHost }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: 'var(--ink3)' }}>AI suggestions:</span>
                 {suggestions.map(s => (
-                  <span key={s} onClick={() => { setNameInput(s); setShowSugg(false); }}
+                  <span key={s} onClick={() => setNameInput(s)}
                     style={{ padding: '3px 10px', borderRadius: 20, border: '1px solid var(--indigo-mid)', background: 'var(--indigo-light)', color: 'var(--indigo)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                     {s}
                   </span>
