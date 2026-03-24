@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -122,7 +122,6 @@ export default function MusicPanel({ event, isHost }) {
   const meta = platform ? platformMeta(platform) : null;
   const approved = (music.suggestions || []).filter(s => s.status === 'approved');
   const pending  = (music.suggestions || []).filter(s => s.status === 'pending');
-  const rejected = (music.suggestions || []).filter(s => s.status === 'rejected');
 
   function saveUrl() {
     saveEvent({ ...event, music: { ...music, url: linkInput.trim() } });
