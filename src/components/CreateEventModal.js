@@ -59,26 +59,6 @@ function EmojiPicker({ field, onPick }) {
   );
 }
 
-function FieldWithEmoji({ label, children, field, onPick, showPicker, onToggle }) {
-  return (
-    <div className="form-group" style={{ position: 'relative' }}>
-      <label className="form-label">{label}</label>
-      <div style={{ position: 'relative' }}>
-        {children}
-        <button
-          type="button"
-          onClick={onToggle}
-          style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, opacity: 0.4, lineHeight: 1 }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '0.4'}>
-          ☺
-        </button>
-        {showPicker && <EmojiPicker field={field} onPick={onPick} />}
-      </div>
-    </div>
-  );
-}
-
 function Toggle({ label, sub, on, onChange }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)', gap: 12 }}>
@@ -115,7 +95,6 @@ export default function CreateEventModal({ editId, onClose, onSaved }) {
   const [coverMode, setCoverMode] = useState(editing?.coverEmoji ? 'emoji' : 'solid');
   const [customEmoji, setCustomEmoji] = useState('');
   const [invImg, setInvImg]       = useState(editing?.img || '');
-  const [invFont, setInvFont]     = useState('sans');
   const [polls, setPolls]         = useState(editing?.polls || []);
   const [cohosts, setCohosts]     = useState(editing?.cohosts || []);
   const [musicUrl, setMusicUrl]   = useState(editing?.music?.url || '');
