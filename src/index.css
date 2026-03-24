@@ -419,3 +419,22 @@ select.form-input { cursor: pointer; appearance: none; }
 .passport-stat {
   transition: all 0.3s ease;
 }
+
+/* ── Animated emoji cover ───────────────────────────────────────────────────── */
+@keyframes emojiPulse {
+  0%, 100% { transform: scale(1) rotate(-4deg); }
+  50%       { transform: scale(1.1) rotate(4deg); }
+}
+.cover-emoji-anim {
+  animation: emojiPulse 2.8s ease-in-out infinite;
+}
+
+/* ── Create event modal — responsive two-column layout ──────────────────────── */
+@media (max-width: 680px) {
+  .modal[style*="max-width: 820px"] > div[style*="grid-template-columns: 1fr 300px"] {
+    grid-template-columns: 1fr !important;
+  }
+  .modal[style*="max-width: 820px"] > div[style*="grid-template-columns: 1fr 300px"] > div:last-child {
+    display: none !important;
+  }
+}
