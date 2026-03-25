@@ -62,7 +62,7 @@ export default function CreateEventModal({ event, onClose }) {
   const [potluckItems, setPotluckItems] = useState(event?.potluck?.items || DEFAULT_POTLUCK.items);
   const [scData, setScData] = useState(event?.supperClub || DEFAULT_SUPPER_CLUB);
   const [newItemText, setNewItemText] = useState({ food: '', drinks: '', other: '' });
-
+  const newItemEmoji = { food: "🍽️", drinks: "🥂", other: "🧺" };
   const isPotluck = form.type === 'Potluck';
   const isSupperClub = form.type === 'Supper Club';
 
