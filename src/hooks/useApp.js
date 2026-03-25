@@ -7,6 +7,7 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState(SEED_EVENTS);
   const [toasts, setToasts] = useState([]);
+  const [following, setFollowing] = useState([]);
 
   const addToast = useCallback((msg, type = '') => {
     const id = Date.now();
@@ -96,6 +97,7 @@ export function AppProvider({ children }) {
       events, createEvent, updateEvent, deleteEvent,
       rsvpEvent, claimPotluckItem, unclaimPotluckItem,
       addPhoto, updateProfile,
+      following, setFollowing,
       toasts, addToast,
     }}>
       {children}

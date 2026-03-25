@@ -8,17 +8,29 @@ export default function FeedPage() {
   const { events } = useApp();
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [dismissedBanners, setDismissedBanners] = useState([]);
 
   const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo);
-  const filters = ['all', 'Dinner Party', 'Supper Club', 'Potluck', 'Cooking Class'];
+  const filters = [
+    { key: 'all', label: '✨ All' },
+    { key: 'Dinner Party', label: 'Dinner Party' },
+    { key: 'Supper Club', label: 'Supper Club' },
+    { key: 'Potluck', label: 'Potluck' },
+    { key: 'Cooking Class', label: 'Cooking Class' },
+  ];
 
   const filtered = upcoming.filter(e => filter === 'all' || e.type === filter);
 
+  // Post-event notifications: ended events within last 48h with gallery
+  const recentEnded = events.filter(e =>
+    e.isEnded && e.galleryEnabled && !dismissedBanners.includes(e.id)
+  ).slice(0, 1);
+
   const stats = [
-    { icon: '🗓️', val: events.filter(e => !e.isEnded && !e.isPast).length, label: 'Upcoming Events' },
-    { icon: '👥', val: 48, label: 'In Your Network' },
+    { icon: '🗓️', val: upcoming.length,                                label: 'Upcoming' },
+    { icon: '👥', val: 48,                                              label: 'In Network' },
     { icon: '🥂', val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners' },
-    { icon: '🌍', val: 7, label: 'Dining Passport' },
+    { icon: '🌍', val: 7,                                               label: 'Passport' },
   ];
 
   return (
@@ -34,56 +46,68 @@ export default function FeedPage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
-        {/* Main feed */}
+      {/* Post-event notification banners */}
+      {recentEnded.map(evt => (
+        <PostEventBanner
+          key={evt.id}
+          event={evt}
+          onView={() => setSelected(evt)}
+          onDismiss={() => setDismissedBanners(d => [...d, evt.id])}
+        />
+      ))}
+
+      {/* Main layout: feed + sidebar */}
+      <div className="feed-layout">
+        {/* Left: filters + cards */}
         <div>
-          {/* Filters */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', overflowX: 'auto' }}>
+          <div className="filter-row" style={{ marginBottom: 14 }}>
             {filters.map(f => (
-              <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-                {f === 'all' ? '✨ All' : f}
+              <button
+                key={f.key}
+                className={`filter-btn ${filter === f.key ? 'active' : ''}`}
+                onClick={() => setFilter(f.key)}
+              >
+                {f.label}
               </button>
             ))}
           </div>
 
-          {filtered.length === 0 && (
+          {filtered.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">🍽️</div>
               <div className="empty-title">No events yet</div>
               <div className="empty-sub">Be the first to host a dinner in your network.</div>
             </div>
+          ) : (
+            <div className="feed-grid">
+              {filtered.map(evt => (
+                <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} />
+              ))}
+            </div>
           )}
-
-          <div className="feed-grid">
-            {filtered.map(evt => (
-              <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} />
-            ))}
-          </div>
         </div>
 
-        {/* Sidebar: Friends Activity */}
+        {/* Right: Friends Activity */}
         <div>
           <div className="card">
-            <div style={{ padding: '16px 16px 0' }}>
+            <div style={{ padding: '14px 14px 0' }}>
               <div className="sec-title">Friends Activity</div>
             </div>
-            <div style={{ padding: '0 16px 16px' }}>
+            <div style={{ padding: '4px 14px 14px' }}>
               {FRIENDS_ACTIVITY.map(act => {
-                const user = USERS.find(u => u.id === act.userId);
+                const u = USERS.find(x => x.id === act.userId);
                 return (
                   <div key={act.id} className="activity-item">
-                    <a href="#!" style={{ textDecoration: 'none' }} title={`View ${act.userName}'s profile`}>
-                      <div className={`av av-sm av-${user?.color || 'indigo'} av-link`}>
-                        {user ? user.initials : act.userName[0]}
-                      </div>
-                    </a>
+                    <div className={`av av-sm av-${u?.color || 'indigo'} av-link`} title={`View ${act.userName}'s profile`}>
+                      {u ? u.initials : act.userName[0]}
+                    </div>
                     <div style={{ flex: 1 }}>
                       <div className="activity-text">
                         <strong>{act.userName}</strong> {act.action}{' '}
-                        {act.targetId ? (
-                          <strong onClick={() => {
-                          }}>{act.target}</strong>
-                        ) : <strong>{act.target}</strong>}
+                        <strong onClick={() => {
+                          const ev = events.find(e => e.id === act.targetId);
+                          if (ev) setSelected(ev);
+                        }}>{act.target}</strong>
                         {' '}{act.emoji}
                       </div>
                       <div className="activity-time">{act.time}</div>
@@ -103,13 +127,47 @@ export default function FeedPage() {
   );
 }
 
+function PostEventBanner({ event, onView, onDismiss }) {
+  const photoCount = event.photoGallery?.length || 0;
+  return (
+    <div className="post-event-banner" onClick={onView}>
+      <div className="post-event-banner-icon">
+        {photoCount > 0 ? '📸' : '🎉'}
+      </div>
+      <div className="post-event-banner-text">
+        <div className="post-event-banner-title">
+          {event.title} just wrapped up
+        </div>
+        <div className="post-event-banner-sub">
+          {photoCount > 0
+            ? `${photoCount} photo${photoCount !== 1 ? 's' : ''} have been shared from the evening. Add yours!`
+            : 'The dinner is over — be the first to share your photos!'}
+        </div>
+      </div>
+      <button
+        className="post-event-banner-cta"
+        onClick={e => { e.stopPropagation(); onView(); }}
+      >
+        {photoCount > 0 ? 'See Photos' : 'Add Photos'}
+      </button>
+      <button
+        onClick={e => { e.stopPropagation(); onDismiss(); }}
+        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.5)', cursor: 'pointer', fontSize: 16, padding: '4px', flexShrink: 0, lineHeight: 1 }}
+        title="Dismiss"
+      >✕</button>
+    </div>
+  );
+}
+
 function EventCard({ event, onClick }) {
   const cover = event.cover || {};
   const hasImg = cover.type === 'image' || event.img;
   const coverStyle = !hasImg
-    ? cover.type === 'gradient' ? { background: cover.value }
-    : cover.type === 'emoji' ? { background: cover.bg || '#1A1A2E' }
-    : { background: 'var(--indigo)' }
+    ? cover.type === 'gradient'
+      ? { background: cover.value }
+      : cover.type === 'emoji'
+        ? { background: cover.bg || '#1A1A2E' }
+        : { background: 'var(--indigo)' }
     : {};
 
   const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
@@ -117,13 +175,19 @@ function EventCard({ event, onClick }) {
   return (
     <div className="event-card" onClick={onClick}>
       <div className="event-card-cover" style={coverStyle}>
-        {hasImg && <img src={cover.value || event.img} alt={event.title} loading="lazy" />}
+        {hasImg && (
+          <img src={cover.value || event.img} alt={event.title} loading="lazy" />
+        )}
         {!hasImg && cover.type === 'emoji' && (
           <div className="event-card-cover-emoji">{cover.emoji}</div>
         )}
         <div className="event-card-badges">
-          <span className="chip chip-indigo" style={{ background: 'rgba(108,93,211,0.85)', color: 'white' }}>{event.type}</span>
-          {event.vis === 'Public' && <span className="chip" style={{ background: 'rgba(46,196,182,0.85)', color: 'white' }}>Public</span>}
+          <span className="chip chip-indigo" style={{ background: 'rgba(108,93,211,.85)', color: 'white' }}>
+            {event.type}
+          </span>
+          {event.vis === 'Public' && (
+            <span className="chip" style={{ background: 'rgba(46,196,182,.85)', color: 'white' }}>Public</span>
+          )}
         </div>
       </div>
 
@@ -142,9 +206,11 @@ function EventCard({ event, onClick }) {
       <div className="event-card-foot">
         <div className="guests-row">
           {approvedGuests.slice(0, 4).map((g, i) => (
-            <div key={i} className={`av av-sm av-${g.color || 'indigo'}`}>{g.initials || g.n?.[0]}</div>
+            <div key={i} className={`av av-sm av-${g.color || 'indigo'}`}>
+              {g.initials || g.n?.[0]}
+            </div>
           ))}
-          <span className="guests-count">{approvedGuests.length}/{event.cap} going</span>
+          <span className="guests-count">{approvedGuests.length}/{event.cap}</span>
         </div>
         <span className="chip chip-indigo">View →</span>
       </div>

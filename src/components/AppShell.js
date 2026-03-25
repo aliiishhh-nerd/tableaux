@@ -7,6 +7,7 @@ import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
+import PartnerPage from '../pages/PartnerPage';
 
 const NAV = [
   { to: '/feed',    icon: '🏠', label: 'Discover' },
@@ -22,18 +23,16 @@ export default function AppShell() {
 
   if (!user) return <AuthPage />;
 
-  const invitePending = events.filter(e => e.isInvitedTo && e.guests?.find(g => g.id === 'u1' && g.s === 'pending')).length;
+  const invitePending = events.filter(
+    e => e.isInvitedTo && e.guests?.find(g => g.id === 'u1' && g.s === 'pending')
+  ).length;
+
   const pageInfo = getPageInfo(location.pathname);
 
   return (
     <div className="app-shell">
-      {/* Sidebar overlay */}
-      <div
-        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
-        onClick={() => setSidebarOpen(false)}
-      />
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
 
-      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <Link to="/feed" className="logo-mark" onClick={() => setSidebarOpen(false)}>
@@ -60,9 +59,20 @@ export default function AppShell() {
               </NavLink>
             ))}
           </div>
+
+          <div className="sb-section" style={{ marginTop: 8 }}>
+            <div className="sb-section-label">For Brands</div>
+            <NavLink
+              to="/partner"
+              className={({ isActive }) => `sb-link ${isActive ? 'active' : ''}`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="sb-icon">🤝</span>
+              Partner with Us
+            </NavLink>
+          </div>
         </nav>
 
-        {/* User in sidebar */}
         <div className="sb-user">
           <Link to="/profile" className="sb-user-inner" onClick={() => setSidebarOpen(false)}>
             <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
@@ -74,9 +84,7 @@ export default function AppShell() {
         </div>
       </aside>
 
-      {/* Main */}
       <div className="main-wrap">
-        {/* Topnav */}
         <header className="topnav">
           <div className="topnav-left">
             <button className="hamburger" onClick={() => setSidebarOpen(o => !o)}>☰</button>
@@ -90,21 +98,20 @@ export default function AppShell() {
               ✉️
               {invitePending > 0 && <span className="notif-dot" />}
             </Link>
-            {/* Profile avatar — initials, no dark circle */}
             <Link to="/profile" className="topnav-avatar-link" title="My Profile">
               <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
             </Link>
           </div>
         </header>
 
-        {/* Routes */}
         <Routes>
-          <Route path="/" element={<FeedPage />} />
-          <Route path="/feed" element={<FeedPage />} />
-          <Route path="/events" element={<EventsPage />} />
+          <Route path="/"        element={<FeedPage />} />
+          <Route path="/feed"    element={<FeedPage />} />
+          <Route path="/events"  element={<EventsPage />} />
           <Route path="/invites" element={<InvitesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog"    element={<BlogPage />} />
+          <Route path="/partner" element={<PartnerPage />} />
         </Routes>
       </div>
 
@@ -116,7 +123,7 @@ export default function AppShell() {
             to={n.to}
             className={({ isActive }) => `mobile-nav-btn ${isActive ? 'active' : ''}`}
           >
-            <span className="mobile-nav-icon" style={{ position: 'relative' }}>
+            <span className="mobile-nav-icon">
               {n.icon}
               {n.to === '/invites' && invitePending > 0 && (
                 <span className="mobile-nav-badge">{invitePending}</span>
@@ -126,12 +133,13 @@ export default function AppShell() {
           </NavLink>
         ))}
         <Link to="/profile" className="mobile-nav-btn">
-          <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 28, height: 28, fontSize: 10 }}>{user.initials}</div>
-          Profile
+          <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 26, height: 26, fontSize: 9 }}>
+            {user.initials}
+          </div>
+          Me
         </Link>
       </nav>
 
-      {/* Toasts */}
       <div className="toast-wrap">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.type ? 'toast-' + t.type : ''}`}>
@@ -144,9 +152,10 @@ export default function AppShell() {
 }
 
 function getPageInfo(path) {
-  if (path.startsWith('/events')) return { title: 'My Events', sub: null };
-  if (path.startsWith('/invites')) return { title: 'Invitations', sub: null };
-  if (path.startsWith('/profile')) return { title: 'My Profile', sub: null };
-  if (path.startsWith('/blog')) return { title: 'The Table', sub: 'Stories & Recipes from Tableaux' };
+  if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
+  if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
+  if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
+  if (path.startsWith('/blog'))    return { title: 'The Table',    sub: 'Stories & Recipes from Tableaux' };
+  if (path.startsWith('/partner')) return { title: 'Partner with Us', sub: 'Bring your brand to the dinner table' };
   return { title: 'Discover', sub: "What's happening around you" };
 }

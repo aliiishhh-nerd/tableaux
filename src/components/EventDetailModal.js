@@ -47,24 +47,30 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   }
 
   const cover = event.cover || {};
-  const coverStyle = cover.type === 'gradient'
-    ? { background: cover.value }
-    : cover.type === 'emoji'
-      ? { background: cover.bg || '#1A1A2E' }
-      : {};
+  const coverBg = cover.type === 'gradient' ? cover.value
+    : cover.type === 'emoji' ? (cover.bg || '#1A1A2E')
+    : (cover.type === 'image' || event.img) ? '#1A1A2E'
+    : 'linear-gradient(135deg, #1A1A2E, #2D2550)';
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal modal-lg" style={{ maxHeight: '92vh' }}>
+      <div className="modal modal-lg">
         {/* Cover */}
         <div style={{ height: 180, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-          {cover.type === 'image' || event.img ? (
-            <img src={cover.value || event.img} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ ...coverStyle, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {cover.type === 'emoji' && <span style={{ fontSize: 72 }}>{cover.emoji}</span>}
+          {/* Always render a background first */}
+          <div style={{ position: 'absolute', inset: 0, background: coverBg }} />
+          {(cover.type === 'image' && cover.value) || event.img ? (
+            <img
+              src={cover.value || event.img}
+              alt={event.title}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={e => { e.target.style.display = 'none'; }}
+            />
+          ) : cover.type === 'emoji' ? (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 72 }}>{cover.emoji}</span>
             </div>
-          )}
+          ) : null}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 60%)' }} />
 
           {/* Ended badge */}
