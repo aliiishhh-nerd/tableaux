@@ -9,7 +9,6 @@ export default function EventsPage() {
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
-  const [filter, setFilter] = useState('upcoming');
   const [pastOpen, setPastOpen] = useState(false);
   const [pastFilter, setPastFilter] = useState('3mo'); // '3mo' | '6mo' | '1y' | '2y' | year string
 

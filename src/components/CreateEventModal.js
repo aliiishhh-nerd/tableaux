@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp';
-import { SEED_IMAGES, GRADIENT_COVERS, EMOJI_PRESETS } from '../data/seed';
+import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiPresetsRow, EmojiTrigger } from './EmojiPicker';
 
 const EVENT_TYPES = ['Dinner Party', 'Supper Club', 'Potluck', 'Cooking Class', 'Tasting', 'Brunch', 'Pop-Up', 'Other'];
@@ -62,7 +62,6 @@ export default function CreateEventModal({ event, onClose }) {
   const [potluckItems, setPotluckItems] = useState(event?.potluck?.items || DEFAULT_POTLUCK.items);
   const [scData, setScData] = useState(event?.supperClub || DEFAULT_SUPPER_CLUB);
   const [newItemText, setNewItemText] = useState({ food: '', drinks: '', other: '' });
-  const [newItemEmoji, setNewItemEmoji] = useState({ food: '🍽️', drinks: '🥂', other: '🧺' });
 
   const isPotluck = form.type === 'Potluck';
   const isSupperClub = form.type === 'Supper Club';

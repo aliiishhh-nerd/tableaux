@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, NavLink, useLocation, Link } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import AuthPage from '../pages/AuthPage';
 import FeedPage from '../pages/FeedPage';

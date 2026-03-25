@@ -34,7 +34,6 @@ export const USERS = [
 
 // ---- EVENTS ----
 const now = new Date();
-const hoursAgo = (h) => new Date(now - h * 3600000).toISOString().slice(0, 16).replace('T', ' ');
 const daysFromNow = (d) => {
   const dt = new Date(now.getTime() + d * 86400000);
   return dt.toISOString().slice(0, 10);

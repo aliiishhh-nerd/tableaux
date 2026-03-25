@@ -82,7 +82,6 @@ export default function FeedPage() {
                         <strong>{act.userName}</strong> {act.action}{' '}
                         {act.targetId ? (
                           <strong onClick={() => {
-                            const evt = events.find ? null : null;
                           }}>{act.target}</strong>
                         ) : <strong>{act.target}</strong>}
                         {' '}{act.emoji}
