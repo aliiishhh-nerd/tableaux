@@ -27,6 +27,8 @@ const GRADIENTS = [
   { label: 'Obsidian',        value: '#11142D' },
 ];
 
+const EMOJI_PRESETS = ['🕯','🍷','🌙','🌿','⭐','🎩','🫒','🍽','🥂','🌸'];
+
 const POTLUCK_FOOD = ['🥗 Salad','🍞 Bread','🧀 Cheese','🍷 Wine','🥘 Main dish','🍰 Dessert','🥬 Side dish','🫙 Condiments'];
 const POTLUCK_CUTLERY = ['🍽 Plates','🥄 Cutlery','🥂 Glasses','🧻 Napkins','🪑 Extra chair'];
 const POTLUCK_OTHER = ['🎵 Speaker','🕯 Candles','🌸 Flowers','🎲 Games'];
