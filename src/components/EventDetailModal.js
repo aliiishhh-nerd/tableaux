@@ -1,219 +1,341 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
-import { fmtDate, avColor } from '../data/utils';
-import PollsPanel from './PollsPanel';
-import CohostsPanel from './CohostsPanel';
-import { CalendarExportButtons } from '../data/calendarExport';
-import MusicPanel from './MusicPanel';
-import GalleryPanel from './GalleryPanel';
+import { fmtDate, fmtTime } from '../data/utils';
 
-export default function EventDetailModal({ event: e, onClose, onOpenEdit }) {
-  const { approveGuest, denyGuest, requestJoin, addPotluckItem, profile } = useApp();
-  const [tab, setTab] = useState('overview');
-  const [potInput, setPotInput] = useState('');
+export default function EventDetailModal({ event, onClose, onEdit }) {
+  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, addToast } = useApp();
+  const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
+  const [uploading, setUploading] = useState(false);
+  const [lightbox, setLightbox] = useState(null);
+  const fileRef = useRef();
 
-  const att = e.guests.filter(g => g.s === 'approved');
-  const pend = e.guests.filter(g => g.s === 'pending');
-  const isPot = e.type === 'Potluck';
-  const isHost = e.mine;
-  const polls = e.polls || [];
-  const cohosts = e.cohosts || [];
-  const visibleCohosts = cohosts.filter(c => c.permissions?.showOnPage);
+  if (!event) return null;
 
-  function handleAddPot() {
-    if (!potInput.trim()) return;
-    addPotluckItem(e.id, potInput.trim(), profile.name);
-    setPotInput('');
-  }
+  const myGuest = event.guests?.find(g => g.id === 'u1');
+  const isEnded = event.isEnded || false;
+  const isHost = event.mine;
+  const isInvited = event.isInvitedTo;
+  const hasGallery = event.galleryEnabled && (isEnded || isHost);
 
+  // Tabs available
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'guests',   label: 'Guests (' + e.guests.length + ')' },
-    ...(isPot ? [{ id: 'potluck', label: 'Potluck' }] : []),
-    { id: 'polls',    label: 'Polls' + (polls.length > 0 ? ' (' + polls.length + ')' : '') },
-    { id: 'music',    label: 'Music' },
-    { id: 'photos',   label: 'Photos' + ((e.gallery?.photos || []).filter(p => p.status === 'approved').length > 0 ? ' (' + (e.gallery?.photos || []).filter(p => p.status === 'approved').length + ')' : '') },
-    { id: 'cohosts',  label: 'Co-hosts' + (cohosts.length > 0 ? ' (' + cohosts.length + ')' : '') },
+    { key: 'overview', label: '📋 Overview' },
+    ...(event.supperClub ? [{ key: 'menu', label: '🍽️ Menu' }] : []),
+    ...(event.potluck ? [{ key: 'potluck', label: '🥘 Potluck' }] : []),
+    { key: 'guests', label: `👥 Guests (${event.guests?.length || 0})` },
+    ...(hasGallery ? [{ key: 'photos', label: `📸 Photos${event.photoGallery?.length ? ` (${event.photoGallery.length})` : ''}` }] : []),
   ];
 
+  function handleUploadPhoto(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const photo = {
+        id: 'ph-' + Date.now(),
+        url: ev.target.result,
+        tags: [],
+        uploadedBy: 'u1',
+        uploaderName: user?.name || 'You',
+      };
+      addPhoto(event.id, photo);
+      addToast('Photo uploaded!', 'success');
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const cover = event.cover || {};
+  const coverStyle = cover.type === 'gradient'
+    ? { background: cover.value }
+    : cover.type === 'emoji'
+      ? { background: cover.bg || '#1A1A2E' }
+      : {};
+
   return (
-    <div className="modal-overlay" onClick={e2 => e2.target === e2.currentTarget && onClose()}>
-      <div className="modal modal-lg" style={{ padding: 0 }}>
-
-        <div className="det-hero">
-          {e.img && <img src={e.img} alt={e.title} />}
-          <div className="det-hero-bg" style={{ background: e.invBg || '#6C5DD3' }} />
-          <div className="det-hero-ov" />
-          <div className="det-hero-content">
-            <div className="det-eyebrow">{e.invH || "You're Invited"} · {e.type}</div>
-            <div className="det-title">{e.title}</div>
-            {visibleCohosts.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>Hosted with</span>
-                {visibleCohosts.map(c => (
-                  <span key={c.name} style={{ padding: '2px 10px', borderRadius: 20, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.25)', fontSize: 11, color: 'white', fontWeight: 600 }}>{c.name}</span>
-                ))}
-              </div>
-            )}
-            <div className="det-chips">
-              <div className="det-chip">📅 {fmtDate(e.date)} · {e.time}</div>
-              <div className="det-chip">📍 {e.loc}</div>
-              <div className="det-chip">👤 {e.host}</div>
-              <div className="det-chip">{e.vis}</div>
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal modal-lg" style={{ maxHeight: '92vh' }}>
+        {/* Cover */}
+        <div style={{ height: 180, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+          {cover.type === 'image' || event.img ? (
+            <img src={cover.value || event.img} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ ...coverStyle, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {cover.type === 'emoji' && <span style={{ fontSize: 72 }}>{cover.emoji}</span>}
             </div>
+          )}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 60%)' }} />
+
+          {/* Ended badge */}
+          {isEnded && (
+            <div style={{ position: 'absolute', top: 12, left: 12 }}>
+              <span className="chip chip-gray" style={{ background: 'rgba(0,0,0,0.6)', color: 'white', backdropFilter: 'blur(8px)' }}>
+                ✓ Event Ended
+              </span>
+            </div>
+          )}
+
+          <button className="modal-x" onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.5)', border: 'none', color: 'white' }}>✕</button>
+
+          <div style={{ position: 'absolute', bottom: 16, left: 20, right: 20 }}>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+              <span className="chip chip-indigo" style={{ background: 'rgba(108,93,211,0.85)', color: 'white' }}>{event.type}</span>
+              {event.seriesName && <span className="chip" style={{ background: 'rgba(212,175,55,0.85)', color: 'white' }}>Vol. {event.seriesVolume}</span>}
+            </div>
+            <h2 style={{ color: 'white', fontSize: 20, fontWeight: 800, lineHeight: 1.2 }}>{event.title}</h2>
           </div>
-          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '6px 12px', color: 'white', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>✕ Close</button>
         </div>
 
-        <div className="det-tabs" style={{ overflowX: 'auto' }}>
-          {tabs.map(t => (
-            <div key={t.id} className={'det-tab' + (tab === t.id ? ' on' : '')} onClick={() => setTab(t.id)}>
-              {t.label}
-            </div>
-          ))}
-        </div>
-
-        {tab === 'overview' && (
-          <div className="det-panel">
-            <div className="sec-label">About this event</div>
-            <p style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.75, marginBottom: 20 }}>
-              {e.desc || 'No description yet.'}
-            </p>
-            {e.addr && (
-              <React.Fragment>
-                <div className="divider" />
-                <div className="sec-label">Location</div>
-                <div style={{ background: 'var(--page)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 16, marginBottom: 16 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>📍 {e.loc}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink2)', marginBottom: 12 }}>{e.addr}</div>
-                  <div className="map-btns">
-                    <a className="map-btn" href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(e.loc + ' ' + e.addr)} target="_blank" rel="noopener noreferrer">🗺 Google Maps</a>
-                    <a className="map-btn" href={'https://maps.apple.com/?q=' + encodeURIComponent(e.loc) + '&address=' + encodeURIComponent(e.addr)} target="_blank" rel="noopener noreferrer">🍎 Apple Maps</a>
-                  </div>
-                </div>
-              </React.Fragment>
-            )}
-            {polls.length > 0 && (
-              <React.Fragment>
-                <div className="divider" />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <div className="sec-label" style={{ margin: 0 }}>Active Polls</div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setTab('polls')}>View all →</button>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {polls.map(poll => {
-                    const icon = poll.type === 'date' ? '📅' : poll.type === 'food' ? '🍽' : '🍷';
-                    const totalVotes = (poll.options || []).filter(o => o.status === 'active').reduce((s, o) => s + (o.votes ? o.votes.length : 0), 0);
-                    return (
-                      <div key={poll.id} onClick={() => setTab('polls')} style={{ padding: '8px 14px', borderRadius: 'var(--r)', background: 'var(--indigo-light)', border: '1px solid var(--indigo-mid)', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--indigo)' }}>
-                        {icon} {poll.question} · {totalVotes} vote{totalVotes !== 1 ? 's' : ''}{poll.locked ? ' · ✅ Decided' : ''}
-                      </div>
-                    );
-                  })}
-                </div>
-              </React.Fragment>
-            )}
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 20 }}>
-              {isHost
-                ? <button className="btn btn-outline" onClick={() => { onClose(); onOpenEdit(e.id); }}>✏ Edit Event</button>
-                : <button className="btn btn-primary" onClick={() => requestJoin(e.id, profile.name)}>Request to Join</button>
-              }
-              <CalendarExportButtons event={e} compact={true} />
-              <button className="btn btn-ghost" onClick={onClose}>Close</button>
-            </div>
-          </div>
-        )}
-
-        {tab === 'guests' && (
-          <div className="det-panel">
-            <div className="sec-label">{att.length} Attending · {pend.length} Pending · {e.cap - att.length} Spots Left</div>
-            {att.map((g, i) => (
-              <div key={g.n} className="p-row">
-                <div className="p-left">
-                  <div className={'av av-sm ' + avColor(i)}>{g.n.split(' ').map(x => x[0]).join('')}</div>
-                  <div><div className="p-name">{g.n}</div></div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--teal)' }} />
-                  <span style={{ fontSize: 11, color: 'var(--ink2)', fontWeight: 500 }}>Attending</span>
-                </div>
-              </div>
+        {/* Tabs */}
+        <div style={{ padding: '0 24px', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' }}>
+          <div className="tabs" style={{ marginBottom: 0, flexWrap: 'nowrap' }}>
+            {tabs.map(t => (
+              <button key={t.key} className={`tab-btn ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
+                {t.label}
+              </button>
             ))}
-            {pend.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className="sec-label">Pending Approval</div>
-                {pend.map((g, i) => (
-                  <div key={g.n} className="p-row">
-                    <div className="p-left">
-                      <div className={'av av-sm ' + avColor(i + 4)}>{g.n.split(' ').map(x => x[0]).join('')}</div>
-                      <div>
-                        <div className="p-name">{g.n}</div>
-                        <div className="p-sub">Requested to join</div>
-                      </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="modal-body">
+          {/* ---- OVERVIEW ---- */}
+          {tab === 'overview' && (
+            <div>
+              {isEnded && (
+                <div className="ended-event-banner" style={{ marginBottom: 16 }}>
+                  <span style={{ fontSize: 32 }}>🎉</span>
+                  <div>
+                    <div style={{ fontWeight: 700, marginBottom: 4 }}>This event has ended</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+                      {event.photoGallery?.length
+                        ? `${event.photoGallery.length} photos shared — check out the gallery!`
+                        : 'Be the first to share photos from the evening.'}
                     </div>
-                    {isHost
-                      ? <div style={{ display: 'flex', gap: 7 }}>
-                          <button className="btn btn-danger btn-sm" onClick={() => denyGuest(e.id, g.n)}>Deny</button>
-                          <button className="btn btn-primary btn-sm" onClick={() => approveGuest(e.id, g.n)}>Approve</button>
-                        </div>
-                      : <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--amber)' }} />
-                          <span style={{ fontSize: 11, color: 'var(--ink2)', fontWeight: 500 }}>Pending</span>
-                        </div>
-                    }
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                {[
+                  { icon: '📅', label: 'Date', val: fmtDate(event.date) },
+                  { icon: '🕖', label: 'Time', val: fmtTime(event.time) },
+                  { icon: '📍', label: 'Location', val: event.loc },
+                  { icon: '👥', label: 'Capacity', val: `${event.guests?.length || 0} / ${event.cap}` },
+                  { icon: '🔒', label: 'Visibility', val: event.vis },
+                  { icon: '👤', label: 'Host', val: event.host },
+                ].map((item, i) => (
+                  <div key={i} style={{ background: 'var(--page)', borderRadius: 10, padding: '10px 14px' }}>
+                    <div style={{ fontSize: 11, color: 'var(--ink2)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
+                      {item.icon} {item.label}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{item.val}</div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        )}
 
-        {tab === 'potluck' && isPot && (
-          <div className="det-panel">
-            <div className="sec-label">{e.pot.length} Items Pledged</div>
-            {e.pot.map((p, i) => (
-              <div key={i} className="pot-row">
-                <div className="pot-icon">🍽</div>
-                <div>
-                  <div className="pot-name">{p.item}</div>
-                  <div className="pot-by">Brought by {p.by}</div>
+              {event.desc && (
+                <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, padding: '14px', background: 'var(--page)', borderRadius: 10 }}>
+                  {event.desc}
                 </div>
+              )}
+
+              {/* RSVP for invited users */}
+              {isInvited && myGuest?.s === 'pending' && (
+                <div style={{ marginTop: 16, padding: 16, border: '1.5px solid var(--indigo)', borderRadius: 12, background: 'var(--indigo-light)' }}>
+                  <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--indigo)' }}>🎉 You're invited!</div>
+                  <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 12 }}>Will you join {event.host} for {event.title}?</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-primary btn-sm" onClick={() => { rsvpEvent(event.id, 'approved'); addToast("You're going! 🎉", 'success'); }}>✓ Accept</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => { rsvpEvent(event.id, 'declined'); addToast('RSVP declined', ''); }}>✕ Decline</button>
+                  </div>
+                </div>
+              )}
+              {isInvited && myGuest?.s === 'approved' && (
+                <div style={{ marginTop: 16, padding: 12, background: 'var(--teal-light)', borderRadius: 10, fontSize: 13, color: '#07A87B', fontWeight: 600 }}>
+                  ✓ You're going!
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ---- SUPPER CLUB MENU ---- */}
+          {tab === 'menu' && event.supperClub && (
+            <div>
+              {/* Host Note */}
+              {event.supperClub.hostNote && (
+                <div className="sc-host-note">
+                  <div className="sc-host-note-label">✍️ A Note from the Host</div>
+                  <div className="sc-host-note-text">"{event.supperClub.hostNote}"</div>
+                </div>
+              )}
+
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                🍽️ The Menu
+              </div>
+              {event.supperClub.courses?.map((course, i) => (
+                <div key={i} className="sc-course" style={course.highlight ? { background: 'linear-gradient(90deg, var(--gold-light), transparent)', borderRadius: 10, padding: '14px', borderBottom: 'none', marginBottom: 6 } : {}}>
+                  <div className="sc-course-num" style={course.highlight ? { background: 'var(--gold)', color: 'white' } : {}}>
+                    {course.num}
+                  </div>
+                  <div className="sc-course-info">
+                    <div className="sc-course-name">
+                      {course.highlight && '⭐ '}{course.name}
+                    </div>
+                    <div className="sc-course-desc">{course.desc}</div>
+                    {course.wine && (
+                      <div className="sc-course-note">🍷 Paired with: {course.wine}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ---- POTLUCK ---- */}
+          {tab === 'potluck' && event.potluck && (
+            <PotluckTab event={event} onClaim={claimPotluckItem} onUnclaim={unclaimPotluckItem} addToast={addToast} />
+          )}
+
+          {/* ---- GUESTS ---- */}
+          {tab === 'guests' && (
+            <div>
+              {event.guests?.length === 0 && (
+                <div className="empty-state"><div className="empty-icon">👥</div><div className="empty-title">No guests yet</div></div>
+              )}
+              {event.guests?.map((g, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div className={`av av-sm av-${g.color || 'indigo'}`}>{g.initials || g.n?.[0]}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{g.n}</div>
+                  </div>
+                  <span className={`chip ${g.s === 'approved' ? 'chip-teal' : g.s === 'declined' ? 'chip-coral' : 'chip-amber'}`}>
+                    {g.s === 'approved' ? '✓ Going' : g.s === 'declined' ? '✕ Declined' : '⏳ Pending'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ---- PHOTOS ---- */}
+          {tab === 'photos' && (
+            <PhotoGalleryTab
+              event={event}
+              fileRef={fileRef}
+              uploading={uploading}
+              onUpload={handleUploadPhoto}
+              lightbox={lightbox}
+              setLightbox={setLightbox}
+            />
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="modal-foot">
+          <button className="btn btn-ghost" onClick={onClose}>Close</button>
+          {isHost && onEdit && (
+            <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>
+          )}
+        </div>
+
+        {/* Hidden file input */}
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPhoto} />
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setLightbox(null)}>
+          <div style={{ maxWidth: 700, width: '100%', position: 'relative' }}>
+            <img src={lightbox.url} alt="" style={{ width: '100%', borderRadius: 12, objectFit: 'contain', maxHeight: '80vh' }} />
+            <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {lightbox.tags?.map((tag, i) => (
+                <span key={i} style={{ background: 'rgba(255,255,255,0.15)', color: 'white', padding: '3px 10px', borderRadius: 20, fontSize: 12 }}>{tag}</span>
+              ))}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8 }}>📸 by {lightbox.uploaderName}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PotluckTab({ event, onClaim, onUnclaim, addToast }) {
+  const cats = { food: '🍽️ Food', drinks: '🥂 Drinks', other: '🧺 Other' };
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16 }}>
+        Tap an unclaimed item to add your dish!
+      </div>
+      {Object.entries(cats).map(([catKey, catLabel]) => {
+        const items = event.potluck.items.filter(it => it.cat === catKey);
+        if (!items.length) return null;
+        return (
+          <div key={catKey} className="potluck-category">
+            <div className="potluck-cat-title">{catLabel}</div>
+            {items.map(item => (
+              <div key={item.id} className={`potluck-item ${item.claimedBy ? 'claimed' : ''}`}>
+                <span style={{ fontSize: 20 }}>{item.emoji}</span>
+                <div className="potluck-item-name">{item.name}</div>
+                {item.claimedBy ? (
+                  <>
+                    <span className="potluck-item-claimant">✓ {item.claimerName}</span>
+                    {item.claimedBy === 'u1' && (
+                      <button className="btn btn-ghost btn-sm potluck-item-btn" onClick={() => { onUnclaim(event.id, item.id); addToast('Item released', ''); }}>
+                        Undo
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button className="btn btn-primary btn-sm potluck-item-btn" onClick={() => { onClaim(event.id, item.id); addToast("Item claimed! 🙌", 'success'); }}>
+                    I'll bring it
+                  </button>
+                )}
               </div>
             ))}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <input className="form-input" style={{ flex: 1 }} placeholder="What will you bring?"
-                value={potInput} onChange={e2 => setPotInput(e2.target.value)}
-                onKeyDown={e2 => e2.key === 'Enter' && handleAddPot()} />
-              <button className="btn btn-primary btn-sm" onClick={handleAddPot}>Add Item</button>
-            </div>
           </div>
-        )}
+        );
+      })}
+    </div>
+  );
+}
 
-        {tab === 'polls' && (
-          <div className="det-panel">
-            <PollsPanel event={e} isHost={isHost} userName={profile.name} />
-          </div>
-        )}
+function PhotoGalleryTab({ event, fileRef, uploading, onUpload, lightbox, setLightbox }) {
+  const photos = event.photoGallery || [];
 
-        {tab === 'music' && (
-          <div className="det-panel">
-            <MusicPanel event={e} isHost={isHost} />
-          </div>
-        )}
-
-        {tab === 'photos' && (
-          <div className="det-panel">
-            <GalleryPanel event={e} isHost={isHost} />
-          </div>
-        )}
-
-        {tab === 'cohosts' && (
-          <div className="det-panel">
-            <CohostsPanel event={e} isHost={isHost} />
-          </div>
-        )}
-
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ fontSize: 14, color: 'var(--ink2)' }}>
+          {photos.length > 0 ? `${photos.length} photo${photos.length !== 1 ? 's' : ''} from the evening` : 'No photos yet — be the first to share!'}
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+          {uploading ? '⏳ Uploading…' : '📸 Add Photos'}
+        </button>
       </div>
+
+      <div className="photo-gallery">
+        {photos.map(ph => (
+          <div key={ph.id} className="photo-thumb" onClick={() => setLightbox(ph)}>
+            <img src={ph.url} alt="" />
+            {ph.tags?.length > 0 && (
+              <div className="photo-tag">{ph.tags[0]}{ph.tags.length > 1 ? ` +${ph.tags.length - 1}` : ''}</div>
+            )}
+          </div>
+        ))}
+        <div className="photo-thumb-add" onClick={() => fileRef.current?.click()}>
+          <span style={{ fontSize: 24 }}>+</span>
+          <span>Upload</span>
+        </div>
+      </div>
+
+      {photos.length > 0 && (
+        <div style={{ marginTop: 14, fontSize: 12, color: 'var(--ink3)', textAlign: 'center' }}>
+          Tap any photo to view full size and tags
+        </div>
+      )}
     </div>
   );
 }

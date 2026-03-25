@@ -1,155 +1,152 @@
 import React, { useState } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'; // eslint-disable-line no-unused-vars
+import { Routes, Route, NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
-import { initials } from '../data/utils';
+import AuthPage from '../pages/AuthPage';
 import FeedPage from '../pages/FeedPage';
 import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
-import CreateEventModal from './CreateEventModal';
+import BlogPage from '../pages/BlogPage';
 
 const NAV = [
-  { id: 'feed',    path: '/',        icon: '⊞', label: 'Feed',       section: 'Discover' },
-  { id: 'create',  path: '/create',  icon: '＋', label: 'New Event',  section: 'Host' },
-  { id: 'events',  path: '/events',  icon: '◫', label: 'My Events',  section: null },
-  { id: 'invites', path: '/invites', icon: '✉', label: 'Invitations', section: 'You' },
-  { id: 'profile', path: '/profile', icon: '◉', label: 'Profile',    section: null },
+  { to: '/feed',    icon: '🏠', label: 'Discover' },
+  { to: '/events',  icon: '🗓️', label: 'My Events' },
+  { to: '/invites', icon: '✉️', label: 'Invitations' },
+  { to: '/blog',    icon: '📝', label: 'The Table' },
 ];
 
-const PAGE_META = {
-  '/':        { title: 'Discover',     sub: 'Upcoming dining experiences' },
-  '/events':  { title: 'My Events',    sub: 'Events you are hosting' },
-  '/invites': { title: 'Invitations',  sub: 'Your received invitations' },
-  '/profile': { title: 'Profile',      sub: 'Your dining identity' },
-  '/create':  { title: 'New Event',    sub: 'Fill in the details below' },
-};
-
 export default function AppShell() {
-  const { user, pendingInvites } = useApp();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { user, events, toasts } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const [editEventId, setEditEventId] = useState(null);
+  const location = useLocation();
 
-  const meta = PAGE_META[pathname] || PAGE_META['/'];
+  if (!user) return <AuthPage />;
 
-  function goTo(path) {
-    if (path === '/create') { setEditEventId(null); setShowCreate(true); }
-    else navigate(path);
-    setSidebarOpen(false);
-  }
-
-  function openEdit(id) { setEditEventId(id); setShowCreate(true); }
-
-  const sectionMap = {};
-  NAV.forEach(n => { if (n.section) sectionMap[n.id] = n.section; });
-
-  let currentSection = null;
-  const navItems = NAV.map(n => {
-    const showSection = n.section && n.section !== currentSection;
-    if (n.section) currentSection = n.section;
-    return { ...n, showSection };
-  });
+  const invitePending = events.filter(e => e.isInvitedTo && e.guests?.find(g => g.id === 'u1' && g.s === 'pending')).length;
+  const pageInfo = getPageInfo(location.pathname);
 
   return (
-    <div className="shell">
+    <div className="app-shell">
       {/* Sidebar overlay */}
-      <div className={`sb-overlay ${sidebarOpen ? 'show' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="sb-logo">
-          <div className="sb-logo-mark">T</div>
-          <div>
-            <div className="sb-logo-name">Tableaux</div>
-            <div className="sb-logo-sub">Social Dining</div>
-          </div>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-logo">
+          <Link to="/feed" className="logo-mark" onClick={() => setSidebarOpen(false)}>
+            <div className="logo-icon">🍽️</div>
+            <div className="logo-text">Table<span>aux</span></div>
+          </Link>
         </div>
-        <div className="sb-scroll">
-          {navItems.map(n => (
-            <React.Fragment key={n.id}>
-              {n.showSection && <div className="sb-section">{n.section}</div>}
-              <div
-                className={`sb-item ${pathname === n.path ? 'active' : ''}`}
-                onClick={() => goTo(n.path)}
+
+        <nav className="sb-nav">
+          <div className="sb-section">
+            <div className="sb-section-label">Menu</div>
+            {NAV.map(n => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                className={({ isActive }) => `sb-link ${isActive ? 'active' : ''}`}
+                onClick={() => setSidebarOpen(false)}
               >
                 <span className="sb-icon">{n.icon}</span>
                 {n.label}
-                {n.id === 'invites' && pendingInvites > 0 && (
-                  <span className="sb-badge">{pendingInvites}</span>
+                {n.to === '/invites' && invitePending > 0 && (
+                  <span className="sb-badge">{invitePending}</span>
                 )}
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="sb-user">
-          <div className="sb-user-inner" onClick={() => goTo('/profile')}>
-            <div className="av av-sm av-indigo">{user ? initials(user.name) : 'AD'}</div>
-            <div>
-              <div className="sb-user-name">{user?.name?.split(' ')[0]} {user?.name?.split(' ')[1]?.[0]}.</div>
-              <div className="sb-user-role">Host · Guest</div>
-            </div>
+              </NavLink>
+            ))}
           </div>
-        </div>
-      </div>
+        </nav>
 
-      {/* Main content */}
+        {/* User in sidebar */}
+        <div className="sb-user">
+          <Link to="/profile" className="sb-user-inner" onClick={() => setSidebarOpen(false)}>
+            <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
+            <div>
+              <div className="sb-user-name">{user.name}</div>
+              <div className="sb-user-role">{user.handle}</div>
+            </div>
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main */}
       <div className="main-wrap">
-        <div className="topnav">
+        {/* Topnav */}
+        <header className="topnav">
           <div className="topnav-left">
-            <div className="hamburger" onClick={() => setSidebarOpen(true)}>☰</div>
+            <button className="hamburger" onClick={() => setSidebarOpen(o => !o)}>☰</button>
             <div className="page-title">
-              <h1>{meta.title}</h1>
-              <p>{meta.sub}</p>
+              <h1>{pageInfo.title}</h1>
+              {pageInfo.sub && <p>{pageInfo.sub}</p>}
             </div>
           </div>
           <div className="topnav-right">
-            <div className="icon-btn" onClick={() => navigate('/invites')} style={{ position: 'relative' }}>
-              <span>✉</span>
-              {pendingInvites > 0 && <div className="notif-dot" />}
-            </div>
-            <div className="icon-btn" onClick={() => navigate('/profile')}><span>◉</span></div>
-            <div className="av av-sm av-indigo" style={{ cursor: 'pointer' }} onClick={() => navigate('/profile')}>
-              {user ? initials(user.name) : 'AD'}
-            </div>
+            <Link to="/invites" className="icon-btn always-show" title="Invitations" style={{ position: 'relative' }}>
+              ✉️
+              {invitePending > 0 && <span className="notif-dot" />}
+            </Link>
+            {/* Profile avatar — initials, no dark circle */}
+            <Link to="/profile" className="topnav-avatar-link" title="My Profile">
+              <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
+            </Link>
           </div>
-        </div>
+        </header>
 
-        <div className="page-body">
-          <Routes>
-            <Route path="/" element={<FeedPage onOpenCreate={() => { setEditEventId(null); setShowCreate(true); }} onOpenEdit={openEdit} />} />
-            <Route path="/events" element={<EventsPage onOpenCreate={() => { setEditEventId(null); setShowCreate(true); }} onOpenEdit={openEdit} />} />
-            <Route path="/invites" element={<InvitesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
+        {/* Routes */}
+        <Routes>
+          <Route path="/" element={<FeedPage />} />
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/invites" element={<InvitesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/blog" element={<BlogPage />} />
+        </Routes>
       </div>
 
-      {/* Mobile bottom bar */}
-      <div className="mob-bar">
+      {/* Mobile bottom nav */}
+      <nav className="mobile-nav">
         {NAV.map(n => (
-          <div
-            key={n.id}
-            className={`mob-item ${pathname === n.path ? 'active' : ''}`}
-            onClick={() => goTo(n.path)}
+          <NavLink
+            key={n.to}
+            to={n.to}
+            className={({ isActive }) => `mobile-nav-btn ${isActive ? 'active' : ''}`}
           >
-            <span className="mob-icon">{n.icon}</span>
-            <span className="mob-label">{n.label.split(' ')[0]}</span>
-            {n.id === 'invites' && pendingInvites > 0 && <div className="mob-dot" />}
+            <span className="mobile-nav-icon" style={{ position: 'relative' }}>
+              {n.icon}
+              {n.to === '/invites' && invitePending > 0 && (
+                <span className="mobile-nav-badge">{invitePending}</span>
+              )}
+            </span>
+            {n.label}
+          </NavLink>
+        ))}
+        <Link to="/profile" className="mobile-nav-btn">
+          <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 28, height: 28, fontSize: 10 }}>{user.initials}</div>
+          Profile
+        </Link>
+      </nav>
+
+      {/* Toasts */}
+      <div className="toast-wrap">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type ? 'toast-' + t.type : ''}`}>
+            {t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : '💬'} {t.msg}
           </div>
         ))}
       </div>
-
-      {/* Create / Edit modal */}
-      {showCreate && (
-        <CreateEventModal
-          editId={editEventId}
-          onClose={() => setShowCreate(false)}
-          onSaved={() => { setShowCreate(false); navigate('/events'); }}
-        />
-      )}
     </div>
   );
+}
+
+function getPageInfo(path) {
+  if (path.startsWith('/events')) return { title: 'My Events', sub: null };
+  if (path.startsWith('/invites')) return { title: 'Invitations', sub: null };
+  if (path.startsWith('/profile')) return { title: 'My Profile', sub: null };
+  if (path.startsWith('/blog')) return { title: 'The Table', sub: 'Stories & Recipes from Tableaux' };
+  return { title: 'Discover', sub: "What's happening around you" };
 }
