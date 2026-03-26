@@ -103,15 +103,15 @@ self.addEventListener('notificationclick', (event) => {
   const url = event.notification.data?.url || '/';
 
   event.waitUntil(
+    // eslint-disable-next-line no-undef
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If app is already open, focus it
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.navigate(url);
           return client.focus();
         }
       }
-      // Otherwise open a new window
+      // eslint-disable-next-line no-undef
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
