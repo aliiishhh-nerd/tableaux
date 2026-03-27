@@ -52,7 +52,6 @@ export default function FeedPage() {
 
   const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo);
 
-  // Event type filters — Cooking Class hidden for now
   const filters = [
     { key: 'all',          label: '✨ All' },
     { key: 'Dinner Party', label: 'Dinner Party' },
