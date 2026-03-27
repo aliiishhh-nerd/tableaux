@@ -386,12 +386,28 @@ body {
 .feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
 .stat-card {
-  background: white; border-radius: var(--r-lg); padding: 14px 16px; display: flex; flex-direction: column;
+  background: white; border-radius: var(--r-lg); padding: 14px 16px;
   border: 1px solid var(--border); box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
 }
-.stat-icon { font-size: 22px; margin-bottom: 6px; }
-.stat-val { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -1px; line-height: 1; }
+.stat-icon { display: none; }
+.stat-icon-circle {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; margin-bottom: 10px; flex-shrink: 0;
+}
+.stat-icon-circle.purple { background: #EEEDFE; }
+.stat-icon-circle.teal   { background: #E1F5EE; }
+.stat-icon-circle.amber  { background: #FAEEDA; }
+.stat-icon-circle.coral  { background: #FAECE7; }
+.stat-val { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; line-height: 1; }
 .stat-label { font-size: 11px; color: var(--ink2); margin-top: 3px; }
+.stat-badge {
+  display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px; width: fit-content;
+}
+.stat-badge.green { background: #E1F5EE; color: #0F6E56; }
+.stat-badge.blue  { background: #E6F1FB; color: #185FA5; }
 
 /* ---- FRIENDS ACTIVITY ---- */
 .activity-item {
@@ -798,9 +814,9 @@ body {
   .event-card-title { font-size: 15px; }
   .event-card-meta  { flex-direction: column; gap: 3px; }
 
-  /* Modal: full-screen bottom sheet */
+  /* Modal: bottom sheet on mobile */
   .modal-overlay { align-items: flex-end; padding: 0; }
-  .modal { border-radius: 20px 20px 0 0; max-height: 94dvh; }
+  .modal { border-radius: 20px 20px 0 0; max-height: 94dvh; width: 100%; max-width: 100%; }
   .modal-centered { align-items: flex-end; }
   .modal-centered .modal { border-radius: 20px 20px 0 0; max-width: 100%; }
 
@@ -843,4 +859,9 @@ body {
   .auth-card    { padding: 22px 18px; }
   .partner-hero-title { font-size: 20px; }
   .event-card-cover { height: 140px; }
+}
+
+/* iOS zoom fix */
+@media (max-width: 768px) {
+  input, select, textarea { font-size: 16px !important; }
 }
