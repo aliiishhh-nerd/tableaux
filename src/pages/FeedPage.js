@@ -27,10 +27,10 @@ export default function FeedPage() {
   ).slice(0, 1);
 
   const stats = [
-    { icon: '🗓️', val: upcoming.length,                                label: 'Upcoming' },
-    { icon: '👥', val: 48,                                              label: 'In Network' },
-    { icon: '🥂', val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners' },
-    { icon: '🌍', val: 7,                                               label: 'Passport' },
+    { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',   badgeColor: 'green' },
+    { icon: '👥', color: 'teal',   val: 48,                                               label: 'In Network',   badge: 'Avg 7 per event', badgeColor: 'blue'  },
+    { icon: '🥂', color: 'amber',  val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted',    badgeColor: 'green' },
+    { icon: '🌍', color: 'coral',  val: 7,                                                label: 'Passport',     badge: 'Top 10%',         badgeColor: 'green' },
   ];
 
   return (
@@ -39,9 +39,10 @@ export default function FeedPage() {
       <div className="stat-cards">
         {stats.map((s, i) => (
           <div key={i} className="stat-card">
-            <div className="stat-icon">{s.icon}</div>
+            <div className={`stat-icon-circle ${s.color}`}>{s.icon}</div>
             <div className="stat-val">{s.val}</div>
             <div className="stat-label">{s.label}</div>
+            <span className={`stat-badge ${s.badgeColor}`}>{s.badge}</span>
           </div>
         ))}
       </div>
