@@ -7,7 +7,6 @@ import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
-import PartnerPage from '../pages/PartnerPage';
 
 const NAV = [
   { to: '/feed',    icon: '🏠', label: 'Discover' },
