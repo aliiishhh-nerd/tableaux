@@ -1,66 +1,180 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
 import EventDetailModal from '../components/EventDetailModal';
 
+const CITIES = [
+  { key: 'auto',    label: '📍 Near Me' },
+  { key: 'chicago', label: 'Chicago' },
+  { key: 'austin',  label: 'Austin' },
+  { key: 'la',      label: 'Los Angeles' },
+  { key: 'seattle', label: 'Seattle' },
+  { key: 'all',     label: 'All Cities' },
+];
+
+const CITY_KEYWORDS = {
+  chicago: ['chicago', 'lincoln park', 'river north', 'wicker park', 'hyde park', 'lakeview', 'il'],
+  austin:  ['austin', 'tx', 'texas'],
+  la:      ['los angeles', 'la', 'california', 'ca', 'venice', 'silverlake', 'hollywood'],
+  seattle: ['seattle', 'wa', 'washington', 'capitol hill', 'ballard'],
+};
+
+function detectCity() {
+  // Default to Chicago since that's the seed data city
+  return 'chicago';
+}
+
+function eventMatchesCity(event, cityKey) {
+  if (cityKey === 'all' || cityKey === 'auto') return true;
+  const keywords = CITY_KEYWORDS[cityKey] || [];
+  const haystack = (event.loc + ' ' + (event.addr || '')).toLowerCase();
+  return keywords.some(k => haystack.includes(k));
+}
+
 export default function FeedPage() {
   const { events } = useApp();
-  const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState('all');
-  const [dismissedBanners, setDismissedBanners] = useState([]);
+  const [selected, setSelected]           = useState(null);
+  const [filter, setFilter]               = useState('all');
+  const [city, setCity]                   = useState(detectCity);
+  const [dismissedBanners, setDismissedBanners] = useState(() => {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]');
+      return stored;
+    } catch { return []; }
+  });
+  const [showAllBanners, setShowAllBanners] = useState(false);
+
+  // Persist dismissed banners in session
+  useEffect(() => {
+    sessionStorage.setItem('tableaux-dismissed-banners', JSON.stringify(dismissedBanners));
+  }, [dismissedBanners]);
 
   const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo);
+
+  // Event type filters — Cooking Class hidden for now
   const filters = [
-    { key: 'all', label: '✨ All' },
+    { key: 'all',          label: '✨ All' },
     { key: 'Dinner Party', label: 'Dinner Party' },
-    { key: 'Supper Club', label: 'Supper Club' },
-    { key: 'Potluck', label: 'Potluck' },
-    { key: 'Cooking Class', label: 'Cooking Class' },
+    { key: 'Supper Club',  label: 'Supper Club' },
+    { key: 'Potluck',      label: 'Potluck' },
   ];
 
-  const filtered = upcoming.filter(e => filter === 'all' || e.type === filter);
+  // Apply both type filter and city filter
+  const filtered = upcoming.filter(e => {
+    const typeMatch = filter === 'all' || e.type === filter;
+    const cityMatch = eventMatchesCity(e, city);
+    return typeMatch && cityMatch;
+  });
 
-  // Post-event notifications: ended events within last 48h with gallery
-  const recentEnded = events.filter(e =>
-    e.isEnded && e.galleryEnabled && !dismissedBanners.includes(e.id)
-  ).slice(0, 1);
+  // Post-event notifications: cap at 3, auto-expire after 7 days
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const allBanners = events.filter(e => {
+    if (!e.isEnded || !e.galleryEnabled) return false;
+    if (dismissedBanners.includes(e.id)) return false;
+    // Auto-expire: if event has an endedAt timestamp, check it; otherwise keep
+    if (e.endedAt && new Date(e.endedAt).getTime() < sevenDaysAgo) return false;
+    return true;
+  });
+  const visibleBanners  = showAllBanners ? allBanners : allBanners.slice(0, 1);
+  const hiddenCount     = allBanners.length - 1;
 
   const stats = [
     { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',   badgeColor: 'green' },
     { icon: '👥', color: 'teal',   val: 48,                                               label: 'In Network',   badge: 'Avg 7 per event', badgeColor: 'blue'  },
     { icon: '🥂', color: 'amber',  val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted',    badgeColor: 'green' },
-    { icon: '🌍', color: 'coral',  val: 7,                                                label: 'Passport',     badge: 'Top 10%',         badgeColor: 'green' },
   ];
 
   return (
     <main className="page-content">
-      {/* Stats */}
-      <div className="stat-cards">
-        {stats.map((s, i) => (
-          <div key={i} className="stat-card">
-            <div className={`stat-icon-circle ${s.color}`}>{s.icon}</div>
-            <div className="stat-val">{s.val}</div>
-            <div className="stat-label">{s.label}</div>
-            <span className={`stat-badge ${s.badgeColor}`}>{s.badge}</span>
+      {/* Stats row — 3 cards + Friends Activity as 4th */}
+      <div className="feed-top-grid">
+        <div className="stat-cards feed-stat-cards">
+          {stats.map((s, i) => (
+            <div key={i} className="stat-card">
+              <div className={`stat-icon-circle ${s.color}`}>{s.icon}</div>
+              <div className="stat-val">{s.val}</div>
+              <div className="stat-label">{s.label}</div>
+              <span className={`stat-badge ${s.badgeColor}`}>{s.badge}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Friends Activity — 4th card */}
+        <div className="card feed-friends-card">
+          <div style={{ padding: '14px 14px 0' }}>
+            <div className="sec-title">Friends Activity</div>
           </div>
-        ))}
+          <div style={{ padding: '4px 14px 14px', overflowY: 'auto', maxHeight: 160 }}>
+            {FRIENDS_ACTIVITY.map(act => {
+              const u = USERS.find(x => x.id === act.userId);
+              return (
+                <div key={act.id} className="activity-item">
+                  <div className={`av av-sm av-${u?.color || 'indigo'} av-link`}>
+                    {u ? u.initials : act.userName[0]}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className="activity-text">
+                      <strong>{act.userName}</strong> {act.action}{' '}
+                      <strong style={{ cursor: 'pointer' }} onClick={() => {
+                        const ev = events.find(e => e.id === act.targetId);
+                        if (ev) setSelected(ev);
+                      }}>{act.target}</strong>
+                      {' '}{act.emoji}
+                    </div>
+                    <div className="activity-time">{act.time}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Post-event notification banners */}
-      {recentEnded.map(evt => (
-        <PostEventBanner
-          key={evt.id}
-          event={evt}
-          onView={() => setSelected(evt)}
-          onDismiss={() => setDismissedBanners(d => [...d, evt.id])}
-        />
-      ))}
+      {allBanners.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          {visibleBanners.map(evt => (
+            <PostEventBanner
+              key={evt.id}
+              event={evt}
+              onView={() => setSelected(evt)}
+              onDismiss={() => setDismissedBanners(d => [...d, evt.id])}
+            />
+          ))}
+          {!showAllBanners && hiddenCount > 0 && (
+            <button
+              onClick={() => setShowAllBanners(true)}
+              style={{
+                width: '100%', padding: '8px', marginTop: 4,
+                background: 'var(--indigo-light)', border: '1px solid var(--indigo-mid)',
+                borderRadius: 10, fontSize: 13, color: 'var(--indigo)',
+                cursor: 'pointer', fontWeight: 600,
+              }}
+            >
+              +{hiddenCount} more wrap-up{hiddenCount !== 1 ? 's' : ''} — tap to view
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Main layout: feed + sidebar */}
       <div className="feed-layout">
-        {/* Left: filters + cards */}
         <div>
+          {/* City filter row */}
+          <div className="filter-row" style={{ marginBottom: 8 }}>
+            {CITIES.map(c => (
+              <button
+                key={c.key}
+                className={`filter-btn ${city === c.key ? 'active' : ''}`}
+                onClick={() => setCity(c.key)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Event type filter row */}
           <div className="filter-row" style={{ marginBottom: 14 }}>
             {filters.map(f => (
               <button
@@ -76,8 +190,8 @@ export default function FeedPage() {
           {filtered.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">🍽️</div>
-              <div className="empty-title">No events yet</div>
-              <div className="empty-sub">Be the first to host a dinner in your network.</div>
+              <div className="empty-title">No events in this area</div>
+              <div className="empty-sub">Try switching cities or browsing all events.</div>
             </div>
           ) : (
             <div className="feed-grid">
@@ -88,8 +202,8 @@ export default function FeedPage() {
           )}
         </div>
 
-        {/* Right: Friends Activity */}
-        <div>
+        {/* Right sidebar: Friends Activity (desktop only, hidden on mobile since it's in the top card) */}
+        <div className="feed-sidebar-activity">
           <div className="card">
             <div style={{ padding: '14px 14px 0' }}>
               <div className="sec-title">Friends Activity</div>
@@ -99,13 +213,13 @@ export default function FeedPage() {
                 const u = USERS.find(x => x.id === act.userId);
                 return (
                   <div key={act.id} className="activity-item">
-                    <div className={`av av-sm av-${u?.color || 'indigo'} av-link`} title={`View ${act.userName}'s profile`}>
+                    <div className={`av av-sm av-${u?.color || 'indigo'} av-link`}>
                       {u ? u.initials : act.userName[0]}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div className="activity-text">
                         <strong>{act.userName}</strong> {act.action}{' '}
-                        <strong onClick={() => {
+                        <strong style={{ cursor: 'pointer' }} onClick={() => {
                           const ev = events.find(e => e.id === act.targetId);
                           if (ev) setSelected(ev);
                         }}>{act.target}</strong>
@@ -131,30 +245,24 @@ export default function FeedPage() {
 function PostEventBanner({ event, onView, onDismiss }) {
   const photoCount = event.photoGallery?.length || 0;
   return (
-    <div className="post-event-banner" onClick={onView}>
+    <div className="post-event-banner" onClick={onView} style={{ marginBottom: 6 }}>
       <div className="post-event-banner-icon">
         {photoCount > 0 ? '📸' : '🎉'}
       </div>
       <div className="post-event-banner-text">
-        <div className="post-event-banner-title">
-          {event.title} just wrapped up
-        </div>
+        <div className="post-event-banner-title">{event.title} just wrapped up</div>
         <div className="post-event-banner-sub">
           {photoCount > 0
-            ? `${photoCount} photo${photoCount !== 1 ? 's' : ''} have been shared from the evening. Add yours!`
-            : 'The dinner is over — be the first to share your photos!'}
+            ? `${photoCount} photo${photoCount !== 1 ? 's' : ''} shared — add yours!`
+            : 'Be the first to share photos from the evening!'}
         </div>
       </div>
-      <button
-        className="post-event-banner-cta"
-        onClick={e => { e.stopPropagation(); onView(); }}
-      >
+      <button className="post-event-banner-cta" onClick={e => { e.stopPropagation(); onView(); }}>
         {photoCount > 0 ? 'See Photos' : 'Add Photos'}
       </button>
       <button
         onClick={e => { e.stopPropagation(); onDismiss(); }}
         style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.5)', cursor: 'pointer', fontSize: 16, padding: '4px', flexShrink: 0, lineHeight: 1 }}
-        title="Dismiss"
       >✕</button>
     </div>
   );
@@ -176,9 +284,7 @@ function EventCard({ event, onClick }) {
   return (
     <div className="event-card" onClick={onClick}>
       <div className="event-card-cover" style={coverStyle}>
-        {hasImg && (
-          <img src={cover.value || event.img} alt={event.title} loading="lazy" />
-        )}
+        {hasImg && <img src={cover.value || event.img} alt={event.title} loading="lazy" />}
         {!hasImg && cover.type === 'emoji' && (
           <div className="event-card-cover-emoji">{cover.emoji}</div>
         )}
@@ -191,7 +297,6 @@ function EventCard({ event, onClick }) {
           )}
         </div>
       </div>
-
       <div className="event-card-body">
         <div className="event-card-title">{event.title}</div>
         <div className="event-card-meta">
@@ -203,7 +308,6 @@ function EventCard({ event, onClick }) {
           <div className="progress-fill" style={{ width: `${Math.min(100, (approvedGuests.length / event.cap) * 100)}%` }} />
         </div>
       </div>
-
       <div className="event-card-foot">
         <div className="guests-row">
           {approvedGuests.slice(0, 4).map((g, i) => (

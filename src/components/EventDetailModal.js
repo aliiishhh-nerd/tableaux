@@ -123,20 +123,23 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                 {[
-                  { icon: '📅', label: 'Date', val: fmtDate(event.date) },
-                  { icon: '🕖', label: 'Time', val: fmtTime(event.time) },
-                  { icon: '📍', label: 'Location', val: event.loc },
-                  { icon: '👥', label: 'Capacity', val: `${event.guests?.length || 0} / ${event.cap}` },
-                  { icon: '🔒', label: 'Visibility', val: event.vis },
-                  { icon: '👤', label: 'Host', val: event.host },
+                  { icon: '📅', val: fmtDate(event.date) },
+                  { icon: '🕖', val: fmtTime(event.time) },
+                  { icon: '📍', val: event.loc },
+                  { icon: '👥', val: `${event.guests?.length || 0} / ${event.cap}` },
+                  { icon: '🔒', val: event.vis },
+                  { icon: '👤', val: event.host },
                 ].map((item, i) => (
-                  <div key={i} style={{ background: 'var(--page)', borderRadius: 10, padding: '10px 14px' }}>
-                    <div style={{ fontSize: 11, color: 'var(--ink2)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
-                      {item.icon} {item.label}
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{item.val}</div>
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: 'var(--page)', borderRadius: 20,
+                    padding: '5px 12px', fontSize: 13, color: 'var(--ink)',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <span style={{ fontSize: 14 }}>{item.icon}</span>
+                    <span>{item.val}</span>
                   </div>
                 ))}
               </div>

@@ -1,161 +1,185 @@
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
-import AuthPage from '../pages/AuthPage';
+import { initials } from '../data/utils';
 import FeedPage from '../pages/FeedPage';
 import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
 import PartnerPage from '../pages/PartnerPage';
+import CreateEventModal from './CreateEventModal';
 
 const NAV = [
-  { to: '/feed',    icon: '🏠', label: 'Discover' },
-  { to: '/events',  icon: '🗓️', label: 'My Events' },
-  { to: '/invites', icon: '✉️', label: 'Invitations' },
-  { to: '/blog',    icon: '📝', label: 'The Table' },
+  { id: 'feed',    path: '/',        icon: '⊞', label: 'Discover',    section: 'Menu' },
+  { id: 'events',  path: '/events',  icon: '◫', label: 'My Events',   section: null },
+  { id: 'invites', path: '/invites', icon: '✉', label: 'Invitations', section: null },
+  { id: 'blog',    path: '/blog',    icon: '✏️', label: 'The Table',   section: null },
+  { id: 'profile', path: '/profile', icon: '◉', label: 'Me',          section: null },
+  // Partner hidden for now — uncomment to re-enable:
+  // { id: 'partner', path: '/partner', icon: '🤝', label: 'Partner with Us', section: 'For Brands' },
 ];
 
+const MOBILE_NAV = [
+  { id: 'feed',    path: '/',        icon: '🏠', label: 'Discover'    },
+  { id: 'events',  path: '/events',  icon: '📅', label: 'My Events'   },
+  { id: 'invites', path: '/invites', icon: '✉️', label: 'Invitations' },
+  { id: 'blog',    path: '/blog',    icon: '✏️', label: 'The Table'   },
+  { id: 'profile', path: '/profile', icon: '👤', label: 'Me'          },
+];
+
+const PAGE_META = {
+  '/':        { title: 'Discover',     sub: 'What\'s happening around you' },
+  '/events':  { title: 'My Events',    sub: 'Events you are hosting' },
+  '/invites': { title: 'Invitations',  sub: 'Your received invitations' },
+  '/blog':    { title: 'The Table',    sub: 'Stories, tips & dining culture' },
+  '/profile': { title: 'My Profile',   sub: 'Your dining identity' },
+  '/partner': { title: 'Partner with Us', sub: 'Grow with the Tableaux community' },
+};
+
 export default function AppShell() {
-  const { user, events, toasts } = useApp();
+  const { user, profile, pendingInvites, signOut } = useApp();
+  const navigate   = useNavigate();
+  const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
+  const [showCreate, setShowCreate]   = useState(false);
+  const [editEventId, setEditEventId] = useState(null);
 
-  if (!user) return <AuthPage />;
+  const meta = PAGE_META[pathname] || PAGE_META['/'];
 
-  const invitePending = events.filter(
-    e => e.isInvitedTo && e.guests?.find(g => g.id === 'u1' && g.s === 'pending')
-  ).length;
+  function goTo(path) {
+    navigate(path);
+    setSidebarOpen(false);
+  }
 
-  const pageInfo = getPageInfo(location.pathname);
+  // Build nav with section headers
+  let currentSection = null;
+  const navItems = NAV.map(n => {
+    const showSection = n.section && n.section !== currentSection;
+    if (n.section) currentSection = n.section;
+    return { ...n, showSection };
+  });
+
+  function openEdit(id) {
+    setEditEventId(id);
+    setShowCreate(true);
+  }
+
+  const userInitials = profile?.name
+    ? profile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : 'AC';
 
   return (
-    <div className="app-shell">
+    <div className="shell">
+      {/* Sidebar overlay */}
       <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
 
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      {/* Sidebar */}
+      <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <Link to="/feed" className="logo-mark" onClick={() => setSidebarOpen(false)}>
-            <div className="logo-icon">🍽️</div>
-            <div className="logo-text">Table<span>aux</span></div>
-          </Link>
+          <div className="logo-mark">
+            <div className="logo-dot">T</div>
+            <div>
+              <div className="logo-name">Tableaux</div>
+              <div className="logo-tag">Social Dining</div>
+            </div>
+          </div>
         </div>
 
-        <nav className="sb-nav">
-          <div className="sb-section">
-            <div className="sb-section-label">Menu</div>
-            {NAV.map(n => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                className={({ isActive }) => `sb-link ${isActive ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
+        <nav className="sidebar-nav">
+          {navItems.map(n => (
+            <React.Fragment key={n.id}>
+              {n.showSection && (
+                <div className="nav-section">{n.section}</div>
+              )}
+              <div
+                className={`nav-item ${pathname === n.path ? 'active' : ''}`}
+                onClick={() => goTo(n.path)}
               >
-                <span className="sb-icon">{n.icon}</span>
-                {n.label}
-                {n.to === '/invites' && invitePending > 0 && (
-                  <span className="sb-badge">{invitePending}</span>
+                <span className="nav-icon">{n.icon}</span>
+                <span>{n.label}</span>
+                {n.id === 'invites' && pendingInvites > 0 && (
+                  <span className="nav-badge">{pendingInvites}</span>
                 )}
-              </NavLink>
-            ))}
-          </div>
-
-          <div className="sb-section" style={{ marginTop: 8 }}>
-            <div className="sb-section-label">For Brands</div>
-            <NavLink
-              to="/partner"
-              className={({ isActive }) => `sb-link ${isActive ? 'active' : ''}`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="sb-icon">🤝</span>
-              Partner with Us
-            </NavLink>
-          </div>
+              </div>
+            </React.Fragment>
+          ))}
         </nav>
 
-        <div className="sb-user">
-          <Link to="/profile" className="sb-user-inner" onClick={() => setSidebarOpen(false)}>
-            <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
-            <div>
-              <div className="sb-user-name">{user.name}</div>
-              <div className="sb-user-role">{user.handle}</div>
-            </div>
-          </Link>
-        </div>
-      </aside>
-
-      <div className="main-wrap">
-        <header className="topnav">
-          <div className="topnav-left">
-            <button className="hamburger" onClick={() => setSidebarOpen(o => !o)}>☰</button>
-            <div className="page-title">
-              <h1>{pageInfo.title}</h1>
-              {pageInfo.sub && <p>{pageInfo.sub}</p>}
+        <div className="sidebar-footer">
+          <button className="btn btn-primary btn-sm btn-full" onClick={() => { setEditEventId(null); setShowCreate(true); setSidebarOpen(false); }}>
+            + New Event
+          </button>
+          <div className="sidebar-user" onClick={() => goTo('/profile')} style={{ cursor: 'pointer', marginTop: 12 }}>
+            <div className="av av-sm av-indigo">{userInitials}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{profile?.name || 'Ada Chen'}</div>
+              <div style={{ fontSize: 11, color: 'var(--ink2)' }}>@{(profile?.name || 'adachen').toLowerCase().replace(/\s+/g, '')}</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="main-wrap">
+        {/* Top nav */}
+        <header className="topnav">
+          <button className="hamburger icon-btn" onClick={() => setSidebarOpen(true)}>☰</button>
+          <div className="page-title">
+            <h1>{meta.title}</h1>
+            <p>{meta.sub}</p>
+          </div>
           <div className="topnav-right">
-            <Link to="/invites" className="icon-btn always-show" title="Invitations" style={{ position: 'relative' }}>
-              ✉️
-              {invitePending > 0 && <span className="notif-dot" />}
-            </Link>
-            <Link to="/profile" className="topnav-avatar-link" title="My Profile">
-              <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
-            </Link>
+            <button className="icon-btn always-show" onClick={() => goTo('/invites')} style={{ position: 'relative' }}>
+              ✉
+              {pendingInvites > 0 && (
+                <span className="notif-dot">{pendingInvites}</span>
+              )}
+            </button>
+            <div className="av av-sm av-indigo always-show" onClick={() => goTo('/profile')} style={{ cursor: 'pointer' }}>
+              {userInitials}
+            </div>
           </div>
         </header>
 
+        {/* Page routes */}
         <Routes>
-          <Route path="/"        element={<FeedPage />} />
-          <Route path="/feed"    element={<FeedPage />} />
-          <Route path="/events"  element={<EventsPage />} />
+          <Route path="/"        element={<FeedPage onEditEvent={openEdit} />} />
+          <Route path="/events"  element={<EventsPage onEditEvent={openEdit} />} />
           <Route path="/invites" element={<InvitesPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/blog"    element={<BlogPage />} />
+          <Route path="/profile" element={<ProfilePage onEditEvent={openEdit} />} />
           <Route path="/partner" element={<PartnerPage />} />
+          <Route path="*"        element={<Navigate to="/" replace />} />
         </Routes>
       </div>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav — Partner hidden */}
       <nav className="mobile-nav">
-        {NAV.map(n => (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            className={({ isActive }) => `mobile-nav-btn ${isActive ? 'active' : ''}`}
+        {MOBILE_NAV.map(n => (
+          <button
+            key={n.id}
+            className={`mobile-nav-btn ${pathname === n.path ? 'active' : ''}`}
+            onClick={() => goTo(n.path)}
           >
             <span className="mobile-nav-icon">
               {n.icon}
-              {n.to === '/invites' && invitePending > 0 && (
-                <span className="mobile-nav-badge">{invitePending}</span>
+              {n.id === 'invites' && pendingInvites > 0 && (
+                <span className="notif-dot">{pendingInvites}</span>
               )}
             </span>
-            {n.label}
-          </NavLink>
+            <span className="mobile-nav-label">{n.label}</span>
+          </button>
         ))}
-        <Link to="/profile" className="mobile-nav-btn">
-          <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 26, height: 26, fontSize: 9 }}>
-            {user.initials}
-          </div>
-          Me
-        </Link>
       </nav>
 
-      <div className="toast-wrap">
-        {toasts.map(t => (
-          <div key={t.id} className={`toast ${t.type ? 'toast-' + t.type : ''}`}>
-            {t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : '💬'} {t.msg}
-          </div>
-        ))}
-      </div>
+      {/* Create / Edit Event modal */}
+      {showCreate && (
+        <CreateEventModal
+          eventId={editEventId}
+          onClose={() => { setShowCreate(false); setEditEventId(null); }}
+        />
+      )}
     </div>
   );
-}
-
-function getPageInfo(path) {
-  if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
-  if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
-  if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
-  if (path.startsWith('/blog'))    return { title: 'The Table',    sub: 'Stories & Recipes from Tableaux' };
-  if (path.startsWith('/partner')) return { title: 'Partner with Us', sub: 'Bring your brand to the dinner table' };
-  return { title: 'Discover', sub: "What's happening around you" };
 }
