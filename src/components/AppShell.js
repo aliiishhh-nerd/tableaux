@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
-import { initials } from '../data/utils';
+
 import FeedPage from '../pages/FeedPage';
 import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
@@ -38,7 +38,7 @@ const PAGE_META = {
 };
 
 export default function AppShell() {
-  const { user, profile, pendingInvites, signOut } = useApp();
+  const { profile, pendingInvites } = useApp();
   const navigate   = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
