@@ -7,6 +7,8 @@ import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
+import PartnerPage from '../pages/PartnerPage';
+import OnboardingTour from './OnboardingTour';
 
 const NAV = [
   { to: '/feed',    icon: '🏠', label: 'Discover' },
@@ -18,6 +20,9 @@ const NAV = [
 export default function AppShell() {
   const { user, events, toasts } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showTour, setShowTour] = useState(() => {
+    try { return sessionStorage.getItem('tableaux-tour-done') !== '1'; } catch { return true; }
+  });
   const location = useLocation();
 
   if (!user) return <AuthPage />;
@@ -27,6 +32,11 @@ export default function AppShell() {
   ).length;
 
   const pageInfo = getPageInfo(location.pathname);
+
+  function handleTourDone() {
+    try { sessionStorage.setItem('tableaux-tour-done', '1'); } catch {}
+    setShowTour(false);
+  }
 
   return (
     <div className="app-shell">
@@ -60,11 +70,14 @@ export default function AppShell() {
           </div>
 
           <div className="sb-section" style={{ marginTop: 8 }}>
+            <div className="sb-section-label">Partners</div>
             <NavLink
+              to="/partner"
               className={({ isActive }) => `sb-link ${isActive ? 'active' : ''}`}
               onClick={() => setSidebarOpen(false)}
             >
               <span className="sb-icon">🤝</span>
+              For Partners
             </NavLink>
           </div>
         </nav>
@@ -107,6 +120,7 @@ export default function AppShell() {
           <Route path="/invites" element={<InvitesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/blog"    element={<BlogPage />} />
+          <Route path="/partner" element={<PartnerPage />} />
         </Routes>
       </div>
 
@@ -142,6 +156,8 @@ export default function AppShell() {
           </div>
         ))}
       </div>
+
+      {showTour && <OnboardingTour onDone={handleTourDone} />}
     </div>
   );
 }
@@ -151,5 +167,6 @@ function getPageInfo(path) {
   if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
   if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
   if (path.startsWith('/blog'))    return { title: 'The Table',    sub: 'Stories & Recipes from Tableaux' };
+  if (path.startsWith('/partner')) return { title: 'For Partners', sub: 'Grow your brand with Tableaux' };
   return { title: 'Discover', sub: "What's happening around you" };
 }

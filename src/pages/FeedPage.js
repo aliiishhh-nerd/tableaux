@@ -20,8 +20,17 @@ const CITY_KEYWORDS = {
   seattle: ['seattle', 'wa', 'washington', 'capitol hill', 'ballard'],
 };
 
+// Event type pill config — distinct colors per type
+const TYPE_PILLS = {
+  'Dinner Party': { bg: 'rgba(108,93,211,.85)',  label: '🍷 Dinner Party' },
+  'Supper Club':  { bg: 'rgba(212,175,55,.9)',   label: '✨ Supper Club'  },
+  'Potluck':      { bg: 'rgba(46,196,182,.85)',  label: '🥘 Potluck'      },
+  'Cooking Class':{ bg: 'rgba(255,107,107,.85)', label: '👨‍🍳 Cooking Class' },
+  'Wine Tasting': { bg: 'rgba(135,93,155,.85)',  label: '🍷 Wine Tasting' },
+  'Pop-Up':       { bg: 'rgba(255,179,71,.9)',   label: '⚡ Pop-Up'       },
+};
+
 function detectCity() {
-  // Default to Chicago since that's the seed data city
   return 'chicago';
 }
 
@@ -39,13 +48,11 @@ export default function FeedPage() {
   const [city, setCity]                   = useState(detectCity);
   const [dismissedBanners, setDismissedBanners] = useState(() => {
     try {
-      const stored = JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]');
-      return stored;
+      return JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]');
     } catch { return []; }
   });
   const [showAllBanners, setShowAllBanners] = useState(false);
 
-  // Persist dismissed banners in session
   useEffect(() => {
     sessionStorage.setItem('tableaux-dismissed-banners', JSON.stringify(dismissedBanners));
   }, [dismissedBanners]);
@@ -53,30 +60,28 @@ export default function FeedPage() {
   const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo);
 
   const filters = [
-    { key: 'all',          label: '✨ All' },
-    { key: 'Dinner Party', label: 'Dinner Party' },
-    { key: 'Supper Club',  label: 'Supper Club' },
-    { key: 'Potluck',      label: 'Potluck' },
+    { key: 'all',           label: '✨ All'          },
+    { key: 'Dinner Party',  label: '🍷 Dinner Party' },
+    { key: 'Supper Club',   label: '✨ Supper Club'  },
+    { key: 'Potluck',       label: '🥘 Potluck'      },
   ];
 
-  // Apply both type filter and city filter
   const filtered = upcoming.filter(e => {
     const typeMatch = filter === 'all' || e.type === filter;
     const cityMatch = eventMatchesCity(e, city);
     return typeMatch && cityMatch;
   });
 
-  // Post-event notifications: cap at 3, auto-expire after 7 days
+  // Post-event notification banners
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const allBanners = events.filter(e => {
     if (!e.isEnded || !e.galleryEnabled) return false;
     if (dismissedBanners.includes(e.id)) return false;
-    // Auto-expire: if event has an endedAt timestamp, check it; otherwise keep
     if (e.endedAt && new Date(e.endedAt).getTime() < sevenDaysAgo) return false;
     return true;
   });
-  const visibleBanners  = showAllBanners ? allBanners : allBanners.slice(0, 1);
-  const hiddenCount     = allBanners.length - 1;
+  const visibleBanners = showAllBanners ? allBanners : allBanners.slice(0, 1);
+  const hiddenCount    = allBanners.length - 1;
 
   const stats = [
     { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',   badgeColor: 'green' },
@@ -86,7 +91,7 @@ export default function FeedPage() {
 
   return (
     <main className="page-content">
-      {/* Stats row — 3 cards + Friends Activity as 4th */}
+      {/* Stats row */}
       <div className="feed-top-grid">
         <div className="stat-cards feed-stat-cards">
           {stats.map((s, i) => (
@@ -99,7 +104,7 @@ export default function FeedPage() {
           ))}
         </div>
 
-        {/* Friends Activity — 4th card */}
+        {/* Friends Activity — mobile top card */}
         <div className="card feed-friends-card">
           <div style={{ padding: '14px 14px 0' }}>
             <div className="sec-title">Friends Activity</div>
@@ -157,7 +162,7 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* Main layout: feed + sidebar */}
+      {/* Main layout */}
       <div className="feed-layout">
         <div>
           {/* City filter row */}
@@ -201,7 +206,7 @@ export default function FeedPage() {
           )}
         </div>
 
-        {/* Right sidebar: Friends Activity (desktop only, hidden on mobile since it's in the top card) */}
+        {/* Right sidebar: Friends Activity (desktop only) */}
         <div className="feed-sidebar-activity">
           <div className="card">
             <div style={{ padding: '14px 14px 0' }}>
@@ -245,9 +250,7 @@ function PostEventBanner({ event, onView, onDismiss }) {
   const photoCount = event.photoGallery?.length || 0;
   return (
     <div className="post-event-banner" onClick={onView} style={{ marginBottom: 6 }}>
-      <div className="post-event-banner-icon">
-        {photoCount > 0 ? '📸' : '🎉'}
-      </div>
+      <div className="post-event-banner-icon">{photoCount > 0 ? '📸' : '🎉'}</div>
       <div className="post-event-banner-text">
         <div className="post-event-banner-title">{event.title} just wrapped up</div>
         <div className="post-event-banner-sub">
@@ -279,6 +282,7 @@ function EventCard({ event, onClick }) {
     : {};
 
   const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
+  const pillConfig = TYPE_PILLS[event.type] || { bg: 'rgba(108,93,211,.85)', label: event.type };
 
   return (
     <div className="event-card" onClick={onClick}>
@@ -288,22 +292,26 @@ function EventCard({ event, onClick }) {
           <div className="event-card-cover-emoji">{cover.emoji}</div>
         )}
         <div className="event-card-badges">
-          <span className="chip chip-indigo" style={{ background: 'rgba(108,93,211,.85)', color: 'white' }}>
-            {event.type}
+          {/* Distinct colored pill per event type */}
+          <span className="chip" style={{ background: pillConfig.bg, color: 'white', fontWeight: 700 }}>
+            {pillConfig.label}
           </span>
           {event.vis === 'Public' && (
-            <span className="chip" style={{ background: 'rgba(46,196,182,.85)', color: 'white' }}>Public</span>
+            <span className="chip" style={{ background: 'rgba(255,255,255,.25)', color: 'white', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.3)' }}>
+              Public
+            </span>
           )}
         </div>
       </div>
-      <div className="event-card-body">
+      {/* Center-aligned card body */}
+      <div className="event-card-body" style={{ textAlign: 'center' }}>
         <div className="event-card-title">{event.title}</div>
-        <div className="event-card-meta">
+        <div className="event-card-meta" style={{ alignItems: 'center' }}>
           <span>📅 {fmtDate(event.date)}</span>
           <span>🕖 {fmtTime(event.time)}</span>
           <span>📍 {event.loc}</span>
         </div>
-        <div className="progress-bar">
+        <div className="progress-bar" style={{ margin: '8px auto 0' }}>
           <div className="progress-fill" style={{ width: `${Math.min(100, (approvedGuests.length / event.cap) * 100)}%` }} />
         </div>
       </div>
