@@ -52,6 +52,7 @@ export default function FeedPage() {
     catch { return []; }
   });
   const [showAllBanners, setShowAllBanners] = useState(false);
+  const [showBanners, setShowBanners] = useState(false);
 
   useEffect(() => {
     sessionStorage.setItem('tableaux-dismissed-banners', JSON.stringify(dismissedBanners));
@@ -86,9 +87,10 @@ export default function FeedPage() {
   const hiddenCount    = allBanners.length - 1;
 
   const stats = [
-    { icon: '🗓️', color: 'purple', val: upcoming.length, label: 'Upcoming',     badge: '+2 this month',   badgeColor: 'green' },
-    { icon: '👥', color: 'teal',   val: 48,               label: 'In Network',   badge: 'Avg 7 per event', badgeColor: 'blue'  },
-    { icon: '🥂', color: 'amber',  val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted', badgeColor: 'green' },
+    { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',                                  badgeColor: 'green', dark: false, action: null },
+    { icon: '👥', color: 'teal',   val: 48,                                               label: 'In Network',   badge: 'Avg 7 per event',                                badgeColor: 'blue',  dark: false, action: null },
+    { icon: '🥂', color: 'amber',  val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted',                                   badgeColor: 'green', dark: false, action: null },
+    { icon: '🔔', color: 'coral',  val: allBanners.length,                                label: 'Wrap-ups',     badge: allBanners.length > 0 ? 'tap to view' : 'all clear', badgeColor: allBanners.length > 0 ? 'amber' : 'green', dark: allBanners.length > 0, action: () => setShowBanners(b => !b) },
   ];
 
   // Near Me label shows resolved city name when active
@@ -100,25 +102,24 @@ export default function FeedPage() {
     <main className="page-content">
       <div className="feed-stat-cards" style={{ marginBottom: 20 }}>
         {stats.map((s, i) => (
-          <div key={i} className="stat-card stat-card-centered">
-            <div className={`stat-icon-circle ${s.color}`}>{s.icon}</div>
-            <div className="stat-val">{s.val}</div>
-            <div className="stat-label">{s.label}</div>
-            <span className={`stat-badge ${s.badgeColor}`}>{s.badge}</span>
+          <div key={i}
+            className="stat-card stat-card-centered"
+            onClick={s.action || undefined}
+            style={s.action ? { cursor: 'pointer', ...(s.dark ? { background: '#1A1A2E', border: '1px solid #2D2550' } : {}) } : {}}
+          >
+            <div className={`stat-icon-circle ${s.color}`} style={s.dark ? { background: 'rgba(255,255,255,.12)' } : {}}>{s.icon}</div>
+            <div className="stat-val" style={s.dark ? { color: 'white' } : {}}>{s.val}</div>
+            <div className="stat-label" style={s.dark ? { color: 'rgba(255,255,255,.6)' } : {}}>{s.label}</div>
+            <span className={`stat-badge ${s.badgeColor}`} style={s.dark ? { background: 'rgba(255,255,255,.15)', color: 'rgba(255,255,255,.85)' } : {}}>{s.badge}</span>
           </div>
         ))}
       </div>
 
-      {allBanners.length > 0 && (
+      {showBanners && allBanners.length > 0 && (
         <div style={{ marginBottom: 14 }}>
-          {visibleBanners.map(evt => (
-            <PostEventBanner key={evt.id} event={evt} onView={() => setSelected(evt)} onDismiss={() => setDismissedBanners(d => [...d, evt.id])} />
+          {allBanners.map(evt => (
+            <PostEventBanner key={evt.id} event={evt} onView={() => { setSelected(evt); setShowBanners(false); }} onDismiss={() => setDismissedBanners(d => [...d, evt.id])} />
           ))}
-          {!showAllBanners && hiddenCount > 0 && (
-            <button onClick={() => setShowAllBanners(true)} style={{ width: '100%', padding: '8px', marginTop: 4, background: 'var(--indigo-light)', border: '1px solid var(--indigo-mid)', borderRadius: 10, fontSize: 13, color: 'var(--indigo)', cursor: 'pointer', fontWeight: 600 }}>
-              +{hiddenCount} more wrap-up{hiddenCount !== 1 ? 's' : ''} — tap to view
-            </button>
-          )}
         </div>
       )}
 

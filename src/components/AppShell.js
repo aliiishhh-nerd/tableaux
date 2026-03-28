@@ -14,10 +14,10 @@ import OnboardingTour from './OnboardingTour';
 import CreateEventModal from './CreateEventModal';
 
 const NAV = [
-  { to: '/feed',    icon: '🏠', label: 'Discover'    },
+  { to: '/feed',    icon: '🏠', label: 'Explore'    },
   { to: '/events',  icon: '🗓️', label: 'My Events'   },
   { to: '/invites', icon: '✉️', label: 'Invitations' },
-  { to: '/blog',    icon: '📝', label: 'The Table'   },
+  { to: '/blog',    icon: '📝', label: 'Fork & Story'   },
 ];
 
 export default function AppShell() {
@@ -160,7 +160,7 @@ function getPageInfo(path) {
   if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
   if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
   if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
-  if (path.startsWith('/blog'))    return { title: 'The Table',    sub: 'Stories & Recipes from Tableaux' };
+  if (path.startsWith('/blog'))    return { title: 'Fork & Story',    sub: 'Stories & Recipes from Tableaux' };
   if (path.startsWith('/partner')) return { title: 'For Partners', sub: 'Grow your brand with Tableaux' };
-  return { title: 'Discover', sub: "What's happening around you" };
+  return { title: 'Explore', sub: "Intimate dining near you" };
 }

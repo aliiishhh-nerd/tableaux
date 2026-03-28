@@ -929,3 +929,8 @@ body {
   color: #07A87B;
   font-weight: 700;
 }
+
+/* ---- 4-COL STAT CARDS (desktop) ---- */
+@media (min-width: 769px) {
+  .feed-stat-cards { grid-template-columns: repeat(4, 1fr) !important; }
+}

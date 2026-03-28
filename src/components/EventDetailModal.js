@@ -3,27 +3,30 @@ import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 
 export default function EventDetailModal({ event, onClose, onEdit }) {
-  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, addToast } = useApp();
+  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, addToast, addComment, pinQuote } = useApp();
   const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
+  const [commentText, setCommentText] = useState('');
   const fileRef = useRef();
 
   if (!event) return null;
 
   const myGuest = event.guests?.find(g => g.id === 'u1');
   const isEnded = event.isEnded || false;
-  const isHost = event.mine;
+  const isHost  = event.mine;
   const isInvited = event.isInvitedTo;
   const hasGallery = event.galleryEnabled && (isEnded || isHost);
+  const myComment = event.eventComments?.find(c => c.userId === 'u1');
+  const passportStamped = myComment?.passportStamped;
 
-  // Tabs available
   const tabs = [
     { key: 'overview', label: '📋 Overview' },
     ...(event.supperClub ? [{ key: 'menu', label: '🍽️ Menu' }] : []),
-    ...(event.potluck ? [{ key: 'potluck', label: '🥘 Potluck' }] : []),
+    ...(event.potluck    ? [{ key: 'potluck', label: '🥘 Potluck' }] : []),
     { key: 'guests', label: `👥 Guests (${event.guests?.length || 0})` },
     ...(hasGallery ? [{ key: 'photos', label: `📸 Photos${event.photoGallery?.length ? ` (${event.photoGallery.length})` : ''}` }] : []),
+    ...(isEnded ? [{ key: 'comments', label: `💬 Moments${event.eventComments?.length ? ` (${event.eventComments.length})` : ''}` }] : []),
   ];
 
   function handleUploadPhoto(e) {
@@ -32,18 +35,29 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
     setUploading(true);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const photo = {
-        id: 'ph-' + Date.now(),
-        url: ev.target.result,
-        tags: [],
-        uploadedBy: 'u1',
-        uploaderName: user?.name || 'You',
-      };
-      addPhoto(event.id, photo);
+      addPhoto(event.id, { id: 'ph-' + Date.now(), url: ev.target.result, tags: [], uploadedBy: 'u1', uploaderName: user?.name || 'You' });
       addToast('Photo uploaded!', 'success');
       setUploading(false);
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleSubmitComment() {
+    if (!commentText.trim()) return;
+    if (typeof addComment === 'function') {
+      addComment(event.id, {
+        id: 'ec-' + Date.now(),
+        userId: 'u1',
+        userName: user?.name || 'Ada Chen',
+        initials: user?.initials || 'AC',
+        color: user?.color || 'indigo',
+        text: commentText.trim(),
+        createdAt: new Date().toISOString(),
+        passportStamped: true,
+      });
+    }
+    setCommentText('');
+    addToast('Moment shared! Your Dining Passport stamp is complete. 🗺️', 'success');
   }
 
   const cover = event.cover || {};
@@ -57,33 +71,21 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
       <div className="modal modal-lg">
         {/* Cover */}
         <div style={{ height: 180, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-          {/* Always render a background first */}
           <div style={{ position: 'absolute', inset: 0, background: coverBg }} />
           {(cover.type === 'image' && cover.value) || event.img ? (
-            <img
-              src={cover.value || event.img}
-              alt={event.title}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={e => { e.target.style.display = 'none'; }}
-            />
+            <img src={cover.value || event.img} alt={event.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
           ) : cover.type === 'emoji' ? (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 72 }}>{cover.emoji}</span>
             </div>
           ) : null}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 60%)' }} />
-
-          {/* Ended badge */}
           {isEnded && (
             <div style={{ position: 'absolute', top: 12, left: 12 }}>
-              <span className="chip chip-gray" style={{ background: 'rgba(0,0,0,0.6)', color: 'white', backdropFilter: 'blur(8px)' }}>
-                ✓ Event Ended
-              </span>
+              <span className="chip chip-gray" style={{ background: 'rgba(0,0,0,0.6)', color: 'white', backdropFilter: 'blur(8px)' }}>✓ Event Ended</span>
             </div>
           )}
-
           <button className="modal-x" onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.5)', border: 'none', color: 'white' }}>✕</button>
-
           <div style={{ position: 'absolute', bottom: 16, left: 20, right: 20 }}>
             <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
               <span className="chip chip-indigo" style={{ background: 'rgba(108,93,211,0.85)', color: 'white' }}>{event.type}</span>
@@ -97,16 +99,14 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
         <div style={{ padding: '0 24px', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' }}>
           <div className="tabs" style={{ marginBottom: 0, flexWrap: 'nowrap' }}>
             {tabs.map(t => (
-              <button key={t.key} className={`tab-btn ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
-                {t.label}
-              </button>
+              <button key={t.key} className={`tab-btn ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>{t.label}</button>
             ))}
           </div>
         </div>
 
-        {/* Body */}
         <div className="modal-body">
-          {/* ---- OVERVIEW ---- */}
+
+          {/* OVERVIEW */}
           {tab === 'overview' && (
             <div>
               {isEnded && (
@@ -115,9 +115,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                   <div>
                     <div style={{ fontWeight: 700, marginBottom: 4 }}>This event has ended</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
-                      {event.photoGallery?.length
-                        ? `${event.photoGallery.length} photos shared — check out the gallery!`
-                        : 'Be the first to share photos from the evening.'}
+                      {event.photoGallery?.length ? `${event.photoGallery.length} photos shared — check out the gallery!` : 'Share your memories in the Moments tab.'}
                     </div>
                   </div>
                 </div>
@@ -130,14 +128,10 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                   { icon: '📍', val: event.loc },
                   { icon: '👥', val: `${event.guests?.length || 0} / ${event.cap}` },
                   { icon: '🔒', val: event.vis },
+                  { icon: '👔', val: event.dressCode || 'No dress code' },
                   { icon: '👤', val: event.host },
                 ].map((item, i) => (
-                  <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    background: 'var(--page)', borderRadius: 20,
-                    padding: '5px 12px', fontSize: 13, color: 'var(--ink)',
-                    border: '1px solid var(--border)',
-                  }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
                     <span style={{ fontSize: 14 }}>{item.icon}</span>
                     <span>{item.val}</span>
                   </div>
@@ -145,15 +139,37 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
               </div>
 
               {event.desc && (
-                <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, padding: '14px', background: 'var(--page)', borderRadius: 10 }}>
+                <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, padding: '14px', background: 'var(--page)', borderRadius: 10, marginBottom: 16 }}>
                   {event.desc}
                 </div>
               )}
 
-              {/* RSVP for invited users */}
+              {/* Pinned quotes from host */}
+              {event.pinnedQuotes?.length > 0 && event.eventComments?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink3)', marginBottom: 8 }}>
+                    What guests said
+                  </div>
+                  {event.pinnedQuotes.map(qid => {
+                    const q = event.eventComments.find(c => c.id === qid);
+                    if (!q) return null;
+                    return (
+                      <div key={qid} style={{ background: 'var(--indigo-light)', borderRadius: 12, padding: '14px 16px', marginBottom: 8, borderLeft: '3px solid var(--indigo)' }}>
+                        <div style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.6, fontStyle: 'italic', marginBottom: 8 }}>"{q.text}"</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <div className={`av av-sm av-${q.color}`}>{q.initials}</div>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink2)' }}>{q.userName}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* RSVP */}
               {isInvited && myGuest?.s === 'pending' && (
                 <div style={{ marginTop: 16, padding: 16, border: '1.5px solid var(--indigo)', borderRadius: 12, background: 'var(--indigo-light)' }}>
-                  <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--indigo)' }}>🎉 You're invited!</div>
+                  <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--indigo)' }}>You are invited!</div>
                   <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 12 }}>Will you join {event.host} for {event.title}?</div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn btn-primary btn-sm" onClick={() => { rsvpEvent(event.id, 'approved'); addToast("You're going! 🎉", 'success'); }}>✓ Accept</button>
@@ -163,56 +179,49 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
               )}
               {isInvited && myGuest?.s === 'approved' && (
                 <div style={{ marginTop: 16, padding: 12, background: 'var(--teal-light)', borderRadius: 10, fontSize: 13, color: '#07A87B', fontWeight: 600 }}>
-                  ✓ You're going!
+                  ✓ You are going!
+                </div>
+              )}
+              {isInvited && myGuest?.s === 'declined' && (
+                <div style={{ marginTop: 16, padding: 12, background: 'var(--coral-light)', borderRadius: 10, fontSize: 13, color: '#D94545', fontWeight: 600 }}>
+                  ✕ You declined this invitation
                 </div>
               )}
             </div>
           )}
 
-          {/* ---- SUPPER CLUB MENU ---- */}
+          {/* MENU */}
           {tab === 'menu' && event.supperClub && (
             <div>
-              {/* Host Note */}
               {event.supperClub.hostNote && (
                 <div className="sc-host-note">
-                  <div className="sc-host-note-label">✍️ A Note from the Host</div>
+                  <div className="sc-host-note-label">A Note from the Host</div>
                   <div className="sc-host-note-text">"{event.supperClub.hostNote}"</div>
                 </div>
               )}
-
-              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                🍽️ The Menu
-              </div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>The Menu</div>
               {event.supperClub.courses?.map((course, i) => (
                 <div key={i} className="sc-course" style={course.highlight ? { background: 'linear-gradient(90deg, var(--gold-light), transparent)', borderRadius: 10, padding: '14px', borderBottom: 'none', marginBottom: 6 } : {}}>
-                  <div className="sc-course-num" style={course.highlight ? { background: 'var(--gold)', color: 'white' } : {}}>
-                    {course.num}
-                  </div>
+                  <div className="sc-course-num" style={course.highlight ? { background: 'var(--gold)', color: 'white' } : {}}>{course.num}</div>
                   <div className="sc-course-info">
-                    <div className="sc-course-name">
-                      {course.highlight && '⭐ '}{course.name}
-                    </div>
+                    <div className="sc-course-name">{course.highlight && '⭐ '}{course.name}</div>
                     <div className="sc-course-desc">{course.desc}</div>
-                    {course.wine && (
-                      <div className="sc-course-note">🍷 Paired with: {course.wine}</div>
-                    )}
+                    {course.wine && <div className="sc-course-note">🍷 Paired with: {course.wine}</div>}
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* ---- POTLUCK ---- */}
+          {/* POTLUCK */}
           {tab === 'potluck' && event.potluck && (
             <PotluckTab event={event} onClaim={claimPotluckItem} onUnclaim={unclaimPotluckItem} addToast={addToast} />
           )}
 
-          {/* ---- GUESTS ---- */}
+          {/* GUESTS */}
           {tab === 'guests' && (
             <div>
-              {event.guests?.length === 0 && (
-                <div className="empty-state"><div className="empty-icon">👥</div><div className="empty-title">No guests yet</div></div>
-              )}
+              {event.guests?.length === 0 && <div className="empty-state"><div className="empty-icon">👥</div><div className="empty-title">No guests yet</div></div>}
               {event.guests?.map((g, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                   <div className={`av av-sm av-${g.color || 'indigo'}`}>{g.initials || g.n?.[0]}</div>
@@ -227,43 +236,135 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
             </div>
           )}
 
-          {/* ---- PHOTOS ---- */}
+          {/* PHOTOS */}
           {tab === 'photos' && (
-            <PhotoGalleryTab
+            <PhotoGalleryTab event={event} fileRef={fileRef} uploading={uploading} onUpload={handleUploadPhoto} lightbox={lightbox} setLightbox={setLightbox} />
+          )}
+
+          {/* COMMENTS / MOMENTS */}
+          {tab === 'comments' && (
+            <CommentsTab
               event={event}
-              fileRef={fileRef}
-              uploading={uploading}
-              onUpload={handleUploadPhoto}
-              lightbox={lightbox}
-              setLightbox={setLightbox}
+              user={user}
+              myComment={myComment}
+              passportStamped={passportStamped}
+              commentText={commentText}
+              setCommentText={setCommentText}
+              onSubmit={handleSubmitComment}
+              isHost={isHost}
+              onPin={typeof pinQuote === 'function' ? (id) => { pinQuote(event.id, id); addToast('Quote pinned to your profile!', 'success'); } : null}
             />
           )}
         </div>
 
-        {/* Footer */}
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Close</button>
-          {isHost && onEdit && (
-            <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>
-          )}
+          {isHost && onEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>}
         </div>
 
-        {/* Hidden file input */}
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPhoto} />
       </div>
 
-      {/* Lightbox */}
       {lightbox && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setLightbox(null)}>
           <div style={{ maxWidth: 700, width: '100%', position: 'relative' }}>
             <img src={lightbox.url} alt="" style={{ width: '100%', borderRadius: 12, objectFit: 'contain', maxHeight: '80vh' }} />
             <div style={{ marginTop: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {lightbox.tags?.map((tag, i) => (
-                <span key={i} style={{ background: 'rgba(255,255,255,0.15)', color: 'white', padding: '3px 10px', borderRadius: 20, fontSize: 12 }}>{tag}</span>
-              ))}
+              {lightbox.tags?.map((tag, i) => <span key={i} style={{ background: 'rgba(255,255,255,0.15)', color: 'white', padding: '3px 10px', borderRadius: 20, fontSize: 12 }}>{tag}</span>)}
             </div>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8 }}>📸 by {lightbox.uploaderName}</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 8 }}>by {lightbox.uploaderName}</div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CommentsTab({ event, user, myComment, passportStamped, commentText, setCommentText, onSubmit, isHost, onPin }) {
+  const comments = event.eventComments || [];
+  const pinnedIds = event.pinnedQuotes || [];
+
+  return (
+    <div>
+      {/* Incentive banner — only if user hasn't commented yet */}
+      {!myComment && (
+        <div style={{ background: 'linear-gradient(135deg, #1A1A2E, #2D2550)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div style={{ fontSize: 28, flexShrink: 0 }}>🗺️</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: 'white', marginBottom: 4, fontSize: 14 }}>Complete your Dining Passport stamp</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', lineHeight: 1.5 }}>
+              Share a moment from this evening to stamp your passport and unlock all event photos. Takes 30 seconds.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comment input */}
+      {!myComment ? (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>How was your evening?</div>
+          <textarea
+            className="form-textarea"
+            value={commentText}
+            onChange={e => setCommentText(e.target.value)}
+            placeholder="Share what made this dinner special. Your host would love to hear from you..."
+            style={{ minHeight: 90, marginBottom: 10 }}
+          />
+          <button
+            className="btn btn-primary btn-full"
+            onClick={onSubmit}
+            disabled={!commentText.trim()}
+          >
+            Share my moment & stamp passport 🗺️
+          </button>
+        </div>
+      ) : (
+        <div style={{ background: 'var(--teal-light)', borderRadius: 10, padding: '12px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 20 }}>✓</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#07A87B' }}>Passport stamped!</div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)' }}>Thanks for sharing your moment.</div>
+          </div>
+        </div>
+      )}
+
+      {/* Comments list */}
+      {comments.length === 0 ? (
+        <div className="empty-state" style={{ padding: '24px 0' }}>
+          <div className="empty-icon">💬</div>
+          <div className="empty-title">No moments shared yet</div>
+          <div className="empty-sub">Be the first to share how the evening went.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {comments.map(c => {
+            const isPinned = pinnedIds.includes(c.id);
+            return (
+              <div key={c.id} style={{ background: isPinned ? 'var(--indigo-light)' : 'var(--page)', borderRadius: 12, padding: '12px 14px', border: `1px solid ${isPinned ? 'var(--indigo-mid)' : 'var(--border)'}`, position: 'relative' }}>
+                {isPinned && (
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--indigo)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                    📌 Pinned to host profile
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div className={`av av-sm av-${c.color}`}>{c.initials}</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{c.userName}</div>
+                    {c.passportStamped && <div style={{ fontSize: 10, color: 'var(--teal)', fontWeight: 600 }}>🗺️ Passport stamped</div>}
+                  </div>
+                  {isHost && onPin && !isPinned && (
+                    <button
+                      onClick={() => onPin(c.id)}
+                      style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', cursor: 'pointer' }}
+                    >
+                      Pin to profile
+                    </button>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--ink)', lineHeight: 1.6 }}>{c.text}</div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -272,12 +373,9 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
 
 function PotluckTab({ event, onClaim, onUnclaim, addToast }) {
   const cats = { food: '🍽️ Food', drinks: '🥂 Drinks', other: '🧺 Other' };
-
   return (
     <div>
-      <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16 }}>
-        Tap an unclaimed item to add your dish!
-      </div>
+      <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16 }}>Tap an unclaimed item to add your dish!</div>
       {Object.entries(cats).map(([catKey, catLabel]) => {
         const items = event.potluck.items.filter(it => it.cat === catKey);
         if (!items.length) return null;
@@ -292,9 +390,7 @@ function PotluckTab({ event, onClaim, onUnclaim, addToast }) {
                   <>
                     <span className="potluck-item-claimant">✓ {item.claimerName}</span>
                     {item.claimedBy === 'u1' && (
-                      <button className="btn btn-ghost btn-sm potluck-item-btn" onClick={() => { onUnclaim(event.id, item.id); addToast('Item released', ''); }}>
-                        Undo
-                      </button>
+                      <button className="btn btn-ghost btn-sm potluck-item-btn" onClick={() => { onUnclaim(event.id, item.id); addToast('Item released', ''); }}>Undo</button>
                     )}
                   </>
                 ) : (
@@ -313,6 +409,8 @@ function PotluckTab({ event, onClaim, onUnclaim, addToast }) {
 
 function PhotoGalleryTab({ event, fileRef, uploading, onUpload, lightbox, setLightbox }) {
   const photos = event.photoGallery || [];
+  const myComment = event.eventComments?.find(c => c.userId === 'u1');
+  const photosLocked = !myComment && photos.length > 0;
 
   return (
     <div>
@@ -321,29 +419,44 @@ function PhotoGalleryTab({ event, fileRef, uploading, onUpload, lightbox, setLig
           {photos.length > 0 ? `${photos.length} photo${photos.length !== 1 ? 's' : ''} from the evening` : 'No photos yet — be the first to share!'}
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-          {uploading ? '⏳ Uploading…' : '📸 Add Photos'}
+          {uploading ? '⏳ Uploading...' : '📸 Add Photos'}
         </button>
       </div>
 
+      {/* Locked state — comment required to unlock all photos */}
+      {photosLocked && (
+        <div style={{ background: 'var(--indigo-light)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--indigo-mid)' }}>
+          <span style={{ fontSize: 20 }}>🔓</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--indigo)', marginBottom: 2 }}>Share a moment to unlock all photos</div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)' }}>Leave a comment in the Moments tab to see the full gallery.</div>
+          </div>
+        </div>
+      )}
+
       <div className="photo-gallery">
-        {photos.map(ph => (
-          <div key={ph.id} className="photo-thumb" onClick={() => setLightbox(ph)}>
-            <img src={ph.url} alt="" />
-            {ph.tags?.length > 0 && (
+        {(photosLocked ? photos.slice(0, 1) : photos).map(ph => (
+          <div key={ph.id} className="photo-thumb" onClick={() => !photosLocked && setLightbox(ph)}>
+            <img src={ph.url} alt="" style={{ filter: photosLocked ? 'blur(8px)' : 'none', transition: 'filter 0.3s' }} />
+            {ph.tags?.length > 0 && !photosLocked && (
               <div className="photo-tag">{ph.tags[0]}{ph.tags.length > 1 ? ` +${ph.tags.length - 1}` : ''}</div>
             )}
           </div>
         ))}
+        {photosLocked && photos.length > 1 && (
+          <div className="photo-thumb" style={{ background: 'var(--indigo-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 20 }}>🔒</span>
+            <span style={{ fontSize: 11, color: 'var(--indigo)', fontWeight: 600 }}>+{photos.length - 1} more</span>
+          </div>
+        )}
         <div className="photo-thumb-add" onClick={() => fileRef.current?.click()}>
           <span style={{ fontSize: 24 }}>+</span>
           <span>Upload</span>
         </div>
       </div>
 
-      {photos.length > 0 && (
-        <div style={{ marginTop: 14, fontSize: 12, color: 'var(--ink3)', textAlign: 'center' }}>
-          Tap any photo to view full size and tags
-        </div>
+      {photos.length > 0 && !photosLocked && (
+        <div style={{ marginTop: 14, fontSize: 12, color: 'var(--ink3)', textAlign: 'center' }}>Tap any photo to view full size</div>
       )}
     </div>
   );
