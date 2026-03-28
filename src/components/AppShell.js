@@ -8,13 +8,16 @@ import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
 import PartnerPage from '../pages/PartnerPage';
+import LandingPage from '../pages/LandingPage';
+import EmptyStatePage from '../pages/EmptyStatePage';
 import OnboardingTour from './OnboardingTour';
+import CreateEventModal from './CreateEventModal';
 
 const NAV = [
-  { to: '/feed',    icon: '🏠', label: 'Discover' },
-  { to: '/events',  icon: '🗓️', label: 'My Events' },
+  { to: '/feed',    icon: '🏠', label: 'Discover'    },
+  { to: '/events',  icon: '🗓️', label: 'My Events'   },
   { to: '/invites', icon: '✉️', label: 'Invitations' },
-  { to: '/blog',    icon: '📝', label: 'The Table' },
+  { to: '/blog',    icon: '📝', label: 'The Table'   },
 ];
 
 export default function AppShell() {
@@ -23,13 +26,18 @@ export default function AppShell() {
   const [showTour, setShowTour] = useState(() => {
     try { return sessionStorage.getItem('tableaux-tour-done') !== '1'; } catch { return true; }
   });
+  const [creatingEvent, setCreatingEvent] = useState(false);
   const location = useLocation();
 
+  if (!user && location.pathname === '/') return <LandingPage />;
   if (!user) return <AuthPage />;
 
   const invitePending = events.filter(
     e => e.isInvitedTo && e.guests?.find(g => g.id === 'u1' && g.s === 'pending')
   ).length;
+
+  const hasAnyActivity = events.some(e => e.mine || e.isInvitedTo);
+  const isNewUser = !hasAnyActivity;
 
   const pageInfo = getPageInfo(location.pathname);
 
@@ -68,18 +76,7 @@ export default function AppShell() {
               </NavLink>
             ))}
           </div>
-
-          <div className="sb-section" style={{ marginTop: 8 }}>
-            <div className="sb-section-label">Partners</div>
-            <NavLink
-              to="/partner"
-              className={({ isActive }) => `sb-link ${isActive ? 'active' : ''}`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="sb-icon">🤝</span>
-              For Partners
-            </NavLink>
-          </div>
+          {/* Partner link intentionally hidden from nav — route still exists at /partner */}
         </nav>
 
         <div className="sb-user">
@@ -104,8 +101,7 @@ export default function AppShell() {
           </div>
           <div className="topnav-right">
             <Link to="/invites" className="icon-btn always-show" title="Invitations" style={{ position: 'relative' }}>
-              ✉️
-              {invitePending > 0 && <span className="notif-dot" />}
+              ✉️{invitePending > 0 && <span className="notif-dot" />}
             </Link>
             <Link to="/profile" className="topnav-avatar-link" title="My Profile">
               <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
@@ -114,8 +110,8 @@ export default function AppShell() {
         </header>
 
         <Routes>
-          <Route path="/"        element={<FeedPage />} />
-          <Route path="/feed"    element={<FeedPage />} />
+          <Route path="/"        element={isNewUser ? <EmptyStatePage onCreateEvent={() => setCreatingEvent(true)} onBrowse={() => {}} /> : <FeedPage />} />
+          <Route path="/feed"    element={isNewUser ? <EmptyStatePage onCreateEvent={() => setCreatingEvent(true)} onBrowse={() => {}} /> : <FeedPage />} />
           <Route path="/events"  element={<EventsPage />} />
           <Route path="/invites" element={<InvitesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -124,7 +120,6 @@ export default function AppShell() {
         </Routes>
       </div>
 
-      {/* Mobile bottom nav */}
       <nav className="mobile-nav">
         {NAV.map(n => (
           <NavLink
@@ -142,9 +137,7 @@ export default function AppShell() {
           </NavLink>
         ))}
         <Link to="/profile" className="mobile-nav-btn">
-          <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 26, height: 26, fontSize: 9 }}>
-            {user.initials}
-          </div>
+          <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 26, height: 26, fontSize: 9 }}>{user.initials}</div>
           Me
         </Link>
       </nav>
@@ -158,6 +151,7 @@ export default function AppShell() {
       </div>
 
       {showTour && <OnboardingTour onDone={handleTourDone} />}
+      {creatingEvent && <CreateEventModal onClose={() => setCreatingEvent(false)} />}
     </div>
   );
 }
