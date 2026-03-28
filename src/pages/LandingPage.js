@@ -159,7 +159,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'flex', gap: 20 }}>
           {['About', 'Blog', 'Partners', 'Privacy'].map(l => (
-            <a key={l} href="#" style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none' }}>{l}</a>
+            <button key={l} onClick={() => {}} style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>
           ))}
         </div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)' }}>© 2025 Tableaux</div>
