@@ -17,9 +17,9 @@ const HOW_IT_WORKS = [
 ];
 
 const TESTIMONIALS = [
-  { quote: 'I've met more interesting people at Tableaux dinners than at any networking event.', name: 'Priya S.', role: 'Guest · Chicago', color: 'indigo' },
-  { quote: 'Hosting on Tableaux turned my dinner parties into a real community. The tools just work.', name: 'Marcus T.', role: 'Host · Austin', color: 'teal' },
-  { quote: 'Our brand reached 300 engaged food lovers in one month. Nothing else comes close.', name: 'Elena V.', role: 'Partner · Chicago', color: 'amber' },
+  { quote: "I've met more interesting people at Tableaux dinners than at any networking event.", name: 'Priya S.', role: 'Guest · Chicago', color: 'indigo' },
+  { quote: "Hosting on Tableaux turned my dinner parties into a real community. The tools just work.", name: 'Marcus T.', role: 'Host · Austin', color: 'teal' },
+  { quote: "Our brand reached 300 engaged food lovers in one month. Nothing else comes close.", name: 'Elena V.', role: 'Partner · Chicago', color: 'amber' },
 ];
 
 export default function LandingPage() {
