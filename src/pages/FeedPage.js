@@ -51,7 +51,6 @@ export default function FeedPage() {
     try { return JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]'); }
     catch { return []; }
   });
-  const [showAllBanners, setShowAllBanners] = useState(false);
   const [showBanners, setShowBanners] = useState(false);
 
   useEffect(() => {
@@ -83,8 +82,6 @@ export default function FeedPage() {
     if (e.endedAt && new Date(e.endedAt).getTime() < sevenDaysAgo) return false;
     return true;
   });
-  const visibleBanners = showAllBanners ? allBanners : allBanners.slice(0, 1);
-  const hiddenCount    = allBanners.length - 1;
 
   const stats = [
     { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',                                  badgeColor: 'green', dark: false, action: null },
