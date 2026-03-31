@@ -7,17 +7,17 @@ import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
-import PartnerPage from '../pages/PartnerPage';
+import FAQPage from '../pages/FAQPage';
 import LandingPage from '../pages/LandingPage';
 import EmptyStatePage from '../pages/EmptyStatePage';
 import OnboardingTour from './OnboardingTour';
 import CreateEventModal from './CreateEventModal';
 
 const NAV = [
-  { to: '/feed',    icon: '🏠', label: 'Explore'    },
+  { to: '/feed',    icon: '🏠', label: 'Explore'     },
   { to: '/events',  icon: '🗓️', label: 'My Events'   },
   { to: '/invites', icon: '✉️', label: 'Invitations' },
-  { to: '/blog',    icon: '📝', label: 'Fork & Story'   },
+  { to: '/blog',    icon: '📝', label: 'Fork & Story' },
 ];
 
 export default function AppShell() {
@@ -76,7 +76,6 @@ export default function AppShell() {
               </NavLink>
             ))}
           </div>
-          {/* Partner link intentionally hidden from nav — route still exists at /partner */}
         </nav>
 
         <div className="sb-user">
@@ -116,9 +115,37 @@ export default function AppShell() {
           <Route path="/invites" element={<InvitesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/blog"    element={<BlogPage />} />
-          <Route path="/partner" element={<PartnerPage />} />
+          <Route path="/faq"     element={<FAQPage />} />
         </Routes>
       </div>
+
+      {/* FAB — Host a dinner */}
+      <button
+        className="fab"
+        onClick={() => setCreatingEvent(true)}
+        aria-label="Host a dinner"
+        style={{
+          position: 'fixed',
+          bottom: 80,
+          right: 20,
+          zIndex: 200,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: 'var(--indigo)',
+          color: 'white',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: 22,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(108,93,211,0.45)',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        }}
+      >
+        🍴
+      </button>
 
       <nav className="mobile-nav">
         {NAV.map(n => (
@@ -157,10 +184,10 @@ export default function AppShell() {
 }
 
 function getPageInfo(path) {
-  if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
-  if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
-  if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
-  if (path.startsWith('/blog'))    return { title: 'Fork & Story',    sub: 'Stories & Recipes from Tableaux' };
-  if (path.startsWith('/partner')) return { title: 'For Partners', sub: 'Grow your brand with Tableaux' };
-  return { title: 'Explore', sub: "Intimate dining near you" };
+  if (path.startsWith('/events'))  return { title: 'My Events',   sub: null };
+  if (path.startsWith('/invites')) return { title: 'Invitations', sub: null };
+  if (path.startsWith('/profile')) return { title: 'My Profile',  sub: null };
+  if (path.startsWith('/blog'))    return { title: 'Fork & Story', sub: 'Stories & Recipes from Tableaux' };
+  if (path.startsWith('/faq'))     return { title: 'Help & FAQ',  sub: 'Everything you need to know' };
+  return { title: 'Explore', sub: 'Intimate dining near you' };
 }

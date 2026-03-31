@@ -1,34 +1,57 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 
 export default function AuthPage() {
   const { login } = useApp();
-  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const navigate = useNavigate();
+
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     setTimeout(() => {
       const ok = login(email, password);
-      if (!ok) {
-        setError(mode === 'login'
-          ? 'Invalid email or password. Try ada@tableaux.com / password'
-          : 'Could not create account. Try logging in instead.');
+      if (ok) {
+        navigate('/feed');
+      } else {
+        setError(
+          mode === 'login'
+            ? 'Invalid email or password. Try ada@tableaux.com / password'
+            : 'Could not create account. Try logging in instead.'
+        );
+        setLoading(false);
       }
-      setLoading(false);
     }, 600);
-  }
+  };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
+    <div className="auth-screen" style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      background: 'var(--indigo-light, #F4F3FF)',
+      padding: '24px 16px',
+    }}>
+      <div className="auth-card" style={{
+        background: 'white',
+        borderRadius: 20,
+        padding: '36px 32px',
+        width: '100%',
+        maxWidth: 420,
+        boxShadow: '0 4px 40px rgba(108,93,211,0.10)',
+      }}>
+
+        {/* Logo */}
         <div className="auth-logo">
           <div className="logo-icon">🍽️</div>
           <div className="logo-text" style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.5px' }}>
@@ -36,14 +59,17 @@ export default function AuthPage() {
           </div>
         </div>
 
-        <div className="auth-title">{mode === 'login' ? 'Welcome back' : 'Join Tableaux'}</div>
+        {/* Title */}
+        <div className="auth-title">
+          {mode === 'login' ? 'Welcome back' : 'Join Tableaux'}
+        </div>
         <div className="auth-sub">
           {mode === 'login'
             ? 'Sign in to discover and host intimate dining experiences.'
             : 'Create your account to start hosting and discovering dinners.'}
         </div>
 
-        {/* Social logins */}
+        {/* Social login */}
         <button className="social-login-btn social-login-google">
           <span className="social-login-icon">
             <svg viewBox="0 0 24 24" width="18" height="18">
@@ -55,18 +81,22 @@ export default function AuthPage() {
           </span>
           Continue with Google
         </button>
+
         <button className="social-login-btn social-login-apple">
           <span className="social-login-icon" style={{ fontSize: 17 }}>🍎</span>
           Continue with Apple
         </button>
 
+        {/* Divider */}
         <div className="auth-divider">
           <div className="auth-divider-line" />
           <div className="auth-divider-text">or</div>
           <div className="auth-divider-line" />
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
+
           {mode === 'signup' && (
             <div className="form-group">
               <label className="form-label">Full Name</label>
@@ -77,9 +107,11 @@ export default function AuthPage() {
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
+                style={{ fontSize: 16 }}
               />
             </div>
           )}
+
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -90,45 +122,90 @@ export default function AuthPage() {
               onChange={e => setEmail(e.target.value)}
               required
               autoComplete="email"
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 20 }}>
-            <label className="form-label">Password</label>
-            <input
-              className="form-input"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              style={{ fontSize: 16 }}
             />
           </div>
 
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                className="form-input"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                style={{ fontSize: 16, paddingRight: 44 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                style={{
+                  position: 'absolute', right: 12, top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--ink3)', fontSize: 16, padding: 4,
+                  display: 'flex', alignItems: 'center',
+                }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+
           {error && (
-            <div style={{ fontSize: 13, color: 'var(--coral)', marginBottom: 14, padding: '10px 12px', background: 'var(--coral-light)', borderRadius: 8 }}>
+            <div className="auth-error" style={{
+              fontSize: 13, color: 'var(--coral, #e05c5c)',
+              background: 'rgba(224,92,92,0.08)',
+              borderRadius: 8, padding: '10px 14px', marginBottom: 12,
+            }}>
               {error}
             </div>
           )}
 
-          <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
-            {loading ? '⏳ Signing in…' : mode === 'login' ? 'Sign in' : 'Create account'}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ width: '100%', fontSize: 16, padding: '13px', marginTop: 4 }}
+            disabled={loading}
+          >
+            {loading ? 'Signing in…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
-        <div className="auth-toggle">
+        {/* Toggle mode */}
+        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: 'var(--ink2)' }}>
           {mode === 'login' ? (
-            <>Don't have an account? <button onClick={() => { setMode('signup'); setError(''); }}>Sign up</button></>
+            <>
+              Don't have an account?{' '}
+              <button
+                onClick={() => { setMode('signup'); setError(''); }}
+                style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
+              >
+                Sign up
+              </button>
+            </>
           ) : (
-            <>Already have an account? <button onClick={() => { setMode('login'); setError(''); }}>Sign in</button></>
+            <>
+              Already have an account?{' '}
+              <button
+                onClick={() => { setMode('login'); setError(''); }}
+                style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
+              >
+                Log in
+              </button>
+            </>
           )}
         </div>
 
-        {mode === 'login' && (
-          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--ink3)' }}>
-            Demo: ada@tableaux.com / password
-          </div>
-        )}
+        {/* Demo hint */}
+        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--ink3)' }}>
+          Demo: ada@tableaux.com / password
+        </div>
+
       </div>
     </div>
   );

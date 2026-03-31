@@ -28,6 +28,7 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--page)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
       {/* Nav */}
       <nav style={{ background: 'white', borderBottom: '1px solid var(--border)', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 40 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -35,7 +36,6 @@ export default function LandingPage() {
           <div className="logo-text">Table<span>aux</span></div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/partner" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink2)', textDecoration: 'none' }}>For Partners</Link>
           <Link to="/feed" className="btn btn-ghost btn-sm">Log in</Link>
           <Link to="/feed" className="btn btn-primary btn-sm">Join free</Link>
         </div>
@@ -87,7 +87,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works — dark section */}
+      {/* How it works */}
       <section style={{ background: 'linear-gradient(135deg, #1A1A2E, #2D2550)', padding: '72px 32px', margin: '0 0 64px' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -142,7 +142,7 @@ export default function LandingPage() {
               placeholder="your@email.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              style={{ flex: 1, minWidth: 200 }}
+              style={{ flex: 1, minWidth: 200, fontSize: 16 }}
             />
             <button className="btn btn-primary" onClick={() => email && setSubmitted(true)}>
               Get early access →
@@ -155,15 +155,19 @@ export default function LandingPage() {
       <footer style={{ background: 'var(--ink)', padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="logo-icon" style={{ width: 28, height: 28, fontSize: 14 }}>🍽️</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>Table<span style={{ color: 'var(--indigo-mid)' }}>aux</span></div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>
+            Table<span style={{ color: 'var(--indigo-mid)' }}>aux</span>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 20 }}>
-          {['About', 'Blog', 'Partners', 'Privacy'].map(l => (
-            <button key={l} onClick={() => {}} style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>
-          ))}
+          <Link to="/blog" style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none' }}>Blog</Link>
+          <Link to="/faq"  style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none' }}>Help</Link>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.5)' }}>About</span>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.5)' }}>Privacy</span>
         </div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)' }}>© 2025 Tableaux</div>
       </footer>
+
     </div>
   );
 }
