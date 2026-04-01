@@ -117,7 +117,6 @@ function ContributorCTA() {
 }
 
 function BlogCard({ post, onClick }) {
-  const slug = post.slug || post.id;
   return (
     <div className="blog-card" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div className="blog-card-cover">

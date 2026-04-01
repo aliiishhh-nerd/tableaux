@@ -32,9 +32,6 @@ export default function AppShell() {
   const [creatingEvent, setCreatingEvent] = useState(false);
   const location = useLocation();
 
-  const isPublicPath = PUBLIC_PATHS.some(p => location.pathname.startsWith(p) && p !== '/') ||
-    location.pathname === '/';
-
   if (!user && location.pathname === '/') return <LandingPage />;
   // Allow blog and FAQ without login
   if (!user && location.pathname.startsWith('/blog')) return <BlogPage />;
