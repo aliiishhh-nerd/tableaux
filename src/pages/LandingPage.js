@@ -2,24 +2,25 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const FEATURES = [
-  { icon: '🍷', title: 'Supper Clubs', desc: 'Multi-course dinners hosted by passionate home chefs. Ticketed, intimate, unforgettable.' },
-  { icon: '🥘', title: 'Potlucks', desc: 'Collaborative meals where everyone brings a dish. Claim your item, show up, connect.' },
-  { icon: '🕯️', title: 'Dinner Parties', desc: 'Curated guest lists, beautiful tables, meaningful conversation over a shared meal.' },
-  { icon: '👨‍🍳', title: 'Cooking Classes', desc: 'Learn hands-on from local chefs and passionate cooks in a small group setting.' },
-  { icon: '🍾', title: 'Wine Tastings', desc: 'Explore natural wines, pairings, and the stories behind each bottle.' },
-  { icon: '⚡', title: 'Pop-Ups', desc: 'Spontaneous one-night experiences. Follow your favorite hosts to get first access.' },
+  { icon: '🥞', title: 'Brunch',       desc: 'Leisurely late-morning gatherings with friends. Mimosas, good food, unhurried conversation.' },
+  { icon: '🕯️', title: 'Dinner Party', desc: 'Curated guest lists, beautiful tables, meaningful conversation over a shared meal.' },
+  { icon: '🍽️', title: 'Other',        desc: 'One-of-a-kind experiences that don\'t fit a category. The best meals rarely do.' },
+  { icon: '🥘', title: 'Potluck',      desc: 'Collaborative meals where everyone brings a dish. Claim your item, show up, connect.' },
+  { icon: '🏮', title: 'Restaurant',   desc: 'Group reservations and private dining experiences at restaurants worth gathering around.' },
+  { icon: '🍷', title: 'Supper Club',  desc: 'Multi-course dinners hosted by passionate home chefs. Ticketed, intimate, unforgettable.' },
+  { icon: '🍾', title: 'Tasting',      desc: 'Explore natural wines, craft spirits, or rare ingredients guided by someone who knows them deeply.' },
 ];
 
 const HOW_IT_WORKS = [
-  { step: '01', title: 'Discover', desc: 'Browse events in your city filtered by type, date, and cuisine.' },
-  { step: '02', title: 'Request a seat', desc: 'Send a request to the host. They review your profile and accept.' },
+  { step: '01', title: 'Discover',          desc: 'Browse events in your city filtered by type, date, and cuisine.' },
+  { step: '02', title: 'Request a seat',    desc: 'Send a request to the host. They review your profile and accept.' },
   { step: '03', title: 'Show up & connect', desc: 'Arrive, eat well, meet people who share your love of food.' },
 ];
 
 const TESTIMONIALS = [
-  { quote: "I've met more interesting people at Tableaux dinners than at any networking event.", name: 'Priya S.', role: 'Guest · Chicago', color: 'indigo' },
-  { quote: "Hosting on Tableaux turned my dinner parties into a real community. The tools just work.", name: 'Marcus T.', role: 'Host · Austin', color: 'teal' },
-  { quote: "Our brand reached 300 engaged food lovers in one month. Nothing else comes close.", name: 'Elena V.', role: 'Partner · Chicago', color: 'amber' },
+  { quote: "I've met more interesting people at Tableaux dinners than at any networking event.", name: 'Priya S.',  role: 'Guest · Chicago', color: 'indigo' },
+  { quote: "Hosting on Tableaux turned my dinner parties into a real community. The tools just work.",  name: 'Marcus T.', role: 'Host · Austin',   color: 'teal'   },
+  { quote: "Our brand reached 300 engaged food lovers in one month. Nothing else comes close.",         name: 'Elena V.',  role: 'Partner · Chicago', color: 'amber' },
 ];
 
 export default function LandingPage() {
@@ -36,6 +37,7 @@ export default function LandingPage() {
           <div className="logo-text">Table<span>aux</span></div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link to="/blog" className="btn btn-ghost btn-sm">Fork & Story</Link>
           <Link to="/feed" className="btn btn-ghost btn-sm">Log in</Link>
           <Link to="/feed" className="btn btn-primary btn-sm">Join free</Link>
         </div>
@@ -55,7 +57,7 @@ export default function LandingPage() {
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
           <Link to="/feed" className="btn btn-primary" style={{ fontSize: 16, padding: '13px 28px' }}>Find a dinner →</Link>
-          <Link to="/feed" className="btn btn-ghost" style={{ fontSize: 16, padding: '13px 28px' }}>Host a table</Link>
+          <Link to="/feed" className="btn btn-ghost"   style={{ fontSize: 16, padding: '13px 28px' }}>Host a table</Link>
         </div>
         {/* Social proof */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
@@ -70,13 +72,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features — all 7 event types */}
       <section style={{ padding: '64px 32px', maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.5px', marginBottom: 10 }}>Every kind of table</h2>
-          <p style={{ fontSize: 16, color: 'var(--ink2)' }}>From casual potlucks to formal supper clubs — find the format that fits you.</p>
+          <p style={{ fontSize: 16, color: 'var(--ink2)' }}>From casual potlucks to intimate supper clubs — find the format that fits you.</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
           {FEATURES.map((f, i) => (
             <div key={i} className="card" style={{ padding: '20px 22px' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>{f.icon}</div>
@@ -94,7 +96,7 @@ export default function LandingPage() {
             <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', letterSpacing: '-0.5px', marginBottom: 10 }}>How it works</h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,.6)' }}>From discovery to dinner in three steps.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
             {HOW_IT_WORKS.map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 36, fontWeight: 800, color: 'rgba(255,255,255,.15)', letterSpacing: '-1px', marginBottom: 12 }}>{s.step}</div>
@@ -107,20 +109,19 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section style={{ padding: '0 32px 72px', maxWidth: 1100, margin: '0 auto' }}>
+      <section style={{ padding: '64px 32px', maxWidth: 960, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.5px', marginBottom: 10 }}>What people are saying</h2>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.5px' }}>What people are saying</h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
           {TESTIMONIALS.map((t, i) => (
-            <div key={i} className="card" style={{ padding: '22px' }}>
-              <div style={{ fontSize: 32, color: 'var(--indigo)', lineHeight: 1, marginBottom: 12 }}>"</div>
-              <div style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.7, marginBottom: 16, fontStyle: 'italic' }}>{t.quote}</div>
+            <div key={i} className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <p style={{ fontSize: 15, color: 'var(--ink)', lineHeight: 1.7, fontStyle: 'italic', flex: 1 }}>"{t.quote}"</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div className={`av av-sm av-${t.color}`}>{t.name[0]}</div>
+                <div className={`av av-sm av-${t.color}`}>{t.name.split(' ').map(w => w[0]).join('')}</div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{t.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--ink2)' }}>{t.role}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{t.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink3)' }}>{t.role}</div>
                 </div>
               </div>
             </div>
@@ -129,45 +130,44 @@ export default function LandingPage() {
       </section>
 
       {/* Email CTA */}
-      <section style={{ background: 'var(--indigo-light)', padding: '64px 32px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 10, letterSpacing: '-0.4px' }}>Ready to find your table?</h2>
-        <p style={{ fontSize: 15, color: 'var(--ink2)', marginBottom: 28 }}>Join 2,400+ diners already on Tableaux in Chicago.</p>
+      <section style={{ padding: '64px 32px 80px', textAlign: 'center', maxWidth: 560, margin: '0 auto' }}>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', marginBottom: 12 }}>
+          Ready to find your table?
+        </h2>
+        <p style={{ fontSize: 15, color: 'var(--ink2)', marginBottom: 28 }}>
+          Join thousands of food lovers discovering intimate dining experiences near them.
+        </p>
         {submitted ? (
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--indigo)' }}>🎉 You're on the list! We'll be in touch soon.</div>
+          <div style={{ fontSize: 16, color: 'var(--teal)', fontWeight: 600 }}>✓ You're on the list! We'll be in touch.</div>
         ) : (
-          <div style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <input
-              className="form-input"
               type="email"
-              placeholder="your@email.com"
+              placeholder="Your email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              style={{ flex: 1, minWidth: 200, fontSize: 16 }}
+              style={{ padding: '11px 16px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 14, width: 260, outline: 'none' }}
             />
-            <button className="btn btn-primary" onClick={() => email && setSubmitted(true)}>
-              Get early access →
+            <button
+              className="btn btn-primary"
+              onClick={() => { if (email) setSubmitted(true); }}
+              style={{ padding: '11px 22px' }}
+            >
+              Get early access
             </button>
           </div>
         )}
       </section>
 
       {/* Footer */}
-      <footer style={{ background: 'var(--ink)', padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="logo-icon" style={{ width: 28, height: 28, fontSize: 14 }}>🍽️</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>
-            Table<span style={{ color: 'var(--indigo-mid)' }}>aux</span>
-          </div>
-        </div>
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ fontSize: 12, color: 'var(--ink3)' }}>© {new Date().getFullYear()} Tableaux</div>
         <div style={{ display: 'flex', gap: 20 }}>
-          <Link to="/blog" style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none' }}>Blog</Link>
-          <Link to="/faq"  style={{ fontSize: 13, color: 'rgba(255,255,255,.5)', textDecoration: 'none' }}>Help</Link>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.5)' }}>About</span>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.5)' }}>Privacy</span>
+          <Link to="/blog" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Fork & Story</Link>
+          <Link to="/faq"  style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>FAQ</Link>
+          <a href="mailto:hello@tableaux.app" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)' }}>© 2025 Tableaux</div>
       </footer>
-
     </div>
   );
 }

@@ -14,11 +14,14 @@ import OnboardingTour from './OnboardingTour';
 import CreateEventModal from './CreateEventModal';
 
 const NAV = [
-  { to: '/feed',    icon: '🏠', label: 'Explore'     },
-  { to: '/events',  icon: '🗓️', label: 'My Events'   },
-  { to: '/invites', icon: '✉️', label: 'Invitations' },
+  { to: '/feed',    icon: '🏠', label: 'Explore'      },
+  { to: '/events',  icon: '🗓️', label: 'My Events'    },
+  { to: '/invites', icon: '✉️', label: 'Invitations'  },
   { to: '/blog',    icon: '📝', label: 'Fork & Story' },
 ];
+
+// Routes accessible without login
+const PUBLIC_PATHS = ['/blog', '/faq', '/'];
 
 export default function AppShell() {
   const { user, events, toasts } = useApp();
@@ -29,7 +32,13 @@ export default function AppShell() {
   const [creatingEvent, setCreatingEvent] = useState(false);
   const location = useLocation();
 
+  const isPublicPath = PUBLIC_PATHS.some(p => location.pathname.startsWith(p) && p !== '/') ||
+    location.pathname === '/';
+
   if (!user && location.pathname === '/') return <LandingPage />;
+  // Allow blog and FAQ without login
+  if (!user && location.pathname.startsWith('/blog')) return <BlogPage />;
+  if (!user && location.pathname.startsWith('/faq')) return <FAQPage />;
   if (!user) return <AuthPage />;
 
   const invitePending = events.filter(
@@ -78,6 +87,24 @@ export default function AppShell() {
           </div>
         </nav>
 
+        {/* Footer links in sidebar */}
+        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
+          <Link
+            to="/faq"
+            style={{ fontSize: 12, color: 'var(--ink3)', display: 'block', marginBottom: 6, textDecoration: 'none' }}
+            onClick={() => setSidebarOpen(false)}
+          >
+            ❓ Help & FAQ
+          </Link>
+          <Link
+            to="/blog"
+            style={{ fontSize: 12, color: 'var(--ink3)', display: 'block', textDecoration: 'none' }}
+            onClick={() => setSidebarOpen(false)}
+          >
+            📝 Fork & Story
+          </Link>
+        </div>
+
         <div className="sb-user">
           <Link to="/profile" className="sb-user-inner" onClick={() => setSidebarOpen(false)}>
             <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
@@ -117,29 +144,40 @@ export default function AppShell() {
           <Route path="/blog"    element={<BlogPage />} />
           <Route path="/faq"     element={<FAQPage />} />
         </Routes>
+
+        {/* Footer */}
+        <footer style={{
+          borderTop: '1px solid var(--border)',
+          padding: '24px 24px 80px',
+          marginTop: 40,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 16,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{ fontSize: 12, color: 'var(--ink3)' }}>
+            © {new Date().getFullYear()} Tableaux. All rights reserved.
+          </div>
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            <Link to="/blog" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Fork & Story</Link>
+            <Link to="/faq"  style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Help & FAQ</Link>
+            <a href="mailto:hello@tableaux.app" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
+          </div>
+        </footer>
       </div>
 
-      {/* FAB — Host a dinner */}
+      {/* FAB */}
       <button
         className="fab"
         onClick={() => setCreatingEvent(true)}
         aria-label="Host a dinner"
         style={{
-          position: 'fixed',
-          bottom: 80,
-          right: 20,
-          zIndex: 200,
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
-          background: 'var(--indigo)',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: 22,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          position: 'fixed', bottom: 80, right: 20, zIndex: 200,
+          width: 56, height: 56, borderRadius: '50%',
+          background: 'var(--indigo)', color: 'white',
+          border: 'none', cursor: 'pointer', fontSize: 22,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(108,93,211,0.45)',
           transition: 'transform 0.15s ease, box-shadow 0.15s ease',
         }}
@@ -184,10 +222,10 @@ export default function AppShell() {
 }
 
 function getPageInfo(path) {
-  if (path.startsWith('/events'))  return { title: 'My Events',   sub: null };
-  if (path.startsWith('/invites')) return { title: 'Invitations', sub: null };
-  if (path.startsWith('/profile')) return { title: 'My Profile',  sub: null };
+  if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
+  if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
+  if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
   if (path.startsWith('/blog'))    return { title: 'Fork & Story', sub: 'Stories & Recipes from Tableaux' };
-  if (path.startsWith('/faq'))     return { title: 'Help & FAQ',  sub: 'Everything you need to know' };
+  if (path.startsWith('/faq'))     return { title: 'Help & FAQ',   sub: 'Everything you need to know' };
   return { title: 'Explore', sub: 'Intimate dining near you' };
 }

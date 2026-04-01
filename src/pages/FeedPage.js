@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
@@ -9,71 +9,122 @@ const CITIES = [
   { key: 'austin',  label: 'Austin'      },
   { key: 'la',      label: 'Los Angeles' },
   { key: 'seattle', label: 'Seattle'     },
+  { key: 'nyc',     label: 'New York'    },
   { key: 'all',     label: 'All Cities'  },
 ];
 
 const CITY_NAMES = {
-  chicago: 'Chicago', austin: 'Austin', la: 'Los Angeles', seattle: 'Seattle',
+  chicago: 'Chicago', austin: 'Austin', la: 'Los Angeles', seattle: 'Seattle', nyc: 'New York',
 };
 
+// Strict city matching — each event must have its city key set explicitly
+// Falls back to keyword matching for legacy seed events
 const CITY_KEYWORDS = {
-  chicago: ['chicago', 'lincoln park', 'river north', 'wicker park', 'hyde park', 'lakeview', 'il'],
-  austin:  ['austin', 'tx', 'texas'],
-  la:      ['los angeles', 'la', 'california', 'ca', 'venice', 'silverlake', 'hollywood'],
-  seattle: ['seattle', 'wa', 'washington', 'capitol hill', 'ballard'],
+  chicago: ['chicago', 'lincoln park', 'river north', 'wicker park', 'hyde park', 'lakeview', 'logan square', 'il 6'],
+  austin:  ['austin', ', tx', 'texas'],
+  la:      ['los angeles', ', ca 9', 'venice', 'silverlake', 'hollywood', 'culver city'],
+  seattle: ['seattle', ', wa', 'capitol hill', 'ballard', 'fremont'],
+  nyc:     ['new york', ', ny', 'brooklyn', 'manhattan', 'queens'],
 };
 
-// Tasting, Cooking Class, Pop-Up removed per product decision
-const ALLOWED_TYPES = ['Dinner Party', 'Supper Club', 'Potluck'];
+const EVENT_TYPES = [
+  'Brunch',
+  'Dinner Party',
+  'Other',
+  'Potluck',
+  'Restaurant',
+  'Supper Club',
+  'Tasting',
+];
 
 const TYPE_PILLS = {
-  'Dinner Party': { bg: 'rgba(108,93,211,.85)', label: '🍷 Dinner Party' },
-  'Supper Club':  { bg: 'rgba(212,175,55,.9)',  label: '✨ Supper Club'  },
-  'Potluck':      { bg: 'rgba(46,196,182,.85)', label: '🥘 Potluck'      },
+  'Brunch':       { bg: 'rgba(212,175,55,.85)',  label: '🥞 Brunch'        },
+  'Dinner Party': { bg: 'rgba(108,93,211,.85)',  label: '🍷 Dinner Party'  },
+  'Other':        { bg: 'rgba(100,100,100,.75)', label: '🍽️ Other'         },
+  'Potluck':      { bg: 'rgba(46,196,182,.85)',  label: '🥘 Potluck'       },
+  'Restaurant':   { bg: 'rgba(220,80,60,.85)',   label: '🏮 Restaurant'    },
+  'Supper Club':  { bg: 'rgba(212,175,55,.9)',   label: '✨ Supper Club'   },
+  'Tasting':      { bg: 'rgba(150,90,200,.85)',  label: '🍾 Tasting'       },
 };
 
-function detectCity() { return 'chicago'; }
+function getCityFromProfile(user) {
+  if (!user) return 'chicago';
+  const city = (user.city || '').toLowerCase();
+  if (city.includes('austin')) return 'austin';
+  if (city.includes('los angeles') || city === 'la') return 'la';
+  if (city.includes('seattle')) return 'seattle';
+  if (city.includes('new york') || city === 'nyc') return 'nyc';
+  if (city.includes('chicago')) return 'chicago';
+  return 'chicago';
+}
 
 function eventMatchesCity(event, cityKey) {
-  if (cityKey === 'all' || cityKey === 'auto') return true;
+  if (cityKey === 'all') return true;
+  // Prefer explicit city field on event
+  if (event.city) return event.city.toLowerCase() === cityKey.toLowerCase() ||
+    (cityKey === 'la' && event.city.toLowerCase() === 'los angeles');
+  // Fall back to keyword matching on loc/addr
   const keywords = CITY_KEYWORDS[cityKey] || [];
   const haystack = ((event.loc || '') + ' ' + (event.addr || '')).toLowerCase();
   return keywords.some(k => haystack.includes(k));
 }
 
 export default function FeedPage() {
-  const { events } = useApp();
+  const { events, user } = useApp();
   const [selected, setSelected]   = useState(null);
-  const [filter, setFilter]       = useState('all');
-  const [city, setCity]           = useState('auto');
-  const [detectedCity]            = useState(detectCity);
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [city, setCity]           = useState(() => 'auto');
+  const [citySearch, setCitySearch] = useState('');
+  const [showCitySearch, setShowCitySearch] = useState(false);
+  const [eventSearch, setEventSearch] = useState('');
   const [dismissedBanners, setDismissedBanners] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]'); }
     catch { return []; }
   });
   const [showBanners, setShowBanners] = useState(false);
+  const citySearchRef = useRef(null);
+
+  // Resolve user city from profile
+  const profileCity = getCityFromProfile(user);
+  const resolvedCity = city === 'auto' ? profileCity : city;
 
   useEffect(() => {
     sessionStorage.setItem('tableaux-dismissed-banners', JSON.stringify(dismissedBanners));
   }, [dismissedBanners]);
 
-  // Filter out disallowed event types entirely
-  const upcoming = events.filter(e =>
-    !e.isEnded && !e.isPast && !e.isInvitedTo && ALLOWED_TYPES.includes(e.type)
-  );
+  useEffect(() => {
+    if (showCitySearch && citySearchRef.current) citySearchRef.current.focus();
+  }, [showCitySearch]);
 
-  const filters = [
-    { key: 'all',          label: '✨ All'          },
-    { key: 'Dinner Party', label: '🍷 Dinner Party' },
-    { key: 'Supper Club',  label: '✨ Supper Club'  },
-    { key: 'Potluck',      label: '🥘 Potluck'      },
+  const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo);
+
+  // City search filter — find best match city from search input
+  const searchedCity = (() => {
+    if (!citySearch) return null;
+    const q = citySearch.toLowerCase();
+    const match = CITIES.find(c =>
+      c.label.toLowerCase().includes(q) || c.key.toLowerCase().includes(q)
+    );
+    return match ? match.key : 'none';
+  })();
+
+  const activeCity = citySearch ? searchedCity : resolvedCity;
+
+  const typeFilters = [
+    { key: 'all', label: '✨ All' },
+    ...EVENT_TYPES.map(t => ({ key: t, label: (TYPE_PILLS[t] || {}).label || t })),
   ];
 
   const filtered = upcoming.filter(e => {
-    const typeMatch = filter === 'all' || e.type === filter;
-    const cityMatch = city === 'all' || city === 'auto' || eventMatchesCity(e, city);
+    const typeMatch = typeFilter === 'all' || e.type === typeFilter;
+    const cityMatch = activeCity === 'all' || activeCity === 'none'
+      ? activeCity !== 'none'
+      : eventMatchesCity(e, activeCity);
     return typeMatch && cityMatch;
   });
+
+  // Closest city fallback when search finds nothing
+  const noResultsForSearch = citySearch && searchedCity === 'none';
 
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const allBanners = events.filter(e => {
@@ -84,15 +135,17 @@ export default function FeedPage() {
   });
 
   const stats = [
-    { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',                                  badgeColor: 'green', dark: false, action: null },
-    { icon: '👥', color: 'teal',   val: 48,                                               label: 'In Network',   badge: 'Avg 7 per event',                                badgeColor: 'blue',  dark: false, action: null },
-    { icon: '🥂', color: 'amber',  val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted',                                   badgeColor: 'green', dark: false, action: null },
-    { icon: '🔔', color: 'coral',  val: allBanners.length,                                label: 'Wrap-ups',     badge: allBanners.length > 0 ? 'tap to view' : 'all clear', badgeColor: allBanners.length > 0 ? 'amber' : 'green', dark: allBanners.length > 0, action: () => setShowBanners(b => !b) },
+    { icon: '🗓️', color: 'purple', val: upcoming.length,                                 label: 'Upcoming',     badge: '+2 this month',    badgeColor: 'green', dark: false, action: null },
+    { icon: '👥', color: 'teal',   val: 48,                                               label: 'In Network',   badge: 'Avg 7 per event',  badgeColor: 'blue',  dark: false, action: null },
+    { icon: '🥂', color: 'amber',  val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted',     badgeColor: 'green', dark: false, action: null },
+    { icon: '🔔', color: 'coral',  val: allBanners.length, label: 'Wrap-ups',
+      badge: allBanners.length > 0 ? 'tap to view' : 'all clear',
+      badgeColor: allBanners.length > 0 ? 'amber' : 'green',
+      dark: allBanners.length > 0, action: () => setShowBanners(b => !b) },
   ];
 
-  // Near Me label shows resolved city name when active
   const nearMeLabel = city === 'auto'
-    ? `📍 Near Me · ${CITY_NAMES[detectedCity] || 'Chicago'}`
+    ? `📍 Near Me · ${CITY_NAMES[profileCity] || 'Chicago'}`
     : '📍 Near Me';
 
   return (
@@ -115,58 +168,123 @@ export default function FeedPage() {
       {showBanners && allBanners.length > 0 && (
         <div style={{ marginBottom: 14 }}>
           {allBanners.map(evt => (
-            <PostEventBanner key={evt.id} event={evt} onView={() => { setSelected(evt); setShowBanners(false); }} onDismiss={() => setDismissedBanners(d => [...d, evt.id])} />
+            <PostEventBanner key={evt.id} event={evt}
+              onView={() => { setSelected(evt); setShowBanners(false); }}
+              onDismiss={() => setDismissedBanners(d => [...d, evt.id])} />
           ))}
         </div>
       )}
 
       <div className="feed-layout">
         <div>
-          {/* City filter — Near Me teal geo pill, cities standard indigo pills */}
-          <div className="filter-row" style={{ marginBottom: 8 }}>
+          {/* City filter row */}
+          <div className="filter-row" style={{ marginBottom: 8, alignItems: 'center' }}>
             <button
-              className={`filter-btn-nearme ${city === 'auto' ? 'active' : ''}`}
-              onClick={() => setCity('auto')}
+              className={`filter-btn-nearme ${city === 'auto' && !citySearch ? 'active' : ''}`}
+              onClick={() => { setCity('auto'); setCitySearch(''); setShowCitySearch(false); }}
             >
               {nearMeLabel}
             </button>
-            {CITIES.map(c => (
-              <button
-                key={c.key}
-                className={`filter-btn ${city === c.key ? 'active' : ''}`}
-                onClick={() => setCity(c.key)}
-              >
-                {c.label}
-              </button>
-            ))}
+            {showCitySearch ? (
+              <input
+                ref={citySearchRef}
+                value={citySearch}
+                onChange={e => setCitySearch(e.target.value)}
+                onBlur={() => { if (!citySearch) setShowCitySearch(false); }}
+                placeholder="Search city..."
+                style={{
+                  border: '1px solid var(--indigo)',
+                  borderRadius: 20,
+                  padding: '5px 14px',
+                  fontSize: 13,
+                  outline: 'none',
+                  width: 140,
+                }}
+              />
+            ) : (
+              CITIES.map(c => (
+                <button
+                  key={c.key}
+                  className={`filter-btn ${resolvedCity === c.key && city !== 'auto' && !citySearch ? 'active' : ''}`}
+                  onClick={() => { setCity(c.key); setCitySearch(''); }}
+                >
+                  {c.label}
+                </button>
+              ))
+            )}
+            <button
+              className="filter-btn"
+              onClick={() => setShowCitySearch(s => !s)}
+              title="Search city"
+              style={{ padding: '5px 10px' }}
+            >
+              🔍
+            </button>
           </div>
 
+          {noResultsForSearch && (
+            <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 8, padding: '6px 12px', background: 'var(--indigo-light)', borderRadius: 8 }}>
+              No events found for "{citySearch}". Showing closest available cities.
+            </div>
+          )}
+
           {/* Event type filter */}
-          <div className="filter-row" style={{ marginBottom: 14 }}>
-            {filters.map(f => (
+          <div className="filter-row" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
+            {typeFilters.map(f => (
               <button
                 key={f.key}
-                className={`filter-btn ${filter === f.key ? 'active' : ''}`}
-                onClick={() => setFilter(f.key)}
+                className={`filter-btn ${typeFilter === f.key ? 'active' : ''}`}
+                onClick={() => setTypeFilter(f.key)}
               >
                 {f.label}
               </button>
             ))}
           </div>
 
-          {filtered.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🍽️</div>
-              <div className="empty-title">No events in this area</div>
-              <div className="empty-sub">Try switching cities or browsing all events.</div>
-            </div>
-          ) : (
-            <div className="feed-grid">
-              {filtered.map(evt => (
-                <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} />
-              ))}
-            </div>
-          )}
+          {/* Event search */}
+          <div style={{ marginBottom: 14 }}>
+            <input
+              value={eventSearch}
+              onChange={e => setEventSearch(e.target.value)}
+              placeholder="🔍 Search events..."
+              style={{
+                width: '100%',
+                border: '1px solid var(--border)',
+                borderRadius: 20,
+                padding: '8px 16px',
+                fontSize: 13,
+                outline: 'none',
+                background: 'var(--surface)',
+                color: 'var(--ink)',
+              }}
+            />
+          </div>
+
+          {(() => {
+            const displayEvents = eventSearch
+              ? filtered.filter(e =>
+                  e.title.toLowerCase().includes(eventSearch.toLowerCase()) ||
+                  (e.loc || '').toLowerCase().includes(eventSearch.toLowerCase()) ||
+                  (e.type || '').toLowerCase().includes(eventSearch.toLowerCase())
+                )
+              : noResultsForSearch
+              ? upcoming.slice(0, 6)
+              : filtered;
+
+            return displayEvents.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🍽️</div>
+                <div className="empty-title">No events found</div>
+                <div className="empty-sub">Try a different city or event type.</div>
+              </div>
+            ) : (
+              <div className="feed-grid">
+                {displayEvents.map(evt => (
+                  <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} />
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         <div className="feed-sidebar">
@@ -201,7 +319,8 @@ export default function FeedPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <div style={{ display: 'flex' }}>
                   {['AL','MR','JW'].map((ini, i) => (
-                    <div key={i} className={`av av-sm av-${['indigo','teal','amber'][i]}`} style={{ marginLeft: i > 0 ? -8 : 0, border: '2px solid white', zIndex: 3 - i }}>{ini}</div>
+                    <div key={i} className={`av av-sm av-${['indigo','teal','amber'][i]}`}
+                      style={{ marginLeft: i > 0 ? -8 : 0, border: '2px solid white', zIndex: 3 - i }}>{ini}</div>
                   ))}
                   <div className="av av-sm" style={{ marginLeft: -8, background: 'var(--border)', color: 'var(--ink3)', border: '2px solid white', fontSize: 14, zIndex: 0 }}>+</div>
                 </div>
@@ -210,7 +329,20 @@ export default function FeedPage() {
                   <div className="invite-friend-sub">Good meals are better shared</div>
                 </div>
               </div>
-              <button className="btn btn-primary btn-full btn-sm">📨 Send Invite</button>
+              <button
+                className="btn btn-primary btn-full btn-sm"
+                onClick={() => {
+                  const url = window.location.origin + '/feed';
+                  if (navigator.share) {
+                    navigator.share({ title: 'Join me on Tableaux', text: 'Discover intimate dining experiences near you.', url });
+                  } else {
+                    navigator.clipboard?.writeText(url).catch(() => {});
+                    window.alert('Invite link copied to clipboard!');
+                  }
+                }}
+              >
+                📨 Send Invite
+              </button>
             </div>
           </div>
         </div>
@@ -239,11 +371,12 @@ function PostEventBanner({ event, onView, onDismiss }) {
 function EventCard({ event, onClick }) {
   const cover = event.cover || {};
   const hasImg = cover.type === 'image' || event.img;
-  const coverStyle = !hasImg
-    ? cover.type === 'gradient' ? { background: cover.value }
-    : cover.type === 'emoji'   ? { background: cover.bg || '#1A1A2E' }
-    : { background: 'var(--indigo)' }
-    : {};
+  const coverBg = cover.type === 'gradient'
+    ? cover.value
+    : cover.type === 'emoji'
+    ? (cover.gradient || cover.bg || '#1A1A2E')
+    : 'var(--indigo)';
+  const coverStyle = !hasImg ? { background: coverBg } : {};
   const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
   const pillConfig = TYPE_PILLS[event.type] || { bg: 'rgba(108,93,211,.85)', label: event.type };
 

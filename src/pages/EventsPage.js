@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime, getEventMonthsAgo, getEventYear } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
 import CreateEventModal from '../components/CreateEventModal';
+
+const EVENT_TYPES = ['All', 'Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting'];
 
 export default function EventsPage() {
   const { events, deleteEvent, addToast } = useApp();
@@ -11,10 +13,22 @@ export default function EventsPage() {
   const [creating, setCreating] = useState(false);
   const [pastOpen, setPastOpen] = useState(false);
   const [pastFilter, setPastFilter] = useState('3mo');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [upcomingSearch, setUpcomingSearch] = useState('');
+  const [pastSearch, setPastSearch] = useState('');
+  const [fabVisible, setFabVisible] = useState(true);
+  const topBtnRef = useRef(null);
 
   const mine = events.filter(e => e.mine);
   const upcoming = mine.filter(e => !e.isEnded && !e.isPast);
   const past = mine.filter(e => e.isEnded || e.isPast);
+
+  // Hide top New Event button when user scrolls down (FAB takes over)
+  useEffect(() => {
+    const onScroll = () => setFabVisible(window.scrollY < 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   function filterPast(evts) {
     if (pastFilter === '3mo') return evts.filter(e => getEventMonthsAgo(e) <= 3);
@@ -32,22 +46,29 @@ export default function EventsPage() {
     ...years.map(y => ({ key: String(y), label: String(y) })),
   ];
 
-  const filteredPast = filterPast(past);
+  const displayUpcoming = upcoming
+    .filter(e => typeFilter === 'All' || e.type === typeFilter)
+    .filter(e => !upcomingSearch ||
+      e.title.toLowerCase().includes(upcomingSearch.toLowerCase()) ||
+      (e.loc || '').toLowerCase().includes(upcomingSearch.toLowerCase())
+    );
 
-  const upcomingTypes = ['All', 'Dinner Party', 'Supper Club', 'Potluck', 'Cooking Class'];
-  const [typeFilter, setTypeFilter] = useState('All');
-  const displayUpcoming = upcoming.filter(e => typeFilter === 'All' || e.type === typeFilter);
-
-  // Next upcoming event for nudge/reminder tools
-  const nextEvent = displayUpcoming.sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  const filteredPast = filterPast(past).filter(e =>
+    !pastSearch ||
+    e.title.toLowerCase().includes(pastSearch.toLowerCase()) ||
+    (e.loc || '').toLowerCase().includes(pastSearch.toLowerCase())
+  );
 
   return (
     <main className="page-content">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
-        <button className="btn btn-primary" onClick={() => setCreating(true)}>
-          + New Event
-        </button>
-      </div>
+      {/* Top New Event button — only visible when at top of page */}
+      {fabVisible && (
+        <div ref={topBtnRef} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+          <button className="btn btn-primary" onClick={() => setCreating(true)}>
+            + New Event
+          </button>
+        </div>
+      )}
 
       {/* Upcoming */}
       <div style={{ marginBottom: 32 }}>
@@ -58,13 +79,31 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Type filter */}
-        <div className="events-toolbar" style={{ marginBottom: 16 }}>
-          {upcomingTypes.map(t => (
-            <button key={t} className={`filter-btn ${typeFilter === t ? 'active' : ''}`} onClick={() => setTypeFilter(t)}>
-              {t}
-            </button>
-          ))}
+        {/* Search + type filter */}
+        <div style={{ marginBottom: 10 }}>
+          <input
+            value={upcomingSearch}
+            onChange={e => setUpcomingSearch(e.target.value)}
+            placeholder="🔍 Search upcoming events..."
+            style={{
+              width: '100%',
+              border: '1px solid var(--border)',
+              borderRadius: 20,
+              padding: '8px 16px',
+              fontSize: 13,
+              outline: 'none',
+              background: 'var(--surface)',
+              color: 'var(--ink)',
+              marginBottom: 8,
+            }}
+          />
+          <div className="events-toolbar" style={{ flexWrap: 'wrap', gap: 6 }}>
+            {EVENT_TYPES.map(t => (
+              <button key={t} className={`filter-btn ${typeFilter === t ? 'active' : ''}`} onClick={() => setTypeFilter(t)}>
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
 
         {displayUpcoming.length === 0 ? (
@@ -77,22 +116,17 @@ export default function EventsPage() {
             </button>
           </div>
         ) : (
-          <>
-            <div className="events-list" style={{ marginBottom: 16 }}>
-              {displayUpcoming.map(evt => (
-                <EventRow
-                  key={evt.id}
-                  event={evt}
-                  onClick={() => setSelected(evt)}
-                  onEdit={() => setEditing(evt)}
-                  onDelete={() => { deleteEvent(evt.id); addToast('Event deleted', ''); }}
-                />
-              ))}
-            </div>
-
-            {/* Nudge & Reminder Tools — shown when there are upcoming events */}
-            {nextEvent && <HostToolsPanel event={nextEvent} addToast={addToast} />}
-          </>
+          <div className="events-list">
+            {displayUpcoming.map(evt => (
+              <EventRow
+                key={evt.id}
+                event={evt}
+                onClick={() => setSelected(evt)}
+                onEdit={() => setEditing(evt)}
+                onDelete={() => { deleteEvent(evt.id); addToast('Event deleted', ''); }}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -107,6 +141,24 @@ export default function EventsPage() {
 
           {pastOpen && (
             <>
+              <div style={{ marginBottom: 8 }}>
+                <input
+                  value={pastSearch}
+                  onChange={e => setPastSearch(e.target.value)}
+                  placeholder="🔍 Search past events..."
+                  style={{
+                    width: '100%',
+                    border: '1px solid var(--border)',
+                    borderRadius: 20,
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    outline: 'none',
+                    background: 'var(--surface)',
+                    color: 'var(--ink)',
+                    marginBottom: 8,
+                  }}
+                />
+              </div>
               <div className="past-filter-row">
                 {pastFilters.map(f => (
                   <button
@@ -150,88 +202,13 @@ export default function EventsPage() {
   );
 }
 
-// ── Nudge & Reminder Tools Panel ──────────────────────────────────────────────
-function HostToolsPanel({ event, addToast }) {
-  const [reminderSent, setReminderSent] = useState(false);
-  const [nudgeSent, setNudgeSent] = useState(false);
-
-  const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
-  const pendingGuests  = event.guests?.filter(g => g.s === 'pending')  || [];
-  const spotsLeft = event.cap - approvedGuests.length;
-
-  function handleReminder() {
-    setReminderSent(true);
-    addToast(`Reminder sent to ${approvedGuests.length} guest${approvedGuests.length !== 1 ? 's' : ''} 📩`, 'success');
-  }
-
-  function handleNudge() {
-    setNudgeSent(true);
-    addToast(`Nudge sent to ${pendingGuests.length} pending guest${pendingGuests.length !== 1 ? 's' : ''} 👋`, 'success');
-  }
-
-  return (
-    <div className="host-tools-panel">
-      <div className="host-tools-header">
-        <span className="host-tools-title">🛠️ Host Tools</span>
-        <span className="host-tools-event">{event.title}</span>
-      </div>
-
-      <div className="host-tools-stats">
-        <div className="host-tools-stat">
-          <span className="host-tools-stat-val">{approvedGuests.length}</span>
-          <span className="host-tools-stat-label">Confirmed</span>
-        </div>
-        <div className="host-tools-stat">
-          <span className="host-tools-stat-val" style={{ color: pendingGuests.length > 0 ? 'var(--amber)' : 'var(--ink3)' }}>
-            {pendingGuests.length}
-          </span>
-          <span className="host-tools-stat-label">Pending</span>
-        </div>
-        <div className="host-tools-stat">
-          <span className="host-tools-stat-val" style={{ color: spotsLeft <= 2 ? 'var(--coral)' : 'var(--teal)' }}>
-            {spotsLeft}
-          </span>
-          <span className="host-tools-stat-label">Spots left</span>
-        </div>
-      </div>
-
-      <div className="host-tools-actions">
-        <button
-          className={`host-tool-btn ${reminderSent ? 'sent' : ''}`}
-          onClick={handleReminder}
-          disabled={reminderSent || approvedGuests.length === 0}
-        >
-          {reminderSent ? '✓ Reminder sent' : `📩 Send reminder (${approvedGuests.length})`}
-        </button>
-        <button
-          className={`host-tool-btn ${nudgeSent ? 'sent' : ''}`}
-          onClick={handleNudge}
-          disabled={nudgeSent || pendingGuests.length === 0}
-          style={{ opacity: pendingGuests.length === 0 ? 0.45 : 1 }}
-        >
-          {nudgeSent ? '✓ Nudge sent' : `👋 Nudge pending (${pendingGuests.length})`}
-        </button>
-        <button
-          className="host-tool-btn"
-          onClick={() => {
-            navigator.clipboard?.writeText(`${window.location.origin}/event/${event.id}`).catch(() => {});
-            addToast('Event link copied! 🔗', 'success');
-          }}
-        >
-          🔗 Copy invite link
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function EventRow({ event, onClick, onEdit, onDelete, past }) {
   const cover = event.cover || {};
   const hasImg = cover.type === 'image' || event.img;
 
   return (
     <div className="event-row" onClick={onClick} style={past ? { opacity: 0.8 } : {}}>
-      <div className="event-row-cover" style={!hasImg ? { background: cover.value || 'var(--indigo)' } : {}}>
+      <div className="event-row-cover" style={!hasImg ? { background: cover.gradient || cover.value || 'var(--indigo)' } : {}}>
         {hasImg
           ? <img src={cover.value || event.img} alt={event.title} />
           : <span>{cover.emoji || '🍽️'}</span>}
@@ -248,12 +225,20 @@ function EventRow({ event, onClick, onEdit, onDelete, past }) {
           )}
         </div>
       </div>
-      {!past && (
-        <div className="event-row-actions" onClick={e => e.stopPropagation()}>
-          {onEdit   && <button className="btn btn-ghost btn-sm" onClick={onEdit}>✏️</button>}
-          {onDelete && <button className="btn btn-ghost btn-sm" onClick={onDelete} style={{ color: 'var(--coral)' }}>🗑️</button>}
-        </div>
-      )}
+      <div className="event-row-actions" onClick={e => e.stopPropagation()}>
+        {!past && onEdit   && <button className="btn btn-ghost btn-sm" onClick={onEdit}>✏️</button>}
+        {!past && onDelete && <button className="btn btn-ghost btn-sm" onClick={onDelete} style={{ color: 'var(--coral)' }}>🗑️</button>}
+        {event.mine && (
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ fontSize: 11, padding: '3px 8px', color: 'var(--indigo)', border: '1px solid var(--indigo-light)' }}
+            onClick={e => { e.stopPropagation(); onClick(); }}
+            title="Host tools"
+          >
+            🛠️ Host
+          </button>
+        )}
+      </div>
     </div>
   );
 }
