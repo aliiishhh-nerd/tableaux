@@ -21,7 +21,6 @@ const NAV = [
 ];
 
 // Routes accessible without login
-const PUBLIC_PATHS = ['/blog', '/faq', '/'];
 
 export default function AppShell() {
   const { user, events, toasts } = useApp();
