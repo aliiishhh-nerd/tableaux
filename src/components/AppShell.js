@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, NavLink, useLocation, Link, useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import AuthPage from '../pages/AuthPage';
 import FeedPage from '../pages/FeedPage';
@@ -20,7 +20,181 @@ const NAV = [
   { to: '/blog',    icon: '📝', label: 'Fork & Story' },
 ];
 
-// Routes accessible without login
+// Public event preview page — no login required
+function PublicEventPage() {
+  const { id } = useParams();
+  const { events } = useApp();
+  const navigate = useNavigate();
+  const event = events.find(e => e.id === id);
+
+  if (!event) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--page)', flexDirection: 'column', gap: 16, padding: 24,
+      }}>
+        <div style={{ fontSize: 48 }}>🍽️</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>Event not found</div>
+        <div style={{ fontSize: 14, color: 'var(--ink2)', textAlign: 'center' }}>
+          This event may have ended or the link may be incorrect.
+        </div>
+        <button className="btn btn-primary" onClick={() => navigate('/')}>Back to Tableaux</button>
+      </div>
+    );
+  }
+
+  const cover = event.cover || {};
+  const coverBg = cover.type === 'gradient' ? cover.value
+    : cover.type === 'emoji' ? (cover.bg || '#1A1A2E')
+    : 'linear-gradient(135deg, #1A1A2E, #2D2550)';
+
+  const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
+  const fillPct = Math.min(100, (approvedGuests.length / (event.cap || 1)) * 100);
+  const spotsLeft = (event.cap || 0) - approvedGuests.length;
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--page)' }}>
+      {/* Header bar */}
+      <div style={{
+        padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid var(--border)', background: 'var(--surface)',
+      }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 20 }}>🍽️</div>
+          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--ink)' }}>Table<span style={{ color: 'var(--indigo)' }}>aux</span></div>
+        </Link>
+        <button className="btn btn-primary btn-sm" onClick={() => navigate('/auth')}>
+          Sign in to RSVP
+        </button>
+      </div>
+
+      {/* Cover hero */}
+      <div style={{ height: 260, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: coverBg }} />
+        {cover.type === 'image' && cover.value ? (
+          <img src={cover.value} alt={event.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+        ) : cover.type === 'emoji' ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 90 }}>{cover.emoji}</span>
+          </div>
+        ) : null}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 60%)' }} />
+        <div style={{ position: 'absolute', bottom: 24, left: 24, right: 24 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+            <span className="chip chip-indigo" style={{ background: 'rgba(108,93,211,0.85)', color: 'white' }}>{event.type}</span>
+            {event.vis === 'Public' && <span className="chip" style={{ background: 'rgba(255,255,255,.2)', color: 'white', backdropFilter: 'blur(4px)' }}>Public</span>}
+          </div>
+          <h1 style={{ color: 'white', fontSize: 26, fontWeight: 800, lineHeight: 1.2, margin: 0 }}>{event.title}</h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '24px 20px 48px' }}>
+
+        {/* Key details */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+          {[
+            { icon: '📅', val: event.date ? new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }) : '' },
+            { icon: '🕖', val: event.time ? (() => { const [h,m] = event.time.split(':'); const hr = parseInt(h); return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; })() : '' },
+            { icon: '📍', val: event.loc },
+            { icon: '👔', val: event.dressCode || 'No dress code' },
+            { icon: '👤', val: `Hosted by ${event.host}` },
+          ].filter(item => item.val).map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface)', borderRadius: 20, padding: '6px 14px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+              <span>{item.icon}</span>
+              <span>{item.val}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Address blur */}
+        <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }}>🗺️</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 2 }}>Address</div>
+              <div style={{ fontSize: 13, color: 'var(--ink2)', fontStyle: 'italic' }}>
+                {event.loc || 'Location hidden'}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>
+                🔒 Exact address shared after your RSVP is confirmed
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        {event.desc && (
+          <div style={{ fontSize: 15, color: 'var(--ink2)', lineHeight: 1.8, marginBottom: 20, padding: '16px', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
+            {event.desc}
+          </div>
+        )}
+
+        {/* Capacity bar */}
+        <div style={{ marginBottom: 24, padding: '14px 16px', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
+            <span style={{ fontWeight: 600, color: 'var(--ink)' }}>
+              {approvedGuests.length} attending
+            </span>
+            <span style={{ color: spotsLeft <= 3 ? 'var(--coral)' : 'var(--ink3)', fontWeight: spotsLeft <= 3 ? 700 : 400 }}>
+              {spotsLeft > 0 ? `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left` : 'Full'}
+            </span>
+          </div>
+          <div className="progress-bar" style={{ height: 8 }}>
+            <div className="progress-fill" style={{ width: `${fillPct}%`, background: spotsLeft <= 3 ? 'var(--coral)' : undefined }} />
+          </div>
+        </div>
+
+        {/* Blurred teaser if description is long */}
+        {event.supperClub && (
+          <div style={{ marginBottom: 24, padding: '16px', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🍽️ Multi-course Menu</div>
+            <div style={{ filter: 'blur(4px)', userSelect: 'none', pointerEvents: 'none' }}>
+              {event.supperClub.courses?.slice(0, 2).map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--indigo-light)', color: 'var(--indigo)', fontWeight: 800, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{c.num}</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name || 'Course details hidden'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink2)' }}>{c.desc || 'Sign in to see full menu'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(2px)' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 18, marginBottom: 4 }}>🔒</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>Sign in to see the full menu</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CTA */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1A1A2E, #2D2550)',
+          borderRadius: 16, padding: '24px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: 'white', marginBottom: 6 }}>Want to join?</div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,.65)', marginBottom: 20, lineHeight: 1.5 }}>
+            Create a free Tableaux account to RSVP, see the full address, and connect with your host.
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ width: '100%', fontSize: 15, padding: '14px', borderRadius: 12 }}
+            onClick={() => navigate('/auth')}
+          >
+            Join Tableaux to RSVP
+          </button>
+          <div style={{ marginTop: 12, fontSize: 13, color: 'rgba(255,255,255,.4)' }}>
+            Already have an account? <span style={{ color: 'rgba(255,255,255,.8)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/auth')}>Sign in</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AppShell() {
   const { user, events, toasts } = useApp();
@@ -31,10 +205,13 @@ export default function AppShell() {
   const [creatingEvent, setCreatingEvent] = useState(false);
   const location = useLocation();
 
-  if (!user && location.pathname === '/') return <LandingPage />;
-  // Allow blog and FAQ without login
+  // Public routes — no login required
+  if (location.pathname === '/') {
+    if (!user) return <LandingPage />;
+  }
   if (!user && location.pathname.startsWith('/blog')) return <BlogPage />;
   if (!user && location.pathname.startsWith('/faq')) return <FAQPage />;
+  if (!user && location.pathname.startsWith('/e/')) return <PublicEventWrapper />;
   if (!user) return <AuthPage />;
 
   const invitePending = events.filter(
@@ -83,7 +260,6 @@ export default function AppShell() {
           </div>
         </nav>
 
-        {/* Footer links in sidebar */}
         <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
           <Link
             to="/faq"
@@ -132,16 +308,16 @@ export default function AppShell() {
         </header>
 
         <Routes>
-          <Route path="/"        element={isNewUser ? <EmptyStatePage onCreateEvent={() => setCreatingEvent(true)} onBrowse={() => {}} /> : <FeedPage />} />
-          <Route path="/feed"    element={isNewUser ? <EmptyStatePage onCreateEvent={() => setCreatingEvent(true)} onBrowse={() => {}} /> : <FeedPage />} />
-          <Route path="/events"  element={<EventsPage />} />
-          <Route path="/invites" element={<InvitesPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/blog"    element={<BlogPage />} />
-          <Route path="/faq"     element={<FAQPage />} />
+          <Route path="/"           element={isNewUser ? <EmptyStatePage onCreateEvent={() => setCreatingEvent(true)} onBrowse={() => {}} /> : <FeedPage />} />
+          <Route path="/feed"       element={isNewUser ? <EmptyStatePage onCreateEvent={() => setCreatingEvent(true)} onBrowse={() => {}} /> : <FeedPage />} />
+          <Route path="/events"     element={<EventsPage />} />
+          <Route path="/invites"    element={<InvitesPage />} />
+          <Route path="/profile"    element={<ProfilePage />} />
+          <Route path="/blog"       element={<BlogPage />} />
+          <Route path="/faq"        element={<FAQPage />} />
+          <Route path="/e/:id"      element={<PublicEventPage />} />
         </Routes>
 
-        {/* Footer */}
         <footer style={{
           borderTop: '1px solid var(--border)',
           padding: '24px 24px 80px',
@@ -163,7 +339,6 @@ export default function AppShell() {
         </footer>
       </div>
 
-      {/* FAB */}
       <button
         className="fab"
         onClick={() => setCreatingEvent(true)}
@@ -217,11 +392,17 @@ export default function AppShell() {
   );
 }
 
+// Wrapper so PublicEventPage has access to useApp even when user is not logged in
+function PublicEventWrapper() {
+  return <PublicEventPage />;
+}
+
 function getPageInfo(path) {
   if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
   if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
   if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
   if (path.startsWith('/blog'))    return { title: 'Fork & Story', sub: 'Stories & Recipes from Tableaux' };
   if (path.startsWith('/faq'))     return { title: 'Help & FAQ',   sub: 'Everything you need to know' };
+  if (path.startsWith('/e/'))      return { title: 'Event Preview', sub: null };
   return { title: 'Explore', sub: 'Intimate dining near you' };
 }

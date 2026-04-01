@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiPresetsRow, EmojiTrigger } from './EmojiPicker';
@@ -30,7 +30,183 @@ const DEFAULT_SUPPER_CLUB = {
   ],
 };
 
+const PLAYLIST_PLATFORMS = [
+  { key: 'spotify',    label: 'Spotify',     icon: '🎵', placeholder: 'https://open.spotify.com/playlist/...' },
+  { key: 'apple',      label: 'Apple Music', icon: '🎶', placeholder: 'https://music.apple.com/playlist/...' },
+  { key: 'youtube',    label: 'YouTube',     icon: '▶️', placeholder: 'https://youtube.com/playlist/...' },
+  { key: 'soundcloud', label: 'SoundCloud',  icon: '🔊', placeholder: 'https://soundcloud.com/...' },
+];
+
+const PRESET_COLORS = [
+  '#6C5DD3', '#2EC4B6', '#D4AF37', '#E94560', '#FF6B6B',
+  '#4ECDC4', '#45B7D1', '#96CEB4', '#1A1A2E', '#2D2550',
+];
+
 function newId() { return 'pi-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7); }
+
+// Address autocomplete using Nominatim (free, no API key)
+function AddressAutocomplete({ value, onChange, onSelect }) {
+  const [query, setQuery] = useState(value || '');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  useEffect(() => { setQuery(value || ''); }, [value]);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function handleInput(e) {
+    const val = e.target.value;
+    setQuery(val);
+    onChange(val);
+    clearTimeout(debounceRef.current);
+    if (val.length < 3) { setResults([]); setOpen(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          'https://nominatim.openstreetmap.org/search?' +
+          new URLSearchParams({ q: val, format: 'json', limit: 5, addressdetails: 1 }),
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const data = await res.json();
+        setResults(data);
+        setOpen(data.length > 0);
+      } catch {
+        setResults([]);
+      }
+      setLoading(false);
+    }, 400);
+  }
+
+  function handleSelect(item) {
+    const displayName = item.display_name;
+    setQuery(displayName);
+    onChange(displayName);
+    onSelect && onSelect(item);
+    setResults([]);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative', flex: 1 }}>
+      <input
+        className="form-input"
+        value={query}
+        onChange={handleInput}
+        onFocus={() => results.length > 0 && setOpen(true)}
+        placeholder="Start typing an address..."
+        autoComplete="off"
+      />
+      {loading && (
+        <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--ink3)' }}>
+          ⏳
+        </div>
+      )}
+      {open && results.length > 0 && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+          zIndex: 1000, overflow: 'hidden',
+        }}>
+          {results.map((item, i) => (
+            <div
+              key={i}
+              onMouseDown={() => handleSelect(item)}
+              style={{
+                padding: '9px 14px', fontSize: 13, cursor: 'pointer', color: 'var(--ink)',
+                borderBottom: i < results.length - 1 ? '1px solid var(--border)' : 'none',
+                display: 'flex', gap: 8, alignItems: 'flex-start',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--indigo-light)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <span style={{ flexShrink: 0, marginTop: 1 }}>📍</span>
+              <span style={{ lineHeight: 1.4 }}>{item.display_name}</span>
+            </div>
+          ))}
+          <div style={{ padding: '6px 14px', fontSize: 10, color: 'var(--ink3)', background: 'var(--page)', borderTop: '1px solid var(--border)' }}>
+            Address data © OpenStreetMap contributors
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Inline hex color picker with preset swatches + custom input
+function ColorPicker({ value, onChange, label }) {
+  const [showCustom, setShowCustom] = useState(false);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {PRESET_COLORS.map(c => (
+          <div
+            key={c}
+            onClick={() => onChange(c)}
+            title={c}
+            style={{
+              width: 28, height: 28, borderRadius: 6, cursor: 'pointer',
+              background: c,
+              border: value === c ? '3px solid var(--indigo)' : '2px solid transparent',
+              outline: value === c ? '2px solid white' : 'none',
+              outlineOffset: -4,
+              transition: 'transform 0.1s',
+              boxShadow: '0 1px 4px rgba(0,0,0,.15)',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        ))}
+        <div
+          onClick={() => setShowCustom(s => !s)}
+          title="Custom color"
+          style={{
+            width: 28, height: 28, borderRadius: 6, cursor: 'pointer',
+            background: PRESET_COLORS.includes(value) ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : value,
+            border: !PRESET_COLORS.includes(value) ? '3px solid var(--indigo)' : '2px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14,
+          }}
+        >
+          {PRESET_COLORS.includes(value) ? '＋' : ''}
+        </div>
+      </div>
+      {showCustom && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+          <input
+            type="color"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            style={{ width: 40, height: 32, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', padding: 2 }}
+          />
+          <input
+            className="form-input"
+            value={value}
+            onChange={e => {
+              const v = e.target.value;
+              if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onChange(v);
+            }}
+            placeholder="#6C5DD3"
+            style={{ width: 110, fontFamily: 'monospace', fontSize: 13 }}
+          />
+          <div style={{ width: 32, height: 32, borderRadius: 6, background: value, border: '1px solid var(--border)', flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Preview</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CreateEventModal({ event, onClose }) {
   const { createEvent, updateEvent, addToast } = useApp();
@@ -43,6 +219,7 @@ export default function CreateEventModal({ event, onClose }) {
     time:           event?.time || '19:00',
     loc:            event?.loc || '',
     addr:           event?.addr || '',
+    addrHidden:     event?.addrHidden ?? true,
     cap:            event?.cap || 10,
     vis:            event?.vis || 'Invite Only',
     desc:           event?.desc || '',
@@ -52,6 +229,7 @@ export default function CreateEventModal({ event, onClose }) {
     galleryEnabled: event?.galleryEnabled ?? true,
     seriesName:     event?.seriesName || '',
     seriesVolume:   event?.seriesVolume || 1,
+    playlist:       event?.playlist || { platform: 'spotify', url: '' },
   });
 
   const [cover, setCover] = useState(
@@ -75,6 +253,20 @@ export default function CreateEventModal({ event, onClose }) {
     setForm(f => ({ ...f, [field]: (f[field] || '') + emoji }));
   }
 
+  function setPlaylist(key, val) {
+    setForm(f => ({ ...f, playlist: { ...f.playlist, [key]: val } }));
+  }
+
+  function handleAddressSelect(nominatimItem) {
+    // Auto-populate loc with city/neighbourhood if empty
+    const addr = nominatimItem.address || {};
+    const neighborhood = addr.neighbourhood || addr.suburb || addr.quarter || '';
+    const city = addr.city || addr.town || addr.village || '';
+    if (!form.loc && (neighborhood || city)) {
+      set('loc', [neighborhood, city].filter(Boolean).join(', '));
+    }
+  }
+
   function handleSubmit() {
     if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
     if (!form.date) { addToast('Please set a date', 'error'); return; }
@@ -84,6 +276,7 @@ export default function CreateEventModal({ event, onClose }) {
       cover,
       potluck:    isPotluck    ? { items: potluckItems } : null,
       supperClub: isSupperClub ? scData                 : null,
+      playlist:   form.playlist?.url?.trim() ? form.playlist : null,
     };
 
     if (isEdit) {
@@ -236,6 +429,43 @@ export default function CreateEventModal({ event, onClose }) {
             </div>
           </div>
 
+          {/* ADDRESS with autocomplete + hide toggle */}
+          <div className="form-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label className="form-label" style={{ margin: 0 }}>Full Address</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--ink2)' }}>
+                  {form.addrHidden ? '🔒 Hidden until RSVP confirmed' : '👁 Visible to all guests'}
+                </span>
+                <div
+                  onClick={() => set('addrHidden', !form.addrHidden)}
+                  style={{
+                    width: 36, height: 20, borderRadius: 10,
+                    background: form.addrHidden ? 'var(--indigo)' : 'var(--border)',
+                    position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
+                  }}
+                >
+                  <div style={{
+                    width: 14, height: 14, borderRadius: 7, background: 'white',
+                    position: 'absolute', top: 3, left: form.addrHidden ? 19 : 3,
+                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+                  }} />
+                </div>
+              </div>
+            </div>
+            <AddressAutocomplete
+              value={form.addr}
+              onChange={val => set('addr', val)}
+              onSelect={handleAddressSelect}
+            />
+            {form.addrHidden && (
+              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink3)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span>🔐</span>
+                Guests will see only your location name until their RSVP is accepted.
+              </div>
+            )}
+          </div>
+
           {/* Dress Code */}
           <div className="form-row">
             <div className="form-group">
@@ -262,6 +492,44 @@ export default function CreateEventModal({ event, onClose }) {
               <input className="form-input" value={form.invH} onChange={e => set('invH', e.target.value)} placeholder="You're Invited!" style={{ flex: 1 }} />
               <EmojiTrigger onSelect={em => appendToField('invH', em)} />
             </div>
+          </div>
+
+          {/* INVITATION COLOR — hex picker */}
+          <div className="form-group">
+            <label className="form-label">Invitation Accent Color</label>
+            <ColorPicker value={form.invBg} onChange={val => set('invBg', val)} />
+            <div style={{ marginTop: 10, borderRadius: 10, background: form.invBg, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>✉️</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'white', textShadow: '0 1px 3px rgba(0,0,0,.3)' }}>{form.invH || "You're Invited"}</span>
+            </div>
+          </div>
+
+          {/* PLAYLIST */}
+          <div className="form-group">
+            <label className="form-label">🎵 Event Playlist <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+              {PLAYLIST_PLATFORMS.map(p => (
+                <button
+                  key={p.key}
+                  className={`filter-btn ${form.playlist?.platform === p.key ? 'active' : ''}`}
+                  style={{ padding: '5px 12px', fontSize: 12 }}
+                  onClick={() => setPlaylist('platform', p.key)}
+                >
+                  {p.icon} {p.label}
+                </button>
+              ))}
+            </div>
+            <input
+              className="form-input"
+              value={form.playlist?.url || ''}
+              onChange={e => setPlaylist('url', e.target.value)}
+              placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'}
+            />
+            {form.playlist?.url?.trim() && (
+              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span>✓</span> Playlist will be shown to guests on the event page
+              </div>
+            )}
           </div>
 
           {/* SUPPER CLUB TEMPLATE */}

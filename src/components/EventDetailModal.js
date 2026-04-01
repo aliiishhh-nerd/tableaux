@@ -2,12 +2,29 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 
+const REMINDER_OPTIONS = [
+  { key: '2d',  label: '2 days before',  icon: '📅', desc: 'Give guests plenty of notice' },
+  { key: '24h', label: '24 hours before', icon: '⏰', desc: 'A friendly day-before heads up' },
+  { key: 'dof', label: 'Day of event',    icon: '🔔', desc: 'Morning of — get them hyped' },
+];
+
+const PLATFORM_ICONS = {
+  spotify:    { icon: '🎵', label: 'Spotify',     color: '#1DB954' },
+  apple:      { icon: '🎶', label: 'Apple Music', color: '#FC3C44' },
+  youtube:    { icon: '▶️', label: 'YouTube',     color: '#FF0000' },
+  soundcloud: { icon: '🔊', label: 'SoundCloud',  color: '#FF5500' },
+};
+
 export default function EventDetailModal({ event, onClose, onEdit }) {
   const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, addToast, addComment, pinQuote } = useApp();
   const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [commentText, setCommentText] = useState('');
+  const [reminders, setReminders] = useState({ '2d': false, '24h': true, 'dof': false });
+  const [reminderSaved, setReminderSaved] = useState(false);
+  const [nudgeSent, setNudgeSent] = useState({});
+  const [showFullAddr, setShowFullAddr] = useState(false);
   const fileRef = useRef();
 
   if (!event) return null;
@@ -19,6 +36,10 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const hasGallery = event.galleryEnabled && (isEnded || isHost);
   const myComment = event.eventComments?.find(c => c.userId === 'u1');
   const passportStamped = myComment?.passportStamped;
+  const isConfirmed = myGuest?.s === 'approved';
+  const addrHidden = event.addrHidden && !isHost && !isConfirmed && !showFullAddr;
+
+  const pendingGuests = event.guests?.filter(g => g.s === 'pending') || [];
 
   const tabs = [
     { key: 'overview', label: '📋 Overview' },
@@ -27,6 +48,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
     { key: 'guests', label: `👥 Guests (${event.guests?.length || 0})` },
     ...(hasGallery ? [{ key: 'photos', label: `📸 Photos${event.photoGallery?.length ? ` (${event.photoGallery.length})` : ''}` }] : []),
     ...(isEnded ? [{ key: 'comments', label: `💬 Moments${event.eventComments?.length ? ` (${event.eventComments.length})` : ''}` }] : []),
+    ...(isHost ? [{ key: 'host-tools', label: `🛠️ Host Tools${pendingGuests.length > 0 ? ` · ${pendingGuests.length}` : ''}` }] : []),
   ];
 
   function handleUploadPhoto(e) {
@@ -58,6 +80,39 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
     }
     setCommentText('');
     addToast('Moment shared! Your Dining Passport stamp is complete. 🗺️', 'success');
+  }
+
+  function handleSaveReminders() {
+    setReminderSaved(true);
+    const active = REMINDER_OPTIONS.filter(r => reminders[r.key]).map(r => r.label);
+    if (active.length === 0) {
+      addToast('Reminders cleared', '');
+    } else {
+      addToast(`Reminders set: ${active.join(', ')} ✓`, 'success');
+    }
+  }
+
+  function handleNudge(guestId, guestName) {
+    setNudgeSent(s => ({ ...s, [guestId]: true }));
+    addToast(`Nudge sent to ${guestName} 👋`, 'success');
+  }
+
+  function handleCopyLink() {
+    const url = `${window.location.origin}/e/${event.id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => addToast('Event link copied! 🔗', 'success'));
+    } else {
+      window.prompt('Copy this link:', url);
+    }
+  }
+
+  function handleShare() {
+    const url = `${window.location.origin}/e/${event.id}`;
+    if (navigator.share) {
+      navigator.share({ title: event.title, text: `Join me at ${event.title} on Tableaux`, url });
+    } else {
+      handleCopyLink();
+    }
   }
 
   const cover = event.cover || {};
@@ -138,6 +193,64 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 ))}
               </div>
 
+              {/* Address — hidden until confirmed or host */}
+              {event.addr && (
+                <div style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--page)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>🗺️</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 2 }}>Address</div>
+                      {addrHidden ? (
+                        <div>
+                          <div style={{ fontSize: 13, color: 'var(--ink2)', fontStyle: 'italic' }}>
+                            {event.loc || 'Location hidden'}
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            🔒 Full address revealed after RSVP is confirmed
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 500 }}>{event.addr}</div>
+                      )}
+                    </div>
+                    {!isHost && isConfirmed && event.addrHidden && (
+                      <span className="chip chip-teal" style={{ fontSize: 11 }}>✓ Unlocked</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Playlist */}
+              {event.playlist?.url && (
+                <div style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--page)', borderRadius: 10, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                    background: PLATFORM_ICONS[event.playlist.platform]?.color || 'var(--indigo)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                  }}>
+                    {PLATFORM_ICONS[event.playlist.platform]?.icon || '🎵'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 2 }}>
+                      {PLATFORM_ICONS[event.playlist.platform]?.label || 'Playlist'} · Tonight's Vibe
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--indigo)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {event.playlist.url}
+                    </div>
+                  </div>
+                  <a
+                    href={event.playlist.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-ghost btn-sm"
+                    style={{ flexShrink: 0 }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    Listen →
+                  </a>
+                </div>
+              )}
+
               {event.desc && (
                 <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, padding: '14px', background: 'var(--page)', borderRadius: 10, marginBottom: 16 }}>
                   {event.desc}
@@ -178,8 +291,53 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
               {isInvited && myGuest?.s === 'approved' && (
-                <div style={{ marginTop: 16, padding: 12, background: 'var(--teal-light)', borderRadius: 10, fontSize: 13, color: '#07A87B', fontWeight: 600 }}>
-                  ✓ You are going!
+                <div>
+                  <div style={{ marginTop: 16, padding: 12, background: 'var(--teal-light)', borderRadius: 10, fontSize: 13, color: '#07A87B', fontWeight: 600 }}>
+                    ✓ You are going!
+                  </div>
+                  {/* Reminder scheduler — for confirmed guests */}
+                  <div style={{ marginTop: 12, padding: '14px 16px', background: 'var(--page)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>🔔 Event Reminders</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
+                      Choose when to receive reminders for this event.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                      {REMINDER_OPTIONS.map(r => (
+                        <div
+                          key={r.key}
+                          onClick={() => { setReminders(prev => ({ ...prev, [r.key]: !prev[r.key] })); setReminderSaved(false); }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                            background: reminders[r.key] ? 'var(--indigo-light)' : 'var(--surface)',
+                            borderRadius: 10, border: `1.5px solid ${reminders[r.key] ? 'var(--indigo-mid)' : 'var(--border)'}`,
+                            cursor: 'pointer', transition: 'all 0.15s',
+                          }}
+                        >
+                          <span style={{ fontSize: 18, flexShrink: 0 }}>{r.icon}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: reminders[r.key] ? 'var(--indigo)' : 'var(--ink)' }}>{r.label}</div>
+                            <div style={{ fontSize: 11, color: 'var(--ink3)' }}>{r.desc}</div>
+                          </div>
+                          <div style={{
+                            width: 20, height: 20, borderRadius: 5,
+                            background: reminders[r.key] ? 'var(--indigo)' : 'transparent',
+                            border: `2px solid ${reminders[r.key] ? 'var(--indigo)' : 'var(--border)'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: 'white', fontSize: 12, flexShrink: 0,
+                          }}>
+                            {reminders[r.key] ? '✓' : ''}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      className={`btn btn-sm ${reminderSaved ? 'btn-ghost' : 'btn-primary'}`}
+                      style={{ width: '100%' }}
+                      onClick={handleSaveReminders}
+                    >
+                      {reminderSaved ? '✓ Reminders saved' : 'Save reminders'}
+                    </button>
+                  </div>
                 </div>
               )}
               {isInvited && myGuest?.s === 'declined' && (
@@ -255,6 +413,22 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
               onPin={typeof pinQuote === 'function' ? (id) => { pinQuote(event.id, id); addToast('Quote pinned to your profile!', 'success'); } : null}
             />
           )}
+
+          {/* HOST TOOLS */}
+          {tab === 'host-tools' && isHost && (
+            <HostToolsTab
+              event={event}
+              reminders={reminders}
+              setReminders={setReminders}
+              reminderSaved={reminderSaved}
+              onSaveReminders={handleSaveReminders}
+              nudgeSent={nudgeSent}
+              onNudge={handleNudge}
+              onCopyLink={handleCopyLink}
+              onShare={handleShare}
+              addToast={addToast}
+            />
+          )}
         </div>
 
         <div className="modal-foot">
@@ -280,13 +454,162 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   );
 }
 
+function HostToolsTab({ event, reminders, setReminders, reminderSaved, onSaveReminders, nudgeSent, onNudge, onCopyLink, onShare, addToast }) {
+  const pendingGuests = event.guests?.filter(g => g.s === 'pending') || [];
+  const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
+  const publicUrl = `${window.location.origin}/e/${event.id}`;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* Nudge panel — pending guests */}
+      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>👋</span> Pending RSVPs
+          {pendingGuests.length > 0 && (
+            <span style={{ background: 'var(--amber)', color: 'white', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
+              {pendingGuests.length}
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
+          Send a friendly nudge to guests who haven't responded yet.
+        </div>
+        {pendingGuests.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--teal)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+            ✓ All guests have responded
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pendingGuests.map((g, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div className={`av av-sm av-${g.color || 'indigo'}`}>{g.initials || g.n?.[0]}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{g.n}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink3)' }}>Invited · no response yet</div>
+                </div>
+                {nudgeSent[g.id] ? (
+                  <span style={{ fontSize: 12, color: 'var(--teal)', fontWeight: 600 }}>✓ Nudged</span>
+                ) : (
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => onNudge(g.id, g.n)}
+                    style={{ fontSize: 12 }}
+                  >
+                    👋 Nudge
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              className="btn btn-primary btn-sm"
+              style={{ marginTop: 4 }}
+              onClick={() => {
+                pendingGuests.forEach(g => { if (!nudgeSent[g.id]) onNudge(g.id, g.n); });
+              }}
+            >
+              👋 Nudge all pending guests
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Reminder scheduler — for host */}
+      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>🔔 Guest Reminder Schedule</div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
+          Automatically send reminders to confirmed guests ({approvedGuests.length} going).
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {REMINDER_OPTIONS.map(r => (
+            <div
+              key={r.key}
+              onClick={() => { setReminders(prev => ({ ...prev, [r.key]: !prev[r.key] })); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                background: reminders[r.key] ? 'var(--indigo-light)' : 'var(--surface)',
+                borderRadius: 10, border: `1.5px solid ${reminders[r.key] ? 'var(--indigo-mid)' : 'var(--border)'}`,
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+            >
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{r.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: reminders[r.key] ? 'var(--indigo)' : 'var(--ink)' }}>{r.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink3)' }}>{r.desc}</div>
+              </div>
+              <div style={{
+                width: 20, height: 20, borderRadius: 5,
+                background: reminders[r.key] ? 'var(--indigo)' : 'transparent',
+                border: `2px solid ${reminders[r.key] ? 'var(--indigo)' : 'var(--border)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontSize: 12, flexShrink: 0,
+              }}>
+                {reminders[r.key] ? '✓' : ''}
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          className={`btn btn-sm ${reminderSaved ? 'btn-ghost' : 'btn-primary'}`}
+          style={{ width: '100%' }}
+          onClick={onSaveReminders}
+        >
+          {reminderSaved ? '✓ Schedule saved' : 'Save reminder schedule'}
+        </button>
+      </div>
+
+      {/* Share / public URL */}
+      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>🔗 Share Event</div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
+          Share this link to let people preview your event. Exact address stays hidden until you accept their RSVP.
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 12px', background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)', marginBottom: 10 }}>
+          <span style={{ fontSize: 12, color: 'var(--ink2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
+            {publicUrl}
+          </span>
+          <button className="btn btn-ghost btn-sm" style={{ flexShrink: 0, fontSize: 12 }} onClick={onCopyLink}>Copy</button>
+        </div>
+        <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={onShare}>
+          📨 Share Event Link
+        </button>
+      </div>
+
+      {/* Guest stats summary */}
+      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>📊 Guest Summary</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {[
+            { label: 'Going',    val: approvedGuests.length,                                  color: 'var(--teal)',  bg: 'var(--teal-light)' },
+            { label: 'Pending',  val: pendingGuests.length,                                   color: '#B87A00',      bg: 'var(--amber-light)' },
+            { label: 'Declined', val: event.guests?.filter(g => g.s === 'declined').length || 0, color: '#D94545', bg: 'var(--coral-light)' },
+          ].map((stat, i) => (
+            <div key={i} style={{ background: stat.bg, borderRadius: 10, padding: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: stat.color }}>{stat.val}</div>
+              <div style={{ fontSize: 11, color: stat.color, fontWeight: 600, marginTop: 2 }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--ink3)', marginBottom: 4 }}>
+            <span>Capacity</span>
+            <span>{approvedGuests.length} / {event.cap}</span>
+          </div>
+          <div className="progress-bar" style={{ height: 8 }}>
+            <div className="progress-fill" style={{ width: `${Math.min(100, (approvedGuests.length / event.cap) * 100)}%` }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CommentsTab({ event, user, myComment, passportStamped, commentText, setCommentText, onSubmit, isHost, onPin }) {
   const comments = event.eventComments || [];
   const pinnedIds = event.pinnedQuotes || [];
 
   return (
     <div>
-      {/* Incentive banner — only if user hasn't commented yet */}
       {!myComment && (
         <div style={{ background: 'linear-gradient(135deg, #1A1A2E, #2D2550)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ fontSize: 28, flexShrink: 0 }}>🗺️</div>
@@ -299,7 +622,6 @@ function CommentsTab({ event, user, myComment, passportStamped, commentText, set
         </div>
       )}
 
-      {/* Comment input */}
       {!myComment ? (
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>How was your evening?</div>
@@ -328,7 +650,6 @@ function CommentsTab({ event, user, myComment, passportStamped, commentText, set
         </div>
       )}
 
-      {/* Comments list */}
       {comments.length === 0 ? (
         <div className="empty-state" style={{ padding: '24px 0' }}>
           <div className="empty-icon">💬</div>
@@ -423,7 +744,6 @@ function PhotoGalleryTab({ event, fileRef, uploading, onUpload, lightbox, setLig
         </button>
       </div>
 
-      {/* Locked state — comment required to unlock all photos */}
       {photosLocked && (
         <div style={{ background: 'var(--indigo-light)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--indigo-mid)' }}>
           <span style={{ fontSize: 20 }}>🔓</span>
