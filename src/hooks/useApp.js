@@ -16,18 +16,25 @@ export function AppProvider({ children }) {
         setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
     }, []);
 
-    const login = useCallback(async (email, password) => {
-        const data = await supabaseSignIn(email, password);
+    // login accepts either (email, password) or (email, null, session) for confirmation flow
+    const login = useCallback(async (email, password, session) => {
+        let authUser;
+        if (session) {
+            authUser = session.user;
+        } else {
+            const data = await supabaseSignIn(email, password);
+            authUser = data.user;
+        }
         let profile = {};
         try {
-            profile = await getProfile(data.user.id);
+            profile = await getProfile(authUser.id);
         } catch (e) {
             profile = {};
         }
-        const displayName = profile.full_name || data.user.user_metadata?.full_name || email.split('@')[0];
+        const displayName = profile.full_name || authUser.user_metadata?.full_name || email.split('@')[0];
         setUser({
-            id: data.user.id,
-            email: data.user.email,
+            id: authUser.id,
+            email: authUser.email,
             name: displayName,
             initials: displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
             avatar: profile.avatar_url || null,
