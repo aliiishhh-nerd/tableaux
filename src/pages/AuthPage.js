@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
+import { signUp as supabaseSignUp } from '../lib/supabase';
 
 export default function AuthPage() {
   const { login } = useApp();
@@ -14,23 +15,42 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      const ok = login(email, password);
-      if (ok) {
-        navigate('/feed');
+
+    try {
+      if (mode === 'signup') {
+        await supabaseSignUp(email, password, name);
+        // After signup, log them in immediately
+        const ok = await login(email, password);
+        if (ok) {
+          navigate('/feed');
+        } else {
+          setError('Account created! Please check your email to confirm, then sign in.');
+        }
       } else {
-        setError(
-          mode === 'login'
-            ? 'Invalid email or password. Try ada@tableaux.com / password'
-            : 'Could not create account. Try logging in instead.'
-        );
-        setLoading(false);
+        const ok = await login(email, password);
+        if (ok) {
+          navigate('/feed');
+        } else {
+          setError('Invalid email or password.');
+        }
       }
-    }, 600);
+    } catch (err) {
+      if (err.message?.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.');
+      } else if (err.message?.includes('Invalid login credentials')) {
+        setError('Invalid email or password.');
+      } else if (err.message?.includes('User already registered')) {
+        setError('An account with this email already exists. Try logging in instead.');
+      } else {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -136,7 +156,7 @@ export default function AuthPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                autoComplete="current-password"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 style={{ fontSize: 16, paddingRight: 44 }}
               />
               <button
@@ -172,7 +192,9 @@ export default function AuthPage() {
             style={{ width: '100%', fontSize: 16, padding: '13px', marginTop: 4 }}
             disabled={loading}
           >
-            {loading ? 'Signing in…' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {loading
+              ? (mode === 'signup' ? 'Creating account…' : 'Signing in…')
+              : (mode === 'login' ? 'Sign in' : 'Create account')}
           </button>
         </form>
 
@@ -180,7 +202,7 @@ export default function AuthPage() {
         <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: 'var(--ink2)' }}>
           {mode === 'login' ? (
             <>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 onClick={() => { setMode('signup'); setError(''); }}
                 style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
@@ -199,11 +221,6 @@ export default function AuthPage() {
               </button>
             </>
           )}
-        </div>
-
-        {/* Demo hint */}
-        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--ink3)' }}>
-          Demo: ada@tableaux.com / password
         </div>
 
       </div>
