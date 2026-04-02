@@ -3,13 +3,44 @@ import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiPresetsRow, EmojiTrigger } from './EmojiPicker';
 
-const EVENT_TYPES = ['Dinner Party', 'Supper Club', 'Potluck'];
+// #1 FIX: All 7 event types matching Explore page
+const EVENT_TYPES = ['Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting'];
+
+const EVENT_TYPE_ICONS = {
+  'Brunch':       '🥞',
+  'Dinner Party': '🍷',
+  'Other':        '🍽️',
+  'Potluck':      '🥘',
+  'Restaurant':   '🏮',
+  'Supper Club':  '✨',
+  'Tasting':      '🍾',
+};
+
 const VISIBILITY = ['Public', 'Friends Only', 'Invite Only'];
+
+const VISIBILITY_ICONS = {
+  'Public':       '🌍',
+  'Friends Only': '👥',
+  'Invite Only':  '🔒',
+};
+
 const DRESS_CODES = ['No dress code', 'Smart Casual', 'Cocktail Attire', 'Black Tie', 'Themed — see description'];
+
 const POTLUCK_CATS = [
   { key: 'food',   label: '🍽️ Food',   placeholder: 'e.g. Lasagna, Salad' },
   { key: 'drinks', label: '🥂 Drinks', placeholder: 'e.g. Wine, Cider' },
   { key: 'other',  label: '🧺 Other',  placeholder: 'e.g. Candles, Napkins' },
+];
+
+// #8: Pairing options for Supper Club
+const PAIRING_OPTIONS = [
+  { key: 'wine',     label: 'Wine',     icon: '🍷' },
+  { key: 'cocktail', label: 'Cocktail', icon: '🍸' },
+  { key: 'beer',     label: 'Beer',     icon: '🍺' },
+  { key: 'whiskey',  label: 'Whiskey',  icon: '🥃' },
+  { key: 'brandy',   label: 'Brandy',   icon: '🫗' },
+  { key: 'cognac',   label: 'Cognac',   icon: '🥂' },
+  { key: 'other',    label: 'Other',    icon: '🍶' },
 ];
 
 const DEFAULT_POTLUCK = {
@@ -23,10 +54,11 @@ const DEFAULT_POTLUCK = {
 
 const DEFAULT_SUPPER_CLUB = {
   hostNote: '',
+  pairing: 'wine',
   courses: [
-    { num: 1, name: '', desc: '', wine: '' },
-    { num: 2, name: '', desc: '', wine: '' },
-    { num: 3, name: '', desc: '', wine: '' },
+    { num: 1, name: '', desc: '', pairing: '' },
+    { num: 2, name: '', desc: '', pairing: '' },
+    { num: 3, name: '', desc: '', pairing: '' },
   ],
 };
 
@@ -44,13 +76,56 @@ const PRESET_COLORS = [
 
 function newId() { return 'pi-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7); }
 
-// Address autocomplete using Nominatim (free, no API key)
+// #2: Button group select — replaces plain <select> for Event Type and Visibility
+function ButtonGroup({ options, value, onChange, icons, cols }) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: cols ? `repeat(${cols}, 1fr)` : `repeat(${Math.min(options.length, 4)}, 1fr)`,
+      gap: 6,
+    }}>
+      {options.map(opt => {
+        const isActive = value === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            style={{
+              padding: '8px 6px',
+              borderRadius: 10,
+              border: `1.5px solid ${isActive ? 'var(--indigo)' : 'var(--border)'}`,
+              background: isActive ? 'var(--indigo-light)' : 'var(--surface)',
+              color: isActive ? 'var(--indigo)' : 'var(--ink2)',
+              fontWeight: isActive ? 700 : 500,
+              fontSize: 12,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3,
+              lineHeight: 1.3,
+              textAlign: 'center',
+            }}
+          >
+            {icons && <span style={{ fontSize: 16 }}>{icons[opt]}</span>}
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// #5 FIX: Address autocomplete with corrected z-index — rendered via portal-like absolute positioning on body
 function AddressAutocomplete({ value, onChange, onSelect }) {
   const [query, setQuery] = useState(value || '');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
   const debounceRef = useRef(null);
+  const inputRef = useRef(null);
   const wrapRef = useRef(null);
 
   useEffect(() => { setQuery(value || ''); }, [value]);
@@ -63,10 +138,24 @@ function AddressAutocomplete({ value, onChange, onSelect }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Calculate dropdown position based on input element
+  function updateDropdownPosition() {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }
+
   function handleInput(e) {
     const val = e.target.value;
     setQuery(val);
     onChange(val);
+    updateDropdownPosition();
     clearTimeout(debounceRef.current);
     if (val.length < 3) { setResults([]); setOpen(false); return; }
     debounceRef.current = setTimeout(async () => {
@@ -80,6 +169,7 @@ function AddressAutocomplete({ value, onChange, onSelect }) {
         const data = await res.json();
         setResults(data);
         setOpen(data.length > 0);
+        updateDropdownPosition();
       } catch {
         setResults([]);
       }
@@ -98,37 +188,44 @@ function AddressAutocomplete({ value, onChange, onSelect }) {
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', flex: 1 }}>
-      <input
-        className="form-input"
-        value={query}
-        onChange={handleInput}
-        onFocus={() => results.length > 0 && setOpen(true)}
-        placeholder="Start typing an address..."
-        autoComplete="off"
-      />
-      {loading && (
-        <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--ink3)' }}>
-          ⏳
-        </div>
-      )}
+      <div style={{ position: 'relative' }}>
+        <input
+          ref={inputRef}
+          className="form-input"
+          value={query}
+          onChange={handleInput}
+          onFocus={() => { results.length > 0 && setOpen(true); updateDropdownPosition(); }}
+          placeholder="Start typing an address..."
+          autoComplete="off"
+        />
+        {loading && (
+          <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--ink3)' }}>
+            ⏳
+          </div>
+        )}
+      </div>
       {open && results.length > 0 && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.12)',
-          zIndex: 1000, overflow: 'hidden',
+          ...dropdownStyle,
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 10,
+          boxShadow: '0 12px 40px rgba(0,0,0,.18)',
+          overflow: 'hidden',
+          maxHeight: 280,
+          overflowY: 'auto',
         }}>
           {results.map((item, i) => (
             <div
               key={i}
               onMouseDown={() => handleSelect(item)}
               style={{
-                padding: '9px 14px', fontSize: 13, cursor: 'pointer', color: 'var(--ink)',
+                padding: '10px 14px', fontSize: 13, cursor: 'pointer', color: 'var(--ink)',
                 borderBottom: i < results.length - 1 ? '1px solid var(--border)' : 'none',
-                display: 'flex', gap: 8, alignItems: 'flex-start',
+                display: 'flex', gap: 8, alignItems: 'flex-start', background: 'var(--surface)',
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--indigo-light)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
             >
               <span style={{ flexShrink: 0, marginTop: 1 }}>📍</span>
               <span style={{ lineHeight: 1.4 }}>{item.display_name}</span>
@@ -143,8 +240,8 @@ function AddressAutocomplete({ value, onChange, onSelect }) {
   );
 }
 
-// Inline hex color picker with preset swatches + custom input
-function ColorPicker({ value, onChange, label }) {
+// Hex color picker with swatches + custom input
+function ColorPicker({ value, onChange }) {
   const [showCustom, setShowCustom] = useState(false);
 
   return (
@@ -156,13 +253,10 @@ function ColorPicker({ value, onChange, label }) {
             onClick={() => onChange(c)}
             title={c}
             style={{
-              width: 28, height: 28, borderRadius: 6, cursor: 'pointer',
-              background: c,
+              width: 28, height: 28, borderRadius: 6, cursor: 'pointer', background: c,
               border: value === c ? '3px solid var(--indigo)' : '2px solid transparent',
-              outline: value === c ? '2px solid white' : 'none',
-              outlineOffset: -4,
-              transition: 'transform 0.1s',
-              boxShadow: '0 1px 4px rgba(0,0,0,.15)',
+              outline: value === c ? '2px solid white' : 'none', outlineOffset: -4,
+              transition: 'transform 0.1s', boxShadow: '0 1px 4px rgba(0,0,0,.15)',
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -175,8 +269,7 @@ function ColorPicker({ value, onChange, label }) {
             width: 28, height: 28, borderRadius: 6, cursor: 'pointer',
             background: PRESET_COLORS.includes(value) ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : value,
             border: !PRESET_COLORS.includes(value) ? '3px solid var(--indigo)' : '2px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
           }}
         >
           {PRESET_COLORS.includes(value) ? '＋' : ''}
@@ -193,15 +286,78 @@ function ColorPicker({ value, onChange, label }) {
           <input
             className="form-input"
             value={value}
-            onChange={e => {
-              const v = e.target.value;
-              if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onChange(v);
-            }}
+            onChange={e => { const v = e.target.value; if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onChange(v); }}
             placeholder="#6C5DD3"
             style={{ width: 110, fontFamily: 'monospace', fontSize: 13 }}
           />
           <div style={{ width: 32, height: 32, borderRadius: 6, background: value, border: '1px solid var(--border)', flexShrink: 0 }} />
           <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Preview</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// #3: Crowd-check date poll component
+function CrowdCheckSection({ dates, onChange }) {
+  const [newDate, setNewDate] = useState('');
+
+  function addDate() {
+    const d = newDate.trim();
+    if (!d || dates.includes(d)) return;
+    onChange([...dates, d]);
+    setNewDate('');
+  }
+
+  function removeDate(d) {
+    onChange(dates.filter(x => x !== d));
+  }
+
+  const fmt = (d) => {
+    try { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+    catch { return d; }
+  };
+
+  return (
+    <div style={{ background: 'linear-gradient(135deg, #f0f4ff, #f8f0ff)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)', marginTop: 4 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>📅 When works for everyone?</div>
+      <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12, lineHeight: 1.5 }}>
+        Add multiple date options — guests will vote on which works best. Confirm the date once responses are in.
+      </div>
+
+      {dates.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+          {dates.map(d => (
+            <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--indigo-light)', border: '1.5px solid var(--indigo-mid)', borderRadius: 20, padding: '4px 10px' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo)' }}>{fmt(d)}</span>
+              <button
+                onClick={() => removeDate(d)}
+                style={{ background: 'none', border: 'none', color: 'var(--indigo)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          className="form-input"
+          type="date"
+          value={newDate}
+          onChange={e => setNewDate(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addDate()}
+          style={{ flex: 1 }}
+        />
+        <button className="btn btn-ghost btn-sm" onClick={addDate} style={{ flexShrink: 0 }}>
+          + Add Date
+        </button>
+      </div>
+
+      {dates.length === 0 && (
+        <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 8 }}>
+          No date options added yet. Add at least 2 for a useful poll.
         </div>
       )}
     </div>
@@ -230,6 +386,8 @@ export default function CreateEventModal({ event, onClose }) {
     seriesName:     event?.seriesName || '',
     seriesVolume:   event?.seriesVolume || 1,
     playlist:       event?.playlist || { platform: 'spotify', url: '' },
+    crowdCheckDates: event?.crowdCheckDates || [],
+    useCrowdCheck:  event?.useCrowdCheck ?? false,
   });
 
   const [cover, setCover] = useState(
@@ -258,7 +416,6 @@ export default function CreateEventModal({ event, onClose }) {
   }
 
   function handleAddressSelect(nominatimItem) {
-    // Auto-populate loc with city/neighbourhood if empty
     const addr = nominatimItem.address || {};
     const neighborhood = addr.neighbourhood || addr.suburb || addr.quarter || '';
     const city = addr.city || addr.town || addr.village || '';
@@ -269,7 +426,7 @@ export default function CreateEventModal({ event, onClose }) {
 
   function handleSubmit() {
     if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
-    if (!form.date) { addToast('Please set a date', 'error'); return; }
+    if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; }
 
     const payload = {
       ...form,
@@ -301,11 +458,14 @@ export default function CreateEventModal({ event, onClose }) {
     setScData(d => ({ ...d, courses: d.courses.map((c, j) => j === i ? { ...c, [key]: val } : c) }));
   }
   function addCourse() {
-    setScData(d => ({ ...d, courses: [...d.courses, { num: d.courses.length + 1, name: '', desc: '', wine: '' }] }));
+    setScData(d => ({ ...d, courses: [...d.courses, { num: d.courses.length + 1, name: '', desc: '', pairing: '' }] }));
   }
   function removeCourse(i) {
     setScData(d => ({ ...d, courses: d.courses.filter((_, j) => j !== i).map((c, j) => ({ ...c, num: j + 1 })) }));
   }
+
+  // Get the pairing label for a course input placeholder
+  const pairingLabel = PAIRING_OPTIONS.find(p => p.key === scData.pairing)?.label || 'Wine';
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -369,7 +529,7 @@ export default function CreateEventModal({ event, onClose }) {
 
           <div className="divider" />
 
-          {/* BASICS */}
+          {/* TITLE */}
           <div className="form-group">
             <label className="form-label">Event Title</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -378,19 +538,16 @@ export default function CreateEventModal({ event, onClose }) {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Event Type</label>
-              <select className="form-select" value={form.type} onChange={e => set('type', e.target.value)}>
-                {EVENT_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Visibility</label>
-              <select className="form-select" value={form.vis} onChange={e => set('vis', e.target.value)}>
-                {VISIBILITY.map(v => <option key={v}>{v}</option>)}
-              </select>
-            </div>
+          {/* #1 + #2: Event Type — button group with icons */}
+          <div className="form-group">
+            <label className="form-label">Event Type</label>
+            <ButtonGroup options={EVENT_TYPES} value={form.type} onChange={val => set('type', val)} icons={EVENT_TYPE_ICONS} cols={4} />
+          </div>
+
+          {/* #2: Visibility — button group */}
+          <div className="form-group">
+            <label className="form-label">Visibility</label>
+            <ButtonGroup options={VISIBILITY} value={form.vis} onChange={val => set('vis', val)} icons={VISIBILITY_ICONS} cols={3} />
           </div>
 
           {/* Supper Club series fields */}
@@ -407,15 +564,47 @@ export default function CreateEventModal({ event, onClose }) {
             </div>
           )}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Date</label>
-              <input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
+          {/* Date/Time or Crowd-Check */}
+          <div className="form-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <label className="form-label" style={{ margin: 0 }}>Date & Time</label>
+              {/* #3: Crowd-check toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--ink2)' }}>
+                  {form.useCrowdCheck ? '📅 Polling guests' : '📅 Set a date'}
+                </span>
+                <div
+                  onClick={() => set('useCrowdCheck', !form.useCrowdCheck)}
+                  style={{
+                    width: 36, height: 20, borderRadius: 10,
+                    background: form.useCrowdCheck ? 'var(--indigo)' : 'var(--border)',
+                    position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
+                  }}
+                >
+                  <div style={{
+                    width: 14, height: 14, borderRadius: 7, background: 'white',
+                    position: 'absolute', top: 3, left: form.useCrowdCheck ? 19 : 3,
+                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+                  }} />
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Time</label>
-              <input className="form-input" type="time" value={form.time} onChange={e => set('time', e.target.value)} />
-            </div>
+
+            {form.useCrowdCheck ? (
+              <CrowdCheckSection
+                dates={form.crowdCheckDates}
+                onChange={dates => set('crowdCheckDates', dates)}
+              />
+            ) : (
+              <div className="form-row" style={{ marginBottom: 0 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <input className="form-input" type="time" value={form.time} onChange={e => set('time', e.target.value)} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-row">
@@ -429,7 +618,7 @@ export default function CreateEventModal({ event, onClose }) {
             </div>
           </div>
 
-          {/* ADDRESS with autocomplete + hide toggle */}
+          {/* ADDRESS — autocomplete + hide toggle */}
           <div className="form-group">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <label className="form-label" style={{ margin: 0 }}>Full Address</label>
@@ -442,7 +631,7 @@ export default function CreateEventModal({ event, onClose }) {
                   style={{
                     width: 36, height: 20, borderRadius: 10,
                     background: form.addrHidden ? 'var(--indigo)' : 'var(--border)',
-                    position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
+                    position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
                   }}
                 >
                   <div style={{
@@ -494,7 +683,7 @@ export default function CreateEventModal({ event, onClose }) {
             </div>
           </div>
 
-          {/* INVITATION COLOR — hex picker */}
+          {/* Invitation color */}
           <div className="form-group">
             <label className="form-label">Invitation Accent Color</label>
             <ColorPicker value={form.invBg} onChange={val => set('invBg', val)} />
@@ -536,10 +725,38 @@ export default function CreateEventModal({ event, onClose }) {
           {isSupperClub && (
             <div style={{ background: 'linear-gradient(135deg, #1A1A2E08, #2D255008)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)', marginTop: 4 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🍽️ Supper Club Menu</div>
+
+              {/* Host note */}
               <div className="form-group">
                 <label className="form-label">Host Note (shown to guests)</label>
                 <textarea className="form-textarea" value={scData.hostNote} onChange={e => setScData(d => ({ ...d, hostNote: e.target.value }))} placeholder="Share your inspiration, a personal note, or cooking tips..." style={{ minHeight: 70 }} />
               </div>
+
+              {/* #8: Pairing type selector */}
+              <div className="form-group">
+                <label className="form-label">Pairing Style</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {PAIRING_OPTIONS.map(p => (
+                    <button
+                      key={p.key}
+                      onClick={() => setScData(d => ({ ...d, pairing: p.key }))}
+                      style={{
+                        padding: '6px 12px', borderRadius: 20, fontSize: 12,
+                        border: `1.5px solid ${scData.pairing === p.key ? 'var(--indigo)' : 'var(--border)'}`,
+                        background: scData.pairing === p.key ? 'var(--indigo-light)' : 'var(--surface)',
+                        color: scData.pairing === p.key ? 'var(--indigo)' : 'var(--ink2)',
+                        fontWeight: scData.pairing === p.key ? 700 : 500,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                        display: 'flex', alignItems: 'center', gap: 5,
+                      }}
+                    >
+                      {p.icon} {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Courses */}
               {scData.courses.map((course, i) => (
                 <div key={i} style={{ background: 'white', borderRadius: 10, padding: '12px', marginBottom: 8, border: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -553,8 +770,8 @@ export default function CreateEventModal({ event, onClose }) {
                       <input className="form-input" value={course.name} onChange={e => updateCourse(i, 'name', e.target.value)} placeholder="e.g. Boeuf Bourguignon" />
                     </div>
                     <div className="form-group" style={{ marginBottom: 8 }}>
-                      <label className="form-label">Wine Pairing (optional)</label>
-                      <input className="form-input" value={course.wine} onChange={e => updateCourse(i, 'wine', e.target.value)} placeholder="e.g. Pinot Noir 2019" />
+                      <label className="form-label">{PAIRING_OPTIONS.find(p => p.key === scData.pairing)?.icon} {pairingLabel} Pairing <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--ink3)' }}>(optional)</span></label>
+                      <input className="form-input" value={course.pairing || course.wine || ''} onChange={e => updateCourse(i, 'pairing', e.target.value)} placeholder={`e.g. ${pairingLabel === 'Wine' ? 'Pinot Noir 2019' : pairingLabel === 'Beer' ? 'IPA, saison...' : pairingLabel === 'Cocktail' ? 'Negroni, Aperol Spritz...' : pairingLabel + ' pairing...'}`} />
                     </div>
                   </div>
                   <div className="form-group" style={{ marginBottom: 0 }}>

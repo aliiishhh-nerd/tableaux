@@ -17,9 +17,7 @@ export default function ProfilePage() {
   const [tab, setTab] = useState('events');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
-  // Who the current user follows
   const [following, setFollowing] = useState([]);
-  // Which sub-profile to view (null = own, userId = friend)
   const [viewingUser, setViewingUser] = useState(null);
 
   if (!user) return null;
@@ -28,12 +26,22 @@ export default function ProfilePage() {
   const passportEvents = events.filter(e => (e.isEnded || e.isPast) && e.mine).slice(0, 8);
 
   function startEdit() {
-    setDraft({ name: user.name, handle: user.handle || '', bio: user.bio || '', socials: { ...user.socials } });
+    setDraft({
+      name: user.name,
+      handle: user.handle || '',
+      bio: user.bio || '',
+      website: user.website || '',
+      socials: { ...user.socials },
+    });
     setEditing(true);
   }
+
   function saveEdit() {
     updateProfile({
-      name: draft.name, handle: draft.handle, bio: draft.bio,
+      name: draft.name,
+      handle: draft.handle,
+      bio: draft.bio,
+      website: draft.website,
       initials: draft.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
       socials: draft.socials,
     });
@@ -49,7 +57,6 @@ export default function ProfilePage() {
 
   const activeSocials = SOCIAL_PLATFORMS.filter(p => user.socials?.[p.key]);
 
-  // If viewing a friend's profile
   if (viewingUser) {
     return <FriendProfile user={viewingUser} onBack={() => setViewingUser(null)} following={following} onToggleFollow={toggleFollow} events={events} />;
   }
@@ -62,14 +69,28 @@ export default function ProfilePage() {
           <div className={`av av-xl av-${user.color || 'indigo'}`}>{user.initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="profile-name">{user.name}</div>
-            <div className="profile-handle">{user.handle || '@' + user.name.toLowerCase().replace(/\s/g,'')}</div>
+            <div className="profile-handle">{user.handle || '@' + user.name.toLowerCase().replace(/\s/g, '')}</div>
             {user.bio && <div className="profile-bio">{user.bio}</div>}
+
+            {/* Website link */}
+            {user.website && (
+              <a
+                href={user.website.startsWith('http') ? user.website : 'https://' + user.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--indigo)', marginTop: 6, textDecoration: 'none', fontWeight: 500 }}
+              >
+                🔗 {user.website.replace(/^https?:\/\//, '')}
+              </a>
+            )}
+
             <div className="profile-stats">
               <div><div className="profile-stat-val">{hostedEvents.length}</div><div className="profile-stat-label">Hosted</div></div>
               <div><div className="profile-stat-val">{user.friendsCount || 48}</div><div className="profile-stat-label">Friends</div></div>
               <div><div className="profile-stat-val">{following.length}</div><div className="profile-stat-label">Following</div></div>
               <div><div className="profile-stat-val">{passportEvents.length}</div><div className="profile-stat-label">Passport</div></div>
             </div>
+
             {activeSocials.length > 0 && (
               <div className="profile-social">
                 {activeSocials.map(p => (
@@ -124,7 +145,7 @@ export default function ProfilePage() {
       {/* Passport */}
       {tab === 'passport' && (
         <div>
-          <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16, lineHeight: 1.6 }}>Each stamp is a story — every dinner you've hosted or attended.</div>
+          <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16, lineHeight: 1.6 }}>Each stamp is a story — every dinner you have hosted or attended.</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
             {passportEvents.map((evt, i) => (
               <div key={i} style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', cursor: 'pointer' }} onClick={() => setSelectedEvent(evt)}>
@@ -138,22 +159,18 @@ export default function ProfilePage() {
               </div>
             ))}
             {Array.from({ length: Math.max(0, 8 - passportEvents.length) }).map((_, i) => (
-              <div key={'e-'+i} style={{ background: 'var(--page)', borderRadius: 12, border: '2px dashed var(--border)', height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: 'var(--border)' }}>🍽️</div>
+              <div key={'e-' + i} style={{ background: 'var(--page)', borderRadius: 12, border: '2px dashed var(--border)', height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: 'var(--border)' }}>🍽️</div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Friends — with Follow buttons */}
+      {/* Friends */}
       {tab === 'friends' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {USERS.filter(u => u.id !== 'u1').map(friend => (
             <div key={friend.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'white', borderRadius: 12, border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
-              <div
-                className={`av av-md av-${friend.color} av-link`}
-                onClick={() => setViewingUser(friend)}
-                title={`View ${friend.name}'s profile`}
-              >{friend.initials}</div>
+              <div className={`av av-md av-${friend.color} av-link`} onClick={() => setViewingUser(friend)} title={`View ${friend.name}'s profile`}>{friend.initials}</div>
               <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => setViewingUser(friend)}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{friend.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--ink2)' }}>{friend.handle}</div>
@@ -177,6 +194,10 @@ export default function ProfilePage() {
             <div className="form-group"><label className="form-label">Display Name</label><input className="form-input" value={user.name} readOnly onClick={startEdit} placeholder="Your name" /></div>
             <div className="form-group"><label className="form-label">Handle</label><input className="form-input" value={user.handle || ''} readOnly placeholder="@yourhandle" /></div>
             <div className="form-group"><label className="form-label">Bio</label><textarea className="form-textarea" value={user.bio || ''} readOnly placeholder="Your food story..." style={{ minHeight: 70 }} /></div>
+            <div className="form-group">
+              <label className="form-label">🔗 Website</label>
+              <input className="form-input" value={user.website || ''} readOnly placeholder="https://yourwebsite.com" onClick={startEdit} />
+            </div>
             <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>🔗 Social Accounts</div>
             {SOCIAL_PLATFORMS.map(p => (
               <div key={p.key} className="form-group">
@@ -198,9 +219,27 @@ export default function ProfilePage() {
           <div className="modal">
             <div className="modal-head"><h2>Edit Profile</h2><button className="modal-x" onClick={() => setEditing(false)}>✕</button></div>
             <div className="modal-body">
-              <div className="form-group"><label className="form-label">Display Name</label><input className="form-input" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></div>
-              <div className="form-group"><label className="form-label">Handle</label><input className="form-input" value={draft.handle} onChange={e => setDraft(d => ({ ...d, handle: e.target.value }))} placeholder="@yourhandle" /></div>
-              <div className="form-group"><label className="form-label">Bio</label><textarea className="form-textarea" value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))} /></div>
+              <div className="form-group">
+                <label className="form-label">Display Name</label>
+                <input className="form-input" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Handle</label>
+                <input className="form-input" value={draft.handle} onChange={e => setDraft(d => ({ ...d, handle: e.target.value }))} placeholder="@yourhandle" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Bio</label>
+                <textarea className="form-textarea" value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">🔗 Website</label>
+                <input
+                  className="form-input"
+                  value={draft.website}
+                  onChange={e => setDraft(d => ({ ...d, website: e.target.value }))}
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
               <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>🔗 Social Accounts</div>
               {SOCIAL_PLATFORMS.map(p => (
                 <div key={p.key} className="form-group">
@@ -225,7 +264,6 @@ export default function ProfilePage() {
   );
 }
 
-// Friend profile view
 function FriendProfile({ user, onBack, following, onToggleFollow, events }) {
   const isFollowing = following.includes(user.id);
   const activeSocials = SOCIAL_PLATFORMS.filter(p => user.socials?.[p.key]);
@@ -233,7 +271,6 @@ function FriendProfile({ user, onBack, following, onToggleFollow, events }) {
   return (
     <main className="page-content">
       <button className="btn btn-ghost btn-sm" onClick={onBack} style={{ marginBottom: 16 }}>← Back</button>
-
       <div className="profile-hero">
         <div className="profile-hero-inner">
           <div className={`av av-xl av-${user.color || 'indigo'}`}>{user.initials}</div>
@@ -241,6 +278,16 @@ function FriendProfile({ user, onBack, following, onToggleFollow, events }) {
             <div className="profile-name">{user.name}</div>
             <div className="profile-handle">{user.handle}</div>
             {user.bio && <div className="profile-bio">{user.bio}</div>}
+            {user.website && (
+              <a
+                href={user.website.startsWith('http') ? user.website : 'https://' + user.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--indigo)', marginTop: 6, textDecoration: 'none', fontWeight: 500 }}
+              >
+                🔗 {user.website.replace(/^https?:\/\//, '')}
+              </a>
+            )}
             {activeSocials.length > 0 && (
               <div className="profile-social" style={{ marginTop: 10 }}>
                 {activeSocials.map(p => (
@@ -261,10 +308,9 @@ function FriendProfile({ user, onBack, following, onToggleFollow, events }) {
           </button>
         </div>
       </div>
-
       <div style={{ fontSize: 13, color: 'var(--ink2)', padding: '12px 0' }}>
         {isFollowing
-          ? `You're following ${user.name}. You'll see their events in your feed.`
+          ? `You are following ${user.name}. You will see their events in your feed.`
           : `Follow ${user.name} to see their upcoming dinners in your Discover feed.`}
       </div>
     </main>

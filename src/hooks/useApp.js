@@ -41,6 +41,7 @@ export function AppProvider({ children }) {
             role: profile.role || 'guest',
             city: profile.city || null,
             bio: profile.bio || null,
+            website: profile.website || null,
             hosted_count: profile.hosted_count || 0,
             attended_count: profile.attended_count || 0,
         });
@@ -58,7 +59,7 @@ export function AppProvider({ children }) {
     }, []);
 
     const createEvent = useCallback((evt) => {
-        const newEvt = { ...evt, id: 'evt-' + Date.now(), mine: true, hostId: 'u1', host: CURRENT_USER.name, guests: [], photoGallery: [], isEnded: false };
+        const newEvt = { ...evt, id: 'evt-' + Date.now(), mine: true, hostId: 'u1', host: CURRENT_USER.name, guests: [], photoGallery: [], eventComments: [], pinnedQuotes: [], isEnded: false };
         setEvents(e => [newEvt, ...e]);
         return newEvt;
     }, []);
@@ -106,6 +107,28 @@ export function AppProvider({ children }) {
         }));
     }, []);
 
+    // FIX #4: addComment — was called in EventDetailModal but never defined
+    const addComment = useCallback((eventId, comment) => {
+        setEvents(e => e.map(ev => {
+            if (ev.id !== eventId) return ev;
+            return { ...ev, eventComments: [...(ev.eventComments || []), comment] };
+        }));
+    }, []);
+
+    // FIX #4: pinQuote — was called in EventDetailModal but never defined
+    const pinQuote = useCallback((eventId, commentId) => {
+        setEvents(e => e.map(ev => {
+            if (ev.id !== eventId) return ev;
+            const alreadyPinned = (ev.pinnedQuotes || []).includes(commentId);
+            return {
+                ...ev,
+                pinnedQuotes: alreadyPinned
+                    ? ev.pinnedQuotes.filter(id => id !== commentId)
+                    : [...(ev.pinnedQuotes || []), commentId],
+            };
+        }));
+    }, []);
+
     const updateProfile = useCallback((patch) => {
         setUser(u => ({ ...u, ...patch }));
     }, []);
@@ -115,7 +138,7 @@ export function AppProvider({ children }) {
             user, login, loginSocial, logout,
             events, createEvent, updateEvent, deleteEvent,
             rsvpEvent, claimPotluckItem, unclaimPotluckItem,
-            addPhoto, updateProfile,
+            addPhoto, addComment, pinQuote, updateProfile,
             following, setFollowing,
             toasts, addToast,
         }}>
