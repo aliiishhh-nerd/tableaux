@@ -5,22 +5,47 @@ import AppShell from './components/AppShell';
 import { supabase } from './lib/supabase';
 
 function AuthListener() {
-  const { login } = useApp();
+  const { login, logout } = useApp();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+    // On mount: check for an existing session without going through onAuthStateChange
+    // This avoids the Supabase lock deadlock caused by calling getProfile() inside the listener
+    let mounted = true;
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
         try {
           await login(session.user.email, null, session);
         } catch (e) {
-          // session-based login failed silently
+          // Session restore failed — user stays logged out
+        }
+      }
+    });
+
+    // Listen only for NEW sign-in events (not INITIAL_SESSION which causes the lock)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          await login(session.user.email, null, session);
+        } catch (e) {
+          // silent
         }
         navigate('/feed');
       }
+      if (event === 'SIGNED_OUT') {
+        logout();
+        navigate('/');
+      }
     });
-    return () => subscription.unsubscribe();
-  }, [login, navigate]);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [login, logout, navigate]);
 
   return null;
 }

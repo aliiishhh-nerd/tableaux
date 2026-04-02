@@ -3,111 +3,52 @@ import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiPresetsRow, EmojiTrigger } from './EmojiPicker';
 
-// #1 FIX: All 7 event types matching Explore page
-const EVENT_TYPES = ['Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting'];
-
-const EVENT_TYPE_ICONS = {
-  'Brunch':       '🥞',
-  'Dinner Party': '🍷',
-  'Other':        '🍽️',
-  'Potluck':      '🥘',
-  'Restaurant':   '🏮',
-  'Supper Club':  '✨',
-  'Tasting':      '🍾',
-};
-
+const EVENT_TYPES = ['Brunch', 'Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Other'];
+const EVENT_TYPE_ICONS = { 'Brunch': '🍳', 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '👨‍🍳', 'Supper Club': '✨', 'Tasting': '🍾', 'Other': '🍽️' };
 const VISIBILITY = ['Public', 'Friends Only', 'Invite Only'];
-
-const VISIBILITY_ICONS = {
-  'Public':       '🌍',
-  'Friends Only': '👥',
-  'Invite Only':  '🔒',
-};
-
 const DRESS_CODES = ['No dress code', 'Smart Casual', 'Cocktail Attire', 'Black Tie', 'Themed — see description'];
-
 const POTLUCK_CATS = [
-  { key: 'food',   label: '🍽️ Food',   placeholder: 'e.g. Lasagna, Salad' },
+  { key: 'food', label: '🍽️ Food', placeholder: 'e.g. Lasagna, Salad' },
   { key: 'drinks', label: '🥂 Drinks', placeholder: 'e.g. Wine, Cider' },
-  { key: 'other',  label: '🧺 Other',  placeholder: 'e.g. Candles, Napkins' },
+  { key: 'other', label: '🧺 Other', placeholder: 'e.g. Candles, Napkins' },
 ];
-
-// #8: Pairing options for Supper Club
 const PAIRING_OPTIONS = [
-  { key: 'wine',     label: 'Wine',     icon: '🍷' },
-  { key: 'cocktail', label: 'Cocktail', icon: '🍸' },
-  { key: 'beer',     label: 'Beer',     icon: '🍺' },
-  { key: 'whiskey',  label: 'Whiskey',  icon: '🥃' },
-  { key: 'brandy',   label: 'Brandy',   icon: '🫗' },
-  { key: 'cognac',   label: 'Cognac',   icon: '🥂' },
-  { key: 'other',    label: 'Other',    icon: '🍶' },
+  { key: 'wine', label: 'Wine', icon: '🍷' }, { key: 'cocktail', label: 'Cocktail', icon: '🍸' },
+  { key: 'beer', label: 'Beer', icon: '🍺' }, { key: 'whiskey', label: 'Whiskey', icon: '🥃' },
+  { key: 'brandy', label: 'Brandy', icon: '🫗' }, { key: 'cognac', label: 'Cognac', icon: '🥂' },
+  { key: 'other', label: 'Other', icon: '🍶' },
 ];
-
-const DEFAULT_POTLUCK = {
-  items: [
-    { id: 'pi-1', cat: 'food',   emoji: '🍽️', name: 'Main Dish',   claimedBy: null, claimerName: null },
-    { id: 'pi-2', cat: 'food',   emoji: '🥗',  name: 'Salad',       claimedBy: null, claimerName: null },
-    { id: 'pi-3', cat: 'drinks', emoji: '🍷',  name: 'Wine',        claimedBy: null, claimerName: null },
-    { id: 'pi-4', cat: 'other',  emoji: '🧺',  name: 'Utensils',    claimedBy: null, claimerName: null },
-  ],
-};
-
-const DEFAULT_SUPPER_CLUB = {
-  hostNote: '',
-  pairing: 'wine',
-  courses: [
-    { num: 1, name: '', desc: '', pairing: '' },
-    { num: 2, name: '', desc: '', pairing: '' },
-    { num: 3, name: '', desc: '', pairing: '' },
-  ],
-};
-
 const PLAYLIST_PLATFORMS = [
-  { key: 'spotify',    label: 'Spotify',     icon: '🎵', placeholder: 'https://open.spotify.com/playlist/...' },
-  { key: 'apple',      label: 'Apple Music', icon: '🎶', placeholder: 'https://music.apple.com/playlist/...' },
-  { key: 'youtube',    label: 'YouTube',     icon: '▶️', placeholder: 'https://youtube.com/playlist/...' },
-  { key: 'soundcloud', label: 'SoundCloud',  icon: '🔊', placeholder: 'https://soundcloud.com/...' },
+  { key: 'spotify', label: 'Spotify', icon: '🎵', placeholder: 'https://open.spotify.com/playlist/...' },
+  { key: 'apple', label: 'Apple Music', icon: '🎶', placeholder: 'https://music.apple.com/playlist/...' },
+  { key: 'youtube', label: 'YouTube', icon: '▶️', placeholder: 'https://youtube.com/playlist/...' },
+  { key: 'soundcloud', label: 'SoundCloud', icon: '🔊', placeholder: 'https://soundcloud.com/...' },
 ];
-
-const PRESET_COLORS = [
-  '#6C5DD3', '#2EC4B6', '#D4AF37', '#E94560', '#FF6B6B',
-  '#4ECDC4', '#45B7D1', '#96CEB4', '#1A1A2E', '#2D2550',
-];
-
+const PRESET_COLORS = ['#6C5DD3','#2EC4B6','#D4AF37','#E94560','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#1A1A2E','#2D2550'];
+const DEFAULT_POTLUCK = { items: [
+  { id: 'pi-1', cat: 'food', emoji: '🍽️', name: 'Main Dish', claimedBy: null, claimerName: null },
+  { id: 'pi-2', cat: 'food', emoji: '🥗', name: 'Salad', claimedBy: null, claimerName: null },
+  { id: 'pi-3', cat: 'drinks', emoji: '🍷', name: 'Wine', claimedBy: null, claimerName: null },
+  { id: 'pi-4', cat: 'other', emoji: '🧺', name: 'Utensils', claimedBy: null, claimerName: null },
+]};
+const DEFAULT_SUPPER_CLUB = { hostNote: '', pairing: 'wine', courses: [
+  { num: 1, name: '', desc: '', pairing: '' }, { num: 2, name: '', desc: '', pairing: '' }, { num: 3, name: '', desc: '', pairing: '' },
+]};
 function newId() { return 'pi-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7); }
 
-// #2: Button group select — replaces plain <select> for Event Type and Visibility
 function ButtonGroup({ options, value, onChange, icons, cols }) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: cols ? `repeat(${cols}, 1fr)` : `repeat(${Math.min(options.length, 4)}, 1fr)`,
-      gap: 6,
-    }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(' + (cols || 4) + ', 1fr)', gap: 6 }}>
       {options.map(opt => {
         const isActive = value === opt;
         return (
-          <button
-            key={opt}
-            onClick={() => onChange(opt)}
-            style={{
-              padding: '8px 6px',
-              borderRadius: 10,
-              border: `1.5px solid ${isActive ? 'var(--indigo)' : 'var(--border)'}`,
-              background: isActive ? 'var(--indigo-light)' : 'var(--surface)',
-              color: isActive ? 'var(--indigo)' : 'var(--ink2)',
-              fontWeight: isActive ? 700 : 500,
-              fontSize: 12,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 3,
-              lineHeight: 1.3,
-              textAlign: 'center',
-            }}
-          >
+          <button key={opt} onClick={() => onChange(opt)} style={{
+            padding: '8px 6px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
+            border: '1.5px solid ' + (isActive ? 'var(--indigo)' : 'var(--border)'),
+            background: isActive ? 'var(--indigo-light)' : 'var(--surface)',
+            color: isActive ? 'var(--indigo)' : 'var(--ink2)', fontWeight: isActive ? 700 : 500,
+            fontSize: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, lineHeight: 1.3, textAlign: 'center',
+          }}>
             {icons && <span style={{ fontSize: 16 }}>{icons[opt]}</span>}
             {opt}
           </button>
@@ -117,249 +58,151 @@ function ButtonGroup({ options, value, onChange, icons, cols }) {
   );
 }
 
-// #5 FIX: Address autocomplete with corrected z-index — rendered via portal-like absolute positioning on body
+function StyledSelect({ value, onChange, options, style }) {
+  return (
+    <div style={{ position: 'relative', ...style }}>
+      <select className="form-select" value={value} onChange={e => onChange(e.target.value)}
+        style={{ width: '100%', appearance: 'none', WebkitAppearance: 'none', paddingRight: 42, cursor: 'pointer' }}>
+        {options.map(o => <option key={o}>{o}</option>)}
+      </select>
+      <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', borderLeft: '1px solid var(--border)' }}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="var(--ink3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </div>
+    </div>
+  );
+}
+
 function AddressAutocomplete({ value, onChange, onSelect }) {
   const [query, setQuery] = useState(value || '');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState({});
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const wrapRef = useRef(null);
 
   useEffect(() => { setQuery(value || ''); }, [value]);
-
   useEffect(() => {
-    function handleClick(e) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
-    }
+    function handleClick(e) { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // Calculate dropdown position based on input element
-  function updateDropdownPosition() {
+  function calcPos() {
     if (!inputRef.current) return;
     const rect = inputRef.current.getBoundingClientRect();
-    setDropdownStyle({
-      position: 'fixed',
-      top: rect.bottom + 4,
-      left: rect.left,
-      width: rect.width,
-      zIndex: 9999,
-    });
+    setDropPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
   }
 
   function handleInput(e) {
     const val = e.target.value;
-    setQuery(val);
-    onChange(val);
-    updateDropdownPosition();
+    setQuery(val); onChange(val); calcPos();
     clearTimeout(debounceRef.current);
     if (val.length < 3) { setResults([]); setOpen(false); return; }
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          'https://nominatim.openstreetmap.org/search?' +
-          new URLSearchParams({ q: val, format: 'json', limit: 5, addressdetails: 1 }),
-          { headers: { 'Accept-Language': 'en' } }
-        );
+        const res = await fetch('https://nominatim.openstreetmap.org/search?' + new URLSearchParams({ q: val, format: 'json', limit: 5, addressdetails: 1 }), { headers: { 'Accept-Language': 'en' } });
         const data = await res.json();
         setResults(data);
-        setOpen(data.length > 0);
-        updateDropdownPosition();
-      } catch {
-        setResults([]);
-      }
+        if (data.length > 0) { calcPos(); setOpen(true); }
+      } catch { setResults([]); }
       setLoading(false);
     }, 400);
   }
 
   function handleSelect(item) {
-    const displayName = item.display_name;
-    setQuery(displayName);
-    onChange(displayName);
-    onSelect && onSelect(item);
-    setResults([]);
-    setOpen(false);
+    setQuery(item.display_name); onChange(item.display_name); onSelect && onSelect(item);
+    setResults([]); setOpen(false);
   }
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', flex: 1 }}>
       <div style={{ position: 'relative' }}>
-        <input
-          ref={inputRef}
-          className="form-input"
-          value={query}
-          onChange={handleInput}
-          onFocus={() => { results.length > 0 && setOpen(true); updateDropdownPosition(); }}
-          placeholder="Start typing an address..."
-          autoComplete="off"
-        />
-        {loading && (
-          <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--ink3)' }}>
-            ⏳
-          </div>
-        )}
+        <input ref={inputRef} className="form-input" value={query} onChange={handleInput}
+          onFocus={() => { if (results.length > 0) { calcPos(); setOpen(true); } }}
+          placeholder="Start typing an address..." autoComplete="off" />
+        {loading && <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--ink3)' }}>⏳</div>}
       </div>
       {open && results.length > 0 && (
-        <div style={{
-          ...dropdownStyle,
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 10,
-          boxShadow: '0 12px 40px rgba(0,0,0,.18)',
-          overflow: 'hidden',
-          maxHeight: 280,
-          overflowY: 'auto',
-        }}>
+        <div style={{ position: 'fixed', top: dropPos.top, left: dropPos.left, width: dropPos.width, zIndex: 99999, backgroundColor: '#ffffff', border: '1px solid #d0d0d0', borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.20)', overflow: 'hidden', maxHeight: 260, overflowY: 'auto' }}>
           {results.map((item, i) => (
-            <div
-              key={i}
-              onMouseDown={() => handleSelect(item)}
-              style={{
-                padding: '10px 14px', fontSize: 13, cursor: 'pointer', color: 'var(--ink)',
-                borderBottom: i < results.length - 1 ? '1px solid var(--border)' : 'none',
-                display: 'flex', gap: 8, alignItems: 'flex-start', background: 'var(--surface)',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--indigo-light)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
-            >
+            <div key={i} onMouseDown={() => handleSelect(item)}
+              style={{ padding: '10px 14px', fontSize: 13, cursor: 'pointer', color: '#1a1a2e', backgroundColor: '#ffffff', borderBottom: i < results.length - 1 ? '1px solid #f0f0f0' : 'none', display: 'flex', gap: 8, alignItems: 'flex-start', lineHeight: 1.4 }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#ede8ff'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; }}>
               <span style={{ flexShrink: 0, marginTop: 1 }}>📍</span>
-              <span style={{ lineHeight: 1.4 }}>{item.display_name}</span>
+              <span>{item.display_name}</span>
             </div>
           ))}
-          <div style={{ padding: '6px 14px', fontSize: 10, color: 'var(--ink3)', background: 'var(--page)', borderTop: '1px solid var(--border)' }}>
-            Address data © OpenStreetMap contributors
-          </div>
+          <div style={{ padding: '6px 14px', fontSize: 10, color: '#999', backgroundColor: '#fafafa', borderTop: '1px solid #f0f0f0' }}>Address data © OpenStreetMap contributors</div>
         </div>
       )}
     </div>
   );
 }
 
-// Hex color picker with swatches + custom input
 function ColorPicker({ value, onChange }) {
   const [showCustom, setShowCustom] = useState(false);
-
   return (
     <div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {PRESET_COLORS.map(c => (
-          <div
-            key={c}
-            onClick={() => onChange(c)}
-            title={c}
-            style={{
-              width: 28, height: 28, borderRadius: 6, cursor: 'pointer', background: c,
-              border: value === c ? '3px solid var(--indigo)' : '2px solid transparent',
-              outline: value === c ? '2px solid white' : 'none', outlineOffset: -4,
-              transition: 'transform 0.1s', boxShadow: '0 1px 4px rgba(0,0,0,.15)',
-            }}
+          <div key={c} onClick={() => onChange(c)} title={c}
+            style={{ width: 28, height: 28, borderRadius: 6, cursor: 'pointer', background: c, border: value === c ? '3px solid var(--indigo)' : '2px solid transparent', outline: value === c ? '2px solid white' : 'none', outlineOffset: -4, transition: 'transform 0.1s', boxShadow: '0 1px 4px rgba(0,0,0,.15)' }}
             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-          />
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} />
         ))}
-        <div
-          onClick={() => setShowCustom(s => !s)}
-          title="Custom color"
-          style={{
-            width: 28, height: 28, borderRadius: 6, cursor: 'pointer',
-            background: PRESET_COLORS.includes(value) ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : value,
-            border: !PRESET_COLORS.includes(value) ? '3px solid var(--indigo)' : '2px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-          }}
-        >
-          {PRESET_COLORS.includes(value) ? '＋' : ''}
+        <div onClick={() => setShowCustom(s => !s)} title="Custom color"
+          style={{ width: 28, height: 28, borderRadius: 6, cursor: 'pointer', background: PRESET_COLORS.includes(value) ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : value, border: !PRESET_COLORS.includes(value) ? '3px solid var(--indigo)' : '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+          {PRESET_COLORS.includes(value) ? '+' : ''}
         </div>
       </div>
       {showCustom && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
-          <input
-            type="color"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            style={{ width: 40, height: 32, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', padding: 2 }}
-          />
-          <input
-            className="form-input"
-            value={value}
-            onChange={e => { const v = e.target.value; if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onChange(v); }}
-            placeholder="#6C5DD3"
-            style={{ width: 110, fontFamily: 'monospace', fontSize: 13 }}
-          />
+          <input type="color" value={value} onChange={e => onChange(e.target.value)} style={{ width: 40, height: 32, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', padding: 2 }} />
+          <input className="form-input" value={value} onChange={e => { const v = e.target.value; if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onChange(v); }} placeholder="#6C5DD3" style={{ width: 110, fontFamily: 'monospace', fontSize: 13 }} />
           <div style={{ width: 32, height: 32, borderRadius: 6, background: value, border: '1px solid var(--border)', flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Preview</span>
         </div>
       )}
     </div>
   );
 }
 
-// #3: Crowd-check date poll component
 function CrowdCheckSection({ dates, onChange }) {
   const [newDate, setNewDate] = useState('');
-
+  const [newTime, setNewTime] = useState('19:00');
   function addDate() {
-    const d = newDate.trim();
-    if (!d || dates.includes(d)) return;
-    onChange([...dates, d]);
-    setNewDate('');
+    if (!newDate.trim()) return;
+    const entry = { date: newDate, time: newTime };
+    if (dates.some(x => x.date === newDate && x.time === newTime)) return;
+    onChange([...dates, entry]);
+    setNewDate(''); setNewTime('19:00');
   }
-
-  function removeDate(d) {
-    onChange(dates.filter(x => x !== d));
-  }
-
-  const fmt = (d) => {
-    try { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
-    catch { return d; }
-  };
-
+  function removeDate(i) { onChange(dates.filter((_, idx) => idx !== i)); }
+  const fmtD = (d) => { try { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); } catch { return d; } };
+  const fmtT = (t) => { try { const [h, m] = t.split(':'); const hr = parseInt(h); return (hr > 12 ? hr - 12 : hr || 12) + ':' + m + ' ' + (hr >= 12 ? 'PM' : 'AM'); } catch { return t; } };
   return (
     <div style={{ background: 'linear-gradient(135deg, #f0f4ff, #f8f0ff)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)', marginTop: 4 }}>
       <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>📅 When works for everyone?</div>
-      <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12, lineHeight: 1.5 }}>
-        Add multiple date options — guests will vote on which works best. Confirm the date once responses are in.
-      </div>
-
+      <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12, lineHeight: 1.5 }}>Add date and time options — guests vote on what works best.</div>
       {dates.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-          {dates.map(d => (
-            <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--indigo-light)', border: '1.5px solid var(--indigo-mid)', borderRadius: 20, padding: '4px 10px' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo)' }}>{fmt(d)}</span>
-              <button
-                onClick={() => removeDate(d)}
-                style={{ background: 'none', border: 'none', color: 'var(--indigo)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, display: 'flex', alignItems: 'center' }}
-              >
-                ✕
-              </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+          {dates.map((d, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--indigo-light)', border: '1.5px solid var(--indigo-mid)', borderRadius: 10, padding: '7px 12px' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--indigo)', flex: 1 }}>{fmtD(d.date)} · {fmtT(d.time)}</span>
+              <button onClick={() => removeDate(i)} style={{ background: 'none', border: 'none', color: 'var(--indigo)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>✕</button>
             </div>
           ))}
         </div>
       )}
-
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input
-          className="form-input"
-          type="date"
-          value={newDate}
-          onChange={e => setNewDate(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addDate()}
-          style={{ flex: 1 }}
-        />
-        <button className="btn btn-ghost btn-sm" onClick={addDate} style={{ flexShrink: 0 }}>
-          + Add Date
-        </button>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input className="form-input" type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ flex: '1 1 140px', minWidth: 130 }} />
+        <input className="form-input" type="time" value={newTime} onChange={e => setNewTime(e.target.value)} style={{ flex: '1 1 110px', minWidth: 100 }} />
+        <button className="btn btn-ghost btn-sm" onClick={addDate} style={{ flexShrink: 0 }}>+ Add</button>
       </div>
-
-      {dates.length === 0 && (
-        <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 8 }}>
-          No date options added yet. Add at least 2 for a useful poll.
-        </div>
-      )}
+      {dates.length === 0 && <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 8 }}>Add at least 2 options for a useful poll.</div>}
     </div>
   );
 }
@@ -367,85 +210,43 @@ function CrowdCheckSection({ dates, onChange }) {
 export default function CreateEventModal({ event, onClose }) {
   const { createEvent, updateEvent, addToast } = useApp();
   const isEdit = !!event;
-
   const [form, setForm] = useState({
-    title:          event?.title || '',
-    type:           event?.type || 'Dinner Party',
-    date:           event?.date || '',
-    time:           event?.time || '19:00',
-    loc:            event?.loc || '',
-    addr:           event?.addr || '',
-    addrHidden:     event?.addrHidden ?? true,
-    cap:            event?.cap || 10,
-    vis:            event?.vis || 'Invite Only',
-    desc:           event?.desc || '',
-    dressCode:      event?.dressCode || 'No dress code',
-    invH:           event?.invH || "You're Invited",
-    invBg:          event?.invBg || '#6C5DD3',
+    title: event?.title || '', type: event?.type || 'Dinner Party',
+    date: event?.date || '', time: event?.time || '19:00',
+    loc: event?.loc || '', addr: event?.addr || '', addrHidden: event?.addrHidden ?? true,
+    cap: event?.cap || 10, vis: event?.vis || 'Invite Only',
+    desc: event?.desc || '', dressCode: event?.dressCode || 'No dress code',
+    invH: event?.invH || "You're Invited", invBg: event?.invBg || '#6C5DD3',
     galleryEnabled: event?.galleryEnabled ?? true,
-    seriesName:     event?.seriesName || '',
-    seriesVolume:   event?.seriesVolume || 1,
-    playlist:       event?.playlist || { platform: 'spotify', url: '' },
-    crowdCheckDates: event?.crowdCheckDates || [],
-    useCrowdCheck:  event?.useCrowdCheck ?? false,
+    seriesName: event?.seriesName || '', seriesVolume: event?.seriesVolume || 1,
+    playlist: event?.playlist || { platform: 'spotify', url: '' },
+    crowdCheckDates: event?.crowdCheckDates || [], useCrowdCheck: event?.useCrowdCheck ?? false,
   });
-
-  const [cover, setCover] = useState(
-    event?.cover || { type: 'gradient', value: GRADIENT_COVERS[0].value }
-  );
-  const [coverTab, setCoverTab] = useState(
-    event?.cover?.type === 'image' ? 'image' : event?.cover?.type === 'emoji' ? 'emoji' : 'gradient'
-  );
-
+  const [cover, setCover] = useState(event?.cover || { type: 'gradient', value: GRADIENT_COVERS[0].value });
+  const [coverTab, setCoverTab] = useState(event?.cover?.type === 'image' ? 'image' : event?.cover?.type === 'emoji' ? 'emoji' : 'gradient');
   const [potluckItems, setPotluckItems] = useState(event?.potluck?.items || DEFAULT_POTLUCK.items);
   const [scData, setScData] = useState(event?.supperClub || DEFAULT_SUPPER_CLUB);
   const [newItemText, setNewItemText] = useState({ food: '', drinks: '', other: '' });
   const newItemEmoji = { food: '🍽️', drinks: '🥂', other: '🧺' };
-
-  const isPotluck    = form.type === 'Potluck';
+  const isPotluck = form.type === 'Potluck';
   const isSupperClub = form.type === 'Supper Club';
-
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
-
-  function appendToField(field, emoji) {
-    setForm(f => ({ ...f, [field]: (f[field] || '') + emoji }));
-  }
-
-  function setPlaylist(key, val) {
-    setForm(f => ({ ...f, playlist: { ...f.playlist, [key]: val } }));
-  }
-
-  function handleAddressSelect(nominatimItem) {
-    const addr = nominatimItem.address || {};
-    const neighborhood = addr.neighbourhood || addr.suburb || addr.quarter || '';
+  function appendToField(field, emoji) { setForm(f => ({ ...f, [field]: (f[field] || '') + emoji })); }
+  function setPlaylist(key, val) { setForm(f => ({ ...f, playlist: { ...f.playlist, [key]: val } })); }
+  function handleAddressSelect(item) {
+    const addr = item.address || {};
+    const nb = addr.neighbourhood || addr.suburb || addr.quarter || '';
     const city = addr.city || addr.town || addr.village || '';
-    if (!form.loc && (neighborhood || city)) {
-      set('loc', [neighborhood, city].filter(Boolean).join(', '));
-    }
+    if (!form.loc && (nb || city)) set('loc', [nb, city].filter(Boolean).join(', '));
   }
-
   function handleSubmit() {
     if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
     if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; }
-
-    const payload = {
-      ...form,
-      cover,
-      potluck:    isPotluck    ? { items: potluckItems } : null,
-      supperClub: isSupperClub ? scData                 : null,
-      playlist:   form.playlist?.url?.trim() ? form.playlist : null,
-    };
-
-    if (isEdit) {
-      updateEvent(event.id, payload);
-      addToast('Event updated ✓', 'success');
-    } else {
-      createEvent(payload);
-      addToast('Event created! 🎉', 'success');
-    }
+    const payload = { ...form, cover, potluck: isPotluck ? { items: potluckItems } : null, supperClub: isSupperClub ? scData : null, playlist: form.playlist?.url?.trim() ? form.playlist : null };
+    if (isEdit) { updateEvent(event.id, payload); addToast('Event updated ✓', 'success'); }
+    else { createEvent(payload); addToast('Event created! 🎉', 'success'); }
     onClose();
   }
-
   function addPotluckItem(cat) {
     const text = newItemText[cat]?.trim();
     if (!text) return;
@@ -453,49 +254,34 @@ export default function CreateEventModal({ event, onClose }) {
     setNewItemText(t => ({ ...t, [cat]: '' }));
   }
   function removePotluckItem(id) { setPotluckItems(items => items.filter(it => it.id !== id)); }
-
-  function updateCourse(i, key, val) {
-    setScData(d => ({ ...d, courses: d.courses.map((c, j) => j === i ? { ...c, [key]: val } : c) }));
-  }
-  function addCourse() {
-    setScData(d => ({ ...d, courses: [...d.courses, { num: d.courses.length + 1, name: '', desc: '', pairing: '' }] }));
-  }
-  function removeCourse(i) {
-    setScData(d => ({ ...d, courses: d.courses.filter((_, j) => j !== i).map((c, j) => ({ ...c, num: j + 1 })) }));
-  }
-
-  // Get the pairing label for a course input placeholder
+  function updateCourse(i, key, val) { setScData(d => ({ ...d, courses: d.courses.map((c, j) => j === i ? { ...c, [key]: val } : c) })); }
+  function addCourse() { setScData(d => ({ ...d, courses: [...d.courses, { num: d.courses.length + 1, name: '', desc: '', pairing: '' }] })); }
+  function removeCourse(i) { setScData(d => ({ ...d, courses: d.courses.filter((_, j) => j !== i).map((c, j) => ({ ...c, num: j + 1 })) })); }
   const pairingLabel = PAIRING_OPTIONS.find(p => p.key === scData.pairing)?.label || 'Wine';
+  const pairingIcon = PAIRING_OPTIONS.find(p => p.key === scData.pairing)?.icon || '🍷';
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal modal-lg" style={{ maxWidth: 660 }}>
-        <div className="modal-head">
-          <h2>{isEdit ? 'Edit Event' : 'Create Event'}</h2>
-          <button className="modal-x" onClick={onClose}>✕</button>
-        </div>
-
+        <div className="modal-head"><h2>{isEdit ? 'Edit Event' : 'Create Event'}</h2><button className="modal-x" onClick={onClose}>✕</button></div>
         <div className="modal-body">
-          {/* COVER */}
           <div className="form-group">
             <label className="form-label">Cover</label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              {['gradient', 'emoji', 'image'].map(t => (
-                <button key={t} className={`filter-btn ${coverTab === t ? 'active' : ''}`} style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => setCoverTab(t)}>
+              {['gradient','emoji','image'].map(t => (
+                <button key={t} className={'filter-btn ' + (coverTab === t ? 'active' : '')} style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => setCoverTab(t)}>
                   {t === 'gradient' ? '🎨 Gradient' : t === 'emoji' ? '✨ Emoji' : '📷 Photo'}
                 </button>
               ))}
             </div>
-
             {coverTab === 'gradient' && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {GRADIENT_COVERS.map(g => (
                   <div key={g.label} title={g.label} onClick={() => setCover({ type: 'gradient', value: g.value })}
-                    style={{ width: 44, height: 44, borderRadius: 10, cursor: 'pointer', background: g.value, border: cover.value === g.value ? '3px solid var(--indigo)' : '3px solid transparent', transition: 'border-color 0.15s' }} />
+                    style={{ width: 44, height: 44, borderRadius: 10, cursor: 'pointer', background: g.value, border: cover.value === g.value ? '3px solid var(--indigo)' : '3px solid transparent' }} />
                 ))}
               </div>
             )}
-
             {coverTab === 'emoji' && (
               <div>
                 <div style={{ marginBottom: 10, fontSize: 13, color: 'var(--ink2)' }}>Select an emoji for your animated cover:</div>
@@ -507,14 +293,9 @@ export default function CreateEventModal({ event, onClose }) {
                       style={{ width: 28, height: 28, borderRadius: 6, cursor: 'pointer', background: g.value, border: cover.bg === g.value ? '2px solid var(--indigo)' : '2px solid transparent' }} />
                   ))}
                 </div>
-                {cover.emoji && (
-                  <div style={{ marginTop: 10, width: 80, height: 80, borderRadius: 12, background: cover.bg || '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
-                    {cover.emoji}
-                  </div>
-                )}
+                {cover.emoji && <div style={{ marginTop: 10, width: 80, height: 80, borderRadius: 12, background: cover.bg || '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>{cover.emoji}</div>}
               </div>
             )}
-
             {coverTab === 'image' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                 {SEED_IMAGES.map(img => (
@@ -526,10 +307,7 @@ export default function CreateEventModal({ event, onClose }) {
               </div>
             )}
           </div>
-
           <div className="divider" />
-
-          {/* TITLE */}
           <div className="form-group">
             <label className="form-label">Event Title</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -537,135 +315,60 @@ export default function CreateEventModal({ event, onClose }) {
               <EmojiTrigger onSelect={em => appendToField('title', em)} />
             </div>
           </div>
-
-          {/* #1 + #2: Event Type — button group with icons */}
           <div className="form-group">
             <label className="form-label">Event Type</label>
             <ButtonGroup options={EVENT_TYPES} value={form.type} onChange={val => set('type', val)} icons={EVENT_TYPE_ICONS} cols={4} />
           </div>
-
-          {/* #2: Visibility — button group */}
           <div className="form-group">
             <label className="form-label">Visibility</label>
-            <ButtonGroup options={VISIBILITY} value={form.vis} onChange={val => set('vis', val)} icons={VISIBILITY_ICONS} cols={3} />
+            <StyledSelect value={form.vis} onChange={val => set('vis', val)} options={VISIBILITY} />
           </div>
-
-          {/* Supper Club series fields */}
           {isSupperClub && (
             <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Series Name</label>
-                <input className="form-input" value={form.seriesName} onChange={e => set('seriesName', e.target.value)} placeholder="e.g. Terroir Supper Club" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Volume #</label>
-                <input className="form-input" type="number" min={1} value={form.seriesVolume} onChange={e => set('seriesVolume', parseInt(e.target.value) || 1)} />
-              </div>
+              <div className="form-group"><label className="form-label">Series Name</label><input className="form-input" value={form.seriesName} onChange={e => set('seriesName', e.target.value)} placeholder="e.g. Terroir Supper Club" /></div>
+              <div className="form-group"><label className="form-label">Volume #</label><input className="form-input" type="number" min={1} value={form.seriesVolume} onChange={e => set('seriesVolume', parseInt(e.target.value) || 1)} /></div>
             </div>
           )}
-
-          {/* Date/Time or Crowd-Check */}
           <div className="form-group">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <label className="form-label" style={{ margin: 0 }}>Date & Time</label>
-              {/* #3: Crowd-check toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--ink2)' }}>
-                  {form.useCrowdCheck ? '📅 Polling guests' : '📅 Set a date'}
-                </span>
-                <div
-                  onClick={() => set('useCrowdCheck', !form.useCrowdCheck)}
-                  style={{
-                    width: 36, height: 20, borderRadius: 10,
-                    background: form.useCrowdCheck ? 'var(--indigo)' : 'var(--border)',
-                    position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
-                  }}
-                >
-                  <div style={{
-                    width: 14, height: 14, borderRadius: 7, background: 'white',
-                    position: 'absolute', top: 3, left: form.useCrowdCheck ? 19 : 3,
-                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
-                  }} />
+                <span style={{ fontSize: 12, color: 'var(--ink2)' }}>{form.useCrowdCheck ? '📅 Poll guests' : '📅 Set a Date / Time'}</span>
+                <div onClick={() => set('useCrowdCheck', !form.useCrowdCheck)} style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0, background: form.useCrowdCheck ? 'var(--indigo)' : 'var(--border)', position: 'relative' }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 7, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: form.useCrowdCheck ? 19 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
                 </div>
               </div>
             </div>
-
             {form.useCrowdCheck ? (
-              <CrowdCheckSection
-                dates={form.crowdCheckDates}
-                onChange={dates => set('crowdCheckDates', dates)}
-              />
+              <CrowdCheckSection dates={form.crowdCheckDates} onChange={dates => set('crowdCheckDates', dates)} />
             ) : (
               <div className="form-row" style={{ marginBottom: 0 }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <input className="form-input" type="time" value={form.time} onChange={e => set('time', e.target.value)} />
-                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}><input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} /></div>
+                <div className="form-group" style={{ marginBottom: 0 }}><input className="form-input" type="time" value={form.time} onChange={e => set('time', e.target.value)} /></div>
               </div>
             )}
           </div>
-
           <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Location Name</label>
-              <input className="form-input" value={form.loc} onChange={e => set('loc', e.target.value)} placeholder="Venue or neighborhood" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Capacity</label>
-              <input className="form-input" type="number" min={1} max={200} value={form.cap} onChange={e => set('cap', parseInt(e.target.value) || 1)} />
-            </div>
+            <div className="form-group"><label className="form-label">Location Name</label><input className="form-input" value={form.loc} onChange={e => set('loc', e.target.value)} placeholder="Venue or neighborhood" /></div>
+            <div className="form-group"><label className="form-label">Capacity</label><input className="form-input" type="number" min={1} max={200} value={form.cap} onChange={e => set('cap', parseInt(e.target.value) || 1)} /></div>
           </div>
-
-          {/* ADDRESS — autocomplete + hide toggle */}
           <div className="form-group">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <label className="form-label" style={{ margin: 0 }}>Full Address</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--ink2)' }}>
-                  {form.addrHidden ? '🔒 Hidden until RSVP confirmed' : '👁 Visible to all guests'}
-                </span>
-                <div
-                  onClick={() => set('addrHidden', !form.addrHidden)}
-                  style={{
-                    width: 36, height: 20, borderRadius: 10,
-                    background: form.addrHidden ? 'var(--indigo)' : 'var(--border)',
-                    position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
-                  }}
-                >
-                  <div style={{
-                    width: 14, height: 14, borderRadius: 7, background: 'white',
-                    position: 'absolute', top: 3, left: form.addrHidden ? 19 : 3,
-                    transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)',
-                  }} />
+                <span style={{ fontSize: 12, color: 'var(--ink2)' }}>{form.addrHidden ? '🔒 Hidden until RSVP confirmed' : '👁 Visible to all guests'}</span>
+                <div onClick={() => set('addrHidden', !form.addrHidden)} style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0, position: 'relative', background: form.addrHidden ? 'var(--indigo)' : 'var(--border)' }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 7, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: form.addrHidden ? 19 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
                 </div>
               </div>
             </div>
-            <AddressAutocomplete
-              value={form.addr}
-              onChange={val => set('addr', val)}
-              onSelect={handleAddressSelect}
-            />
-            {form.addrHidden && (
-              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink3)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span>🔐</span>
-                Guests will see only your location name until their RSVP is accepted.
-              </div>
-            )}
+            <AddressAutocomplete value={form.addr} onChange={val => set('addr', val)} onSelect={handleAddressSelect} />
+            {form.addrHidden && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink3)', display: 'flex', alignItems: 'center', gap: 5 }}>🔐 Guests see only your location name until their RSVP is accepted.</div>}
           </div>
-
-          {/* Dress Code */}
           <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Dress Code</label>
-              <select className="form-select" value={form.dressCode} onChange={e => set('dressCode', e.target.value)}>
-                {DRESS_CODES.map(d => <option key={d}>{d}</option>)}
-              </select>
-            </div>
+            <div className="form-group"><label className="form-label">Dress Code</label><StyledSelect value={form.dressCode} onChange={val => set('dressCode', val)} options={DRESS_CODES} /></div>
             <div className="form-group" />
           </div>
-
           <div className="form-group">
             <label className="form-label">Description</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -673,8 +376,6 @@ export default function CreateEventModal({ event, onClose }) {
               <EmojiTrigger onSelect={em => appendToField('desc', em)} above />
             </div>
           </div>
-
-          {/* INVITATION */}
           <div className="form-group">
             <label className="form-label">Invitation Header</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -682,8 +383,6 @@ export default function CreateEventModal({ event, onClose }) {
               <EmojiTrigger onSelect={em => appendToField('invH', em)} />
             </div>
           </div>
-
-          {/* Invitation color */}
           <div className="form-group">
             <label className="form-label">Invitation Accent Color</label>
             <ColorPicker value={form.invBg} onChange={val => set('invBg', val)} />
@@ -692,71 +391,33 @@ export default function CreateEventModal({ event, onClose }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: 'white', textShadow: '0 1px 3px rgba(0,0,0,.3)' }}>{form.invH || "You're Invited"}</span>
             </div>
           </div>
-
-          {/* PLAYLIST */}
           <div className="form-group">
             <label className="form-label">🎵 Event Playlist <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
               {PLAYLIST_PLATFORMS.map(p => (
-                <button
-                  key={p.key}
-                  className={`filter-btn ${form.playlist?.platform === p.key ? 'active' : ''}`}
-                  style={{ padding: '5px 12px', fontSize: 12 }}
-                  onClick={() => setPlaylist('platform', p.key)}
-                >
-                  {p.icon} {p.label}
-                </button>
+                <button key={p.key} className={'filter-btn ' + (form.playlist?.platform === p.key ? 'active' : '')} style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setPlaylist('platform', p.key)}>{p.icon} {p.label}</button>
               ))}
             </div>
-            <input
-              className="form-input"
-              value={form.playlist?.url || ''}
-              onChange={e => setPlaylist('url', e.target.value)}
-              placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'}
-            />
-            {form.playlist?.url?.trim() && (
-              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span>✓</span> Playlist will be shown to guests on the event page
-              </div>
-            )}
+            <input className="form-input" value={form.playlist?.url || ''} onChange={e => setPlaylist('url', e.target.value)} placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'} />
+            {form.playlist?.url?.trim() && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>✓ Playlist shown to guests</div>}
           </div>
-
-          {/* SUPPER CLUB TEMPLATE */}
           {isSupperClub && (
             <div style={{ background: 'linear-gradient(135deg, #1A1A2E08, #2D255008)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)', marginTop: 4 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🍽️ Supper Club Menu</div>
-
-              {/* Host note */}
               <div className="form-group">
                 <label className="form-label">Host Note (shown to guests)</label>
-                <textarea className="form-textarea" value={scData.hostNote} onChange={e => setScData(d => ({ ...d, hostNote: e.target.value }))} placeholder="Share your inspiration, a personal note, or cooking tips..." style={{ minHeight: 70 }} />
+                <textarea className="form-textarea" value={scData.hostNote} onChange={e => setScData(d => ({ ...d, hostNote: e.target.value }))} placeholder="Share your inspiration..." style={{ minHeight: 70 }} />
               </div>
-
-              {/* #8: Pairing type selector */}
               <div className="form-group">
                 <label className="form-label">Pairing Style</label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {PAIRING_OPTIONS.map(p => (
-                    <button
-                      key={p.key}
-                      onClick={() => setScData(d => ({ ...d, pairing: p.key }))}
-                      style={{
-                        padding: '6px 12px', borderRadius: 20, fontSize: 12,
-                        border: `1.5px solid ${scData.pairing === p.key ? 'var(--indigo)' : 'var(--border)'}`,
-                        background: scData.pairing === p.key ? 'var(--indigo-light)' : 'var(--surface)',
-                        color: scData.pairing === p.key ? 'var(--indigo)' : 'var(--ink2)',
-                        fontWeight: scData.pairing === p.key ? 700 : 500,
-                        cursor: 'pointer', transition: 'all 0.15s',
-                        display: 'flex', alignItems: 'center', gap: 5,
-                      }}
-                    >
+                    <button key={p.key} onClick={() => setScData(d => ({ ...d, pairing: p.key }))} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1.5px solid ' + (scData.pairing === p.key ? 'var(--indigo)' : 'var(--border)'), background: scData.pairing === p.key ? 'var(--indigo-light)' : 'var(--surface)', color: scData.pairing === p.key ? 'var(--indigo)' : 'var(--ink2)', fontWeight: scData.pairing === p.key ? 700 : 500, display: 'flex', alignItems: 'center', gap: 5 }}>
                       {p.icon} {p.label}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Courses */}
               {scData.courses.map((course, i) => (
                 <div key={i} style={{ background: 'white', borderRadius: 10, padding: '12px', marginBottom: 8, border: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -765,26 +426,15 @@ export default function CreateEventModal({ event, onClose }) {
                     <button style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--coral)', cursor: 'pointer', fontSize: 14 }} onClick={() => removeCourse(i)}>✕</button>
                   </div>
                   <div className="form-row" style={{ marginBottom: 0 }}>
-                    <div className="form-group" style={{ marginBottom: 8 }}>
-                      <label className="form-label">Dish Name</label>
-                      <input className="form-input" value={course.name} onChange={e => updateCourse(i, 'name', e.target.value)} placeholder="e.g. Boeuf Bourguignon" />
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 8 }}>
-                      <label className="form-label">{PAIRING_OPTIONS.find(p => p.key === scData.pairing)?.icon} {pairingLabel} Pairing <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--ink3)' }}>(optional)</span></label>
-                      <input className="form-input" value={course.pairing || course.wine || ''} onChange={e => updateCourse(i, 'pairing', e.target.value)} placeholder={`e.g. ${pairingLabel === 'Wine' ? 'Pinot Noir 2019' : pairingLabel === 'Beer' ? 'IPA, saison...' : pairingLabel === 'Cocktail' ? 'Negroni, Aperol Spritz...' : pairingLabel + ' pairing...'}`} />
-                    </div>
+                    <div className="form-group" style={{ marginBottom: 8 }}><label className="form-label">Dish Name</label><input className="form-input" value={course.name} onChange={e => updateCourse(i, 'name', e.target.value)} placeholder="e.g. Boeuf Bourguignon" /></div>
+                    <div className="form-group" style={{ marginBottom: 8 }}><label className="form-label">{pairingIcon} {pairingLabel} Pairing <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--ink3)' }}>(optional)</span></label><input className="form-input" value={course.pairing || course.wine || ''} onChange={e => updateCourse(i, 'pairing', e.target.value)} placeholder={pairingLabel === 'Wine' ? 'e.g. Pinot Noir 2019' : pairingLabel + ' pairing...'} /></div>
                   </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Description</label>
-                    <input className="form-input" value={course.desc} onChange={e => updateCourse(i, 'desc', e.target.value)} placeholder="Short dish description..." />
-                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label">Description</label><input className="form-input" value={course.desc} onChange={e => updateCourse(i, 'desc', e.target.value)} placeholder="Short dish description..." /></div>
                 </div>
               ))}
               <button className="btn btn-ghost btn-sm" onClick={addCourse} style={{ width: '100%', borderStyle: 'dashed' }}>+ Add Course</button>
             </div>
           )}
-
-          {/* POTLUCK TEMPLATE */}
           {isPotluck && (
             <div style={{ background: 'linear-gradient(135deg, var(--amber-light), #FFF9F0)', borderRadius: 12, padding: 16, border: '1px solid #FFD080', marginTop: 4 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: '#7A5000', marginBottom: 12 }}>🥘 Potluck Items</div>
@@ -795,15 +445,12 @@ export default function CreateEventModal({ event, onClose }) {
                     <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink2)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cat.label}</div>
                     {catItems.map(item => (
                       <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'white', borderRadius: 8, marginBottom: 4, border: '1px solid var(--border)' }}>
-                        <span>{item.emoji}</span>
-                        <span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
+                        <span>{item.emoji}</span><span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
                         <button style={{ background: 'none', border: 'none', color: 'var(--ink3)', cursor: 'pointer', fontSize: 13 }} onClick={() => removePotluckItem(item.id)}>✕</button>
                       </div>
                     ))}
                     <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                      <input className="form-input" style={{ flex: 1, padding: '7px 10px', fontSize: 13 }} value={newItemText[cat.key]}
-                        onChange={e => setNewItemText(t => ({ ...t, [cat.key]: e.target.value }))}
-                        placeholder={cat.placeholder} onKeyDown={e => e.key === 'Enter' && addPotluckItem(cat.key)} />
+                      <input className="form-input" style={{ flex: 1, padding: '7px 10px', fontSize: 13 }} value={newItemText[cat.key]} onChange={e => setNewItemText(t => ({ ...t, [cat.key]: e.target.value }))} placeholder={cat.placeholder} onKeyDown={e => e.key === 'Enter' && addPotluckItem(cat.key)} />
                       <button className="btn btn-ghost btn-sm" onClick={() => addPotluckItem(cat.key)}>+ Add</button>
                     </div>
                   </div>
@@ -811,20 +458,16 @@ export default function CreateEventModal({ event, onClose }) {
               })}
             </div>
           )}
-
-          {/* PHOTO GALLERY TOGGLE */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--page)', borderRadius: 10, marginTop: 8 }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>📸 Photo Gallery</div>
               <div style={{ fontSize: 12, color: 'var(--ink2)', marginTop: 2 }}>Allow guests to upload and share photos after the event</div>
             </div>
-            <div style={{ width: 44, height: 24, borderRadius: 12, background: form.galleryEnabled ? 'var(--indigo)' : 'var(--border)', position: 'relative', transition: 'background 0.2s', cursor: 'pointer' }}
-              onClick={() => set('galleryEnabled', !form.galleryEnabled)}>
+            <div style={{ width: 44, height: 24, borderRadius: 12, background: form.galleryEnabled ? 'var(--indigo)' : 'var(--border)', position: 'relative', transition: 'background 0.2s', cursor: 'pointer' }} onClick={() => set('galleryEnabled', !form.galleryEnabled)}>
               <div style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: form.galleryEnabled ? 23 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
             </div>
           </div>
         </div>
-
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>

@@ -1,14 +1,59 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { SEED_EVENTS, CURRENT_USER } from '../data/seed';
 import { signIn as supabaseSignIn, getProfile, supabase } from '../lib/supabase';
 
 const AppCtx = createContext(null);
 
+const STORAGE_KEY = 'tableaux_state_v1';
+
+function loadFromStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+function saveToStorage(data) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+        // Storage full or unavailable — fail silently
+    }
+}
+
 export function AppProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [events, setEvents] = useState(SEED_EVENTS);
+    // Load persisted user on init (restores logged-in state across refreshes)
+    const [user, setUser] = useState(() => {
+        const stored = loadFromStorage();
+        return stored?.user || null;
+    });
+
+    // Load persisted events — merge seed with any user-created events
+    const [events, setEvents] = useState(() => {
+        const stored = loadFromStorage();
+        if (!stored?.events) return SEED_EVENTS;
+        // Merge: keep seed events intact, append any user-created events on top
+        const userCreated = stored.events.filter(e => e.id.startsWith('evt-') && !SEED_EVENTS.find(s => s.id === e.id));
+        const seedWithUpdates = SEED_EVENTS.map(seed => {
+            const stored_evt = stored.events.find(s => s.id === seed.id);
+            return stored_evt || seed;
+        });
+        return [...userCreated, ...seedWithUpdates];
+    });
+
     const [toasts, setToasts] = useState([]);
-    const [following, setFollowing] = useState([]);
+    const [following, setFollowing] = useState(() => {
+        const stored = loadFromStorage();
+        return stored?.following || [];
+    });
+
+    // Persist to localStorage whenever user, events, or following change
+    useEffect(() => {
+        saveToStorage({ user, events, following });
+    }, [user, events, following]);
 
     const addToast = useCallback((msg, type = '') => {
         const id = Date.now();
@@ -16,7 +61,6 @@ export function AppProvider({ children }) {
         setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
     }, []);
 
-    // login accepts either (email, password) or (email, null, session) for confirmation flow
     const login = useCallback(async (email, password, session) => {
         let authUser;
         if (session) {
@@ -32,7 +76,7 @@ export function AppProvider({ children }) {
             profile = {};
         }
         const displayName = profile.full_name || authUser.user_metadata?.full_name || email.split('@')[0];
-        setUser({
+        const newUser = {
             id: authUser.id,
             email: authUser.email,
             name: displayName,
@@ -44,7 +88,8 @@ export function AppProvider({ children }) {
             website: profile.website || null,
             hosted_count: profile.hosted_count || 0,
             attended_count: profile.attended_count || 0,
-        });
+        };
+        setUser(newUser);
         return true;
     }, []);
 
@@ -56,13 +101,29 @@ export function AppProvider({ children }) {
     const logout = useCallback(async () => {
         await supabase.auth.signOut();
         setUser(null);
+        // Clear only user data from storage, keep events
+        try {
+            const stored = loadFromStorage();
+            if (stored) saveToStorage({ ...stored, user: null });
+        } catch {}
     }, []);
 
     const createEvent = useCallback((evt) => {
-        const newEvt = { ...evt, id: 'evt-' + Date.now(), mine: true, hostId: 'u1', host: CURRENT_USER.name, guests: [], photoGallery: [], eventComments: [], pinnedQuotes: [], isEnded: false };
+        const newEvt = {
+            ...evt,
+            id: 'evt-user-' + Date.now(),
+            mine: true,
+            hostId: user?.id || 'u1',
+            host: user?.name || CURRENT_USER.name,
+            guests: [],
+            photoGallery: [],
+            eventComments: [],
+            pinnedQuotes: [],
+            isEnded: false,
+        };
         setEvents(e => [newEvt, ...e]);
         return newEvt;
-    }, []);
+    }, [user]);
 
     const updateEvent = useCallback((id, patch) => {
         setEvents(e => e.map(ev => ev.id === id ? { ...ev, ...patch } : ev));
@@ -107,7 +168,6 @@ export function AppProvider({ children }) {
         }));
     }, []);
 
-    // FIX #4: addComment — was called in EventDetailModal but never defined
     const addComment = useCallback((eventId, comment) => {
         setEvents(e => e.map(ev => {
             if (ev.id !== eventId) return ev;
@@ -115,7 +175,6 @@ export function AppProvider({ children }) {
         }));
     }, []);
 
-    // FIX #4: pinQuote — was called in EventDetailModal but never defined
     const pinQuote = useCallback((eventId, commentId) => {
         setEvents(e => e.map(ev => {
             if (ev.id !== eventId) return ev;
