@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiPresetsRow, EmojiTrigger } from './EmojiPicker';

@@ -24,7 +24,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const [reminders, setReminders] = useState({ '2d': false, '24h': true, 'dof': false });
   const [reminderSaved, setReminderSaved] = useState(false);
   const [nudgeSent, setNudgeSent] = useState({});
-  const [showFullAddr, setShowFullAddr] = useState(false);
+  const [showFullAddr] = useState(false);
   const fileRef = useRef();
 
   if (!event) return null;
