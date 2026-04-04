@@ -266,13 +266,6 @@ function BlogPost({ post, onBack }) {
   const postUrl = `${window.location.origin}/blog?post=${post.slug || post.id}`;
 
     if (navigator.share) {
-      navigator.share({ title: post.title, text: post.excerpt, url: postUrl });
-    } else {
-      navigator.clipboard?.writeText(postUrl).catch(() => {});
-      window.alert('Link copied to clipboard!');
-    }
-  }
-
   return (
     <main className="page-content" style={{ maxWidth: 680, margin: '0 auto' }}>
       <button className="btn btn-ghost btn-sm" onClick={onBack} style={{ marginBottom: 20 }}>
