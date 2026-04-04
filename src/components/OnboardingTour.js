@@ -1,36 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const STEPS = [
-  {
-    icon: '🏠',
-    title: 'Welcome to Tableaux',
-    body: 'Discover intimate dining experiences near you — supper clubs, potlucks, dinner parties, and more. Your next great meal is waiting.',
-    cta: 'Let\'s go',
-  },
-  {
-    icon: '🗓️',
-    title: 'Host your own table',
-    body: 'Create an event in minutes. Set your guest list, menu style, and cover art. Tableaux handles the invites and RSVPs.',
-    cta: 'Got it',
-  },
-  {
-    icon: '✉️',
-    title: 'Get invited to tables',
-    body: 'When a host wants you at their table, you\'ll get an invitation here. Accept, decline, or claim your potluck dish all in one place.',
-    cta: 'Nice',
-  },
-  {
-    icon: '🥂',
-    title: 'You\'re all set',
-    body: 'Explore what\'s happening around Chicago or create your first event. Good food is better shared.',
-    cta: 'Start exploring →',
-    final: true,
-  },
-];
+// Detect user's city and time of day for personalized copy
+function useLocalContext() {
+  const [city, setCity] = useState('');
+  const [timeOfDay, setTimeOfDay] = useState('');
+
+  useEffect(() => {
+    // Time of day
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setTimeOfDay('morning');
+    else if (hour >= 12 && hour < 17) setTimeOfDay('afternoon');
+    else setTimeOfDay('evening');
+
+    // Geolocation → city name
+    try {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            try {
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&addressdetails=1`,
+                { headers: { 'Accept-Language': 'en' } }
+              );
+              const data = await res.json();
+              const c = data?.address?.city || data?.address?.town || data?.address?.village || '';
+              if (c) setCity(c);
+            } catch { /* fail silently */ }
+          },
+          () => { /* denied */ },
+          { timeout: 5000 }
+        );
+      }
+    } catch { /* unavailable */ }
+  }, []);
+
+  return { city, timeOfDay };
+}
+
+function getSteps(city, timeOfDay) {
+  // Dynamic location string
+  const locationStr = city ? `in ${city}` : 'near you';
+
+  // Time-aware greeting
+  const timeGreeting = timeOfDay === 'morning'
+    ? 'Good morning'
+    : timeOfDay === 'afternoon'
+    ? 'Good afternoon'
+    : 'Good evening';
+
+  // Time-aware meal suggestion
+  const mealSuggestion = timeOfDay === 'morning'
+    ? 'a weekend brunch'
+    : timeOfDay === 'afternoon'
+    ? 'a supper club'
+    : 'a dinner party';
+
+  return [
+    {
+      icon: '🏠',
+      title: `${timeGreeting}! Welcome to Tableaux`,
+      body: `Discover intimate dining experiences ${locationStr} — supper clubs, potlucks, dinner parties, brunches, and more. Your next great meal is waiting.`,
+      cta: 'Let\'s go',
+    },
+    {
+      icon: '🗓️',
+      title: 'Host your own table',
+      body: 'Create an event in minutes. Set your guest list, menu style, and cover art. Tableaux handles the invites and RSVPs.',
+      cta: 'Got it',
+    },
+    {
+      icon: '✉️',
+      title: 'Get invited to tables',
+      body: 'When a host wants you at their table, you\'ll get an invitation here. Accept, decline, or claim your potluck dish all in one place.',
+      cta: 'Nice',
+    },
+    {
+      icon: '🥂',
+      title: 'You\'re all set!',
+      body: `Explore what's happening ${locationStr} or host ${mealSuggestion} of your own. Good food is better shared.`,
+      cta: 'Start exploring →',
+      final: true,
+    },
+  ];
+}
 
 export default function OnboardingTour({ onDone }) {
   const [step, setStep] = useState(0);
-  const current = STEPS[step];
+  const { city, timeOfDay } = useLocalContext();
+  const steps = getSteps(city, timeOfDay);
+  const current = steps[step];
 
   function advance() {
     if (current.final) {
@@ -59,7 +117,7 @@ export default function OnboardingTour({ onDone }) {
       >
         {/* Step dots */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 28 }}>
-          {STEPS.map((_, i) => (
+          {steps.map((_, i) => (
             <div
               key={i}
               style={{

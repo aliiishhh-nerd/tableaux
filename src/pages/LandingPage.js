@@ -1,31 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const FEATURES = [
   { icon: '🥞', title: 'Brunch',       desc: 'Leisurely late-morning gatherings with friends. Mimosas, good food, unhurried conversation.' },
   { icon: '🕯️', title: 'Dinner Party', desc: 'Curated guest lists, beautiful tables, meaningful conversation over a shared meal.' },
-  { icon: '🍽️', title: 'Other',        desc: 'One-of-a-kind experiences that don\'t fit a category. The best meals rarely do.' },
   { icon: '🥘', title: 'Potluck',      desc: 'Collaborative meals where everyone brings a dish. Claim your item, show up, connect.' },
   { icon: '🏮', title: 'Restaurant',   desc: 'Group reservations and private dining experiences at restaurants worth gathering around.' },
-  { icon: '🍷', title: 'Supper Club',  desc: 'Multi-course dinners hosted by passionate home chefs. Ticketed, intimate, unforgettable.' },
-  { icon: '🍾', title: 'Tasting',      desc: 'Explore natural wines, craft spirits, or rare ingredients guided by someone who knows them deeply.' },
+  { icon: '🍷', title: 'Supper Club',  desc: 'Multi-course meals hosted by passionate home chefs. Ticketed, intimate, unforgettable.' },
+  { icon: '🍽️', title: 'Other',        desc: 'One-of-a-kind experiences that don\'t fit a category. The best meals rarely do.' },
 ];
 
 const HOW_IT_WORKS = [
-  { step: '01', title: 'Discover',          desc: 'Browse events in your city filtered by type, date, and cuisine.' },
+  { step: '01', title: 'Discover',          desc: 'Browse events near you filtered by type, date, and cuisine.' },
   { step: '02', title: 'Request a seat',    desc: 'Send a request to the host. They review your profile and accept.' },
   { step: '03', title: 'Show up & connect', desc: 'Arrive, eat well, meet people who share your love of food.' },
 ];
 
 const TESTIMONIALS = [
-  { quote: "I've met more interesting people at Tableaux dinners than at any networking event.", name: 'Priya S.',  role: 'Guest · Chicago', color: 'indigo' },
-  { quote: "Hosting on Tableaux turned my dinner parties into a real community. The tools just work.",  name: 'Marcus T.', role: 'Host · Austin',   color: 'teal'   },
-  { quote: "Our brand reached 300 engaged food lovers in one month. Nothing else comes close.",         name: 'Elena V.',  role: 'Partner · Chicago', color: 'amber' },
+  { quote: "I've met more interesting people at Tableaux gatherings than at any networking event.", name: 'Priya S.',  role: 'Guest',   color: 'indigo' },
+  { quote: "Hosting on Tableaux turned my dinner parties into a real community. The tools just work.",  name: 'Marcus T.', role: 'Host',    color: 'teal'   },
+  { quote: "Our brand reached 300 engaged food lovers in one month. Nothing else comes close.",         name: 'Elena V.',  role: 'Partner', color: 'amber' },
 ];
 
 export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [cityName, setCityName] = useState('');
+
+  // Auto-detect user's city for a personalized touch
+  useEffect(() => {
+    try {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            try {
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&addressdetails=1`,
+                { headers: { 'Accept-Language': 'en' } }
+              );
+              const data = await res.json();
+              const city = data?.address?.city || data?.address?.town || data?.address?.village || '';
+              if (city) setCityName(city);
+            } catch {
+              // Geocoding failed — stay generic
+            }
+          },
+          () => { /* Permission denied — stay generic */ },
+          { timeout: 5000 }
+        );
+      }
+    } catch {
+      // Geolocation not available
+    }
+  }, []);
+
+  const greeting = cityName ? `Now available in ${cityName}` : 'Available everywhere';
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--page)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -46,17 +75,17 @@ export default function LandingPage() {
       {/* Hero */}
       <section style={{ padding: '72px 32px 64px', textAlign: 'center', maxWidth: 760, margin: '0 auto' }}>
         <div style={{ display: 'inline-block', background: 'var(--indigo-light)', color: 'var(--indigo)', fontSize: 12, fontWeight: 700, padding: '5px 14px', borderRadius: 20, marginBottom: 20, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          🍴 Now in Chicago
+          🍴 {greeting}
         </div>
         <h1 style={{ fontSize: 52, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.1, letterSpacing: '-1.5px', marginBottom: 20 }}>
-          Dinner is better<br />when it's{' '}
-          <span style={{ color: 'var(--indigo)' }}>personal</span>
+          Every meal is better<br />when it's{' '}
+          <span style={{ color: 'var(--indigo)' }}>shared</span>
         </h1>
-        <p style={{ fontSize: 18, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 36, maxWidth: 520, margin: '0 auto 36px' }}>
-          Tableaux connects food lovers through intimate, hosted dining experiences — supper clubs, potlucks, dinner parties, and more.
+        <p style={{ fontSize: 18, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 36, maxWidth: 540, margin: '0 auto 36px' }}>
+          Tableaux brings people together around food — with friends, loved ones, and community members you haven't met yet. Host and discover supper clubs, potlucks, brunches, and more.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
-          <Link to="/feed" className="btn btn-primary" style={{ fontSize: 16, padding: '13px 28px' }}>Find a dinner →</Link>
+          <Link to="/feed" className="btn btn-primary" style={{ fontSize: 16, padding: '13px 28px' }}>Explore events →</Link>
           <Link to="/feed" className="btn btn-ghost"   style={{ fontSize: 16, padding: '13px 28px' }}>Host a table</Link>
         </div>
         {/* Social proof */}
@@ -67,12 +96,12 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ fontSize: 13, color: 'var(--ink2)' }}>
-            <strong style={{ color: 'var(--ink)' }}>2,400+</strong> diners in Chicago
+            <strong style={{ color: 'var(--ink)' }}>2,400+</strong> food lovers and counting
           </div>
         </div>
       </section>
 
-      {/* Features — all 7 event types */}
+      {/* Features — event types (Tasting removed) */}
       <section style={{ padding: '64px 32px', maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.5px', marginBottom: 10 }}>Every kind of table</h2>
@@ -94,7 +123,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', letterSpacing: '-0.5px', marginBottom: 10 }}>How it works</h2>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,.6)' }}>From discovery to dinner in three steps.</p>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,.6)' }}>From discovery to the table in three steps.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
             {HOW_IT_WORKS.map((s, i) => (
