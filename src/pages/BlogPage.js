@@ -265,7 +265,6 @@ function BlogCard({ post, onClick }) {
 function BlogPost({ post, onBack }) {
   const postUrl = `${window.location.origin}/blog?post=${post.slug || post.id}`;
 
-    if (navigator.share) {
   return (
     <main className="page-content" style={{ maxWidth: 680, margin: '0 auto' }}>
       <button className="btn btn-ghost btn-sm" onClick={onBack} style={{ marginBottom: 20 }}>
