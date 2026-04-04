@@ -138,7 +138,7 @@ function SignupWidget() {
 function SocialShareButtons({ url, title, excerpt }) {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
-  const encodedExcerpt = encodeURIComponent(excerpt || '');
+  const _encodedExcerpt = encodeURIComponent(excerpt || '');
 
   const shareLinks = [
     {
@@ -266,7 +266,7 @@ function BlogCard({ post, onClick }) {
 function BlogPost({ post, onBack }) {
   const postUrl = `${window.location.origin}/blog?post=${post.slug || post.id}`;
 
-  function handleShare() {
+  function _handleShare() {
     if (navigator.share) {
       navigator.share({ title: post.title, text: post.excerpt, url: postUrl });
     } else {

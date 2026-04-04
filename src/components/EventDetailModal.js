@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FriendButton } from '../pages/ProfilePage';
-import { USERS } from '../data/seed';
 
 const REMINDER_OPTIONS = [
   { key: '2d',  label: '2 days before',  icon: '📅', desc: 'Give guests plenty of notice' },
