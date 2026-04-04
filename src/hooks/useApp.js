@@ -25,17 +25,14 @@ function saveToStorage(data) {
 }
 
 export function AppProvider({ children }) {
-    // Load persisted user on init (restores logged-in state across refreshes)
     const [user, setUser] = useState(() => {
         const stored = loadFromStorage();
         return stored?.user || null;
     });
 
-    // Load persisted events — merge seed with any user-created events
     const [events, setEvents] = useState(() => {
         const stored = loadFromStorage();
         if (!stored?.events) return SEED_EVENTS;
-        // Merge: keep seed events intact, append any user-created events on top
         const userCreated = stored.events.filter(e => e.id.startsWith('evt-') && !SEED_EVENTS.find(s => s.id === e.id));
         const seedWithUpdates = SEED_EVENTS.map(seed => {
             const stored_evt = stored.events.find(s => s.id === seed.id);
@@ -45,15 +42,28 @@ export function AppProvider({ children }) {
     });
 
     const [toasts, setToasts] = useState([]);
+
     const [following, setFollowing] = useState(() => {
         const stored = loadFromStorage();
         return stored?.following || [];
     });
 
-    // Persist to localStorage whenever user, events, or following change
+    // Friend system: { userId, status: 'pending' | 'accepted' | 'blocked' }
+    const [friends, setFriends] = useState(() => {
+        const stored = loadFromStorage();
+        return stored?.friends || [];
+    });
+
+    // Hosts the current user follows (by hostId)
+    const [followedHosts, setFollowedHosts] = useState(() => {
+        const stored = loadFromStorage();
+        return stored?.followedHosts || [];
+    });
+
+    // Persist all state
     useEffect(() => {
-        saveToStorage({ user, events, following });
-    }, [user, events, following]);
+        saveToStorage({ user, events, following, friends, followedHosts });
+    }, [user, events, following, friends, followedHosts]);
 
     const addToast = useCallback((msg, type = '') => {
         const id = Date.now();
@@ -61,6 +71,7 @@ export function AppProvider({ children }) {
         setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
     }, []);
 
+    // ── Auth ──────────────────────────────────────
     const login = useCallback(async (email, password, session) => {
         let authUser;
         if (session) {
@@ -70,11 +81,7 @@ export function AppProvider({ children }) {
             authUser = data.user;
         }
         let profile = {};
-        try {
-            profile = await getProfile(authUser.id);
-        } catch (e) {
-            profile = {};
-        }
+        try { profile = await getProfile(authUser.id); } catch { profile = {}; }
         const displayName = profile.full_name || authUser.user_metadata?.full_name || email.split('@')[0];
         const newUser = {
             id: authUser.id,
@@ -88,6 +95,10 @@ export function AppProvider({ children }) {
             website: profile.website || null,
             hosted_count: profile.hosted_count || 0,
             attended_count: profile.attended_count || 0,
+            // Dietary & foodie info
+            favoriteFood: profile.favoriteFood || '',
+            favoriteRestaurant: profile.favoriteRestaurant || '',
+            dietaryRestrictions: profile.dietaryRestrictions || [],
         };
         setUser(newUser);
         return true;
@@ -101,13 +112,13 @@ export function AppProvider({ children }) {
     const logout = useCallback(async () => {
         await supabase.auth.signOut();
         setUser(null);
-        // Clear only user data from storage, keep events
         try {
             const stored = loadFromStorage();
             if (stored) saveToStorage({ ...stored, user: null });
         } catch {}
     }, []);
 
+    // ── Events ───────────────────────────────────
     const createEvent = useCallback((evt) => {
         const newEvt = {
             ...evt,
@@ -120,6 +131,7 @@ export function AppProvider({ children }) {
             eventComments: [],
             pinnedQuotes: [],
             isEnded: false,
+            experienceTags: evt.experienceTags || [],
         };
         setEvents(e => [newEvt, ...e]);
         return newEvt;
@@ -133,10 +145,12 @@ export function AppProvider({ children }) {
         setEvents(e => e.filter(ev => ev.id !== id));
     }, []);
 
-    const rsvpEvent = useCallback((eventId, status) => {
+    const rsvpEvent = useCallback((eventId, status, dietaryNote) => {
         setEvents(e => e.map(ev => {
             if (ev.id !== eventId) return ev;
-            const guests = ev.guests.map(g => g.id === 'u1' ? { ...g, s: status } : g);
+            const guests = ev.guests.map(g =>
+                g.id === 'u1' ? { ...g, s: status, dietaryNote: dietaryNote || g.dietaryNote || '' } : g
+            );
             return { ...ev, guests };
         }));
     }, []);
@@ -161,6 +175,7 @@ export function AppProvider({ children }) {
         }));
     }, []);
 
+    // ── Photos with tagging ──────────────────────
     const addPhoto = useCallback((eventId, photo) => {
         setEvents(e => e.map(ev => {
             if (ev.id !== eventId) return ev;
@@ -168,6 +183,27 @@ export function AppProvider({ children }) {
         }));
     }, []);
 
+    const tagPhoto = useCallback((eventId, photoId, tags) => {
+        setEvents(e => e.map(ev => {
+            if (ev.id !== eventId) return ev;
+            const gallery = (ev.photoGallery || []).map(ph =>
+                ph.id === photoId ? { ...ph, tags: [...new Set([...(ph.tags || []), ...tags])] } : ph
+            );
+            return { ...ev, photoGallery: gallery };
+        }));
+    }, []);
+
+    const removePhotoTag = useCallback((eventId, photoId, tag) => {
+        setEvents(e => e.map(ev => {
+            if (ev.id !== eventId) return ev;
+            const gallery = (ev.photoGallery || []).map(ph =>
+                ph.id === photoId ? { ...ph, tags: (ph.tags || []).filter(t => t !== tag) } : ph
+            );
+            return { ...ev, photoGallery: gallery };
+        }));
+    }, []);
+
+    // ── Comments & Quotes ────────────────────────
     const addComment = useCallback((eventId, comment) => {
         setEvents(e => e.map(ev => {
             if (ev.id !== eventId) return ev;
@@ -188,17 +224,57 @@ export function AppProvider({ children }) {
         }));
     }, []);
 
+    // ── Profile ──────────────────────────────────
     const updateProfile = useCallback((patch) => {
         setUser(u => ({ ...u, ...patch }));
     }, []);
+
+    // ── Friend System ────────────────────────────
+    const sendFriendRequest = useCallback((userId) => {
+        setFriends(f => {
+            if (f.find(fr => fr.userId === userId)) return f;
+            return [...f, { userId, status: 'pending', sentAt: new Date().toISOString() }];
+        });
+    }, []);
+
+    const acceptFriendRequest = useCallback((userId) => {
+        setFriends(f => f.map(fr => fr.userId === userId ? { ...fr, status: 'accepted' } : fr));
+    }, []);
+
+    const removeFriend = useCallback((userId) => {
+        setFriends(f => f.filter(fr => fr.userId !== userId));
+    }, []);
+
+    const getFriendStatus = useCallback((userId) => {
+        const fr = friends.find(f => f.userId === userId);
+        return fr ? fr.status : null;
+    }, [friends]);
+
+    // ── Follow Host ──────────────────────────────
+    const followHost = useCallback((hostId) => {
+        setFollowedHosts(h => h.includes(hostId) ? h : [...h, hostId]);
+    }, []);
+
+    const unfollowHost = useCallback((hostId) => {
+        setFollowedHosts(h => h.filter(id => id !== hostId));
+    }, []);
+
+    const isFollowingHost = useCallback((hostId) => {
+        return followedHosts.includes(hostId);
+    }, [followedHosts]);
 
     return (
         <AppCtx.Provider value={{
             user, login, loginSocial, logout,
             events, createEvent, updateEvent, deleteEvent,
             rsvpEvent, claimPotluckItem, unclaimPotluckItem,
-            addPhoto, addComment, pinQuote, updateProfile,
+            addPhoto, tagPhoto, removePhotoTag,
+            addComment, pinQuote, updateProfile,
             following, setFollowing,
+            // Friend system
+            friends, sendFriendRequest, acceptFriendRequest, removeFriend, getFriendStatus,
+            // Follow host
+            followedHosts, followHost, unfollowHost, isFollowingHost,
             toasts, addToast,
         }}>
             {children}

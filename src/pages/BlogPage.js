@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useApp } from '../hooks/useApp';
 import { BLOG_POSTS } from '../data/seed';
+import { Link } from 'react-router-dom';
 
 const CATEGORIES = ['All', 'Supper Club Culture', 'Host Guide', 'Natural Wine', 'Recipe', 'Fermentation'];
 
-// Blog is fully public — no login required
 export default function BlogPage() {
+  const { user } = useApp();
   const [category, setCategory] = useState('All');
   const [reading, setReading] = useState(null);
 
-  // Support direct URL sharing: /blog?post=slug
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get('post');
@@ -18,7 +19,6 @@ export default function BlogPage() {
     }
   }, []);
 
-  // Update URL when reading a post (makes it shareable + crawlable)
   useEffect(() => {
     if (reading) {
       const slug = reading.slug || reading.id;
@@ -36,15 +36,14 @@ export default function BlogPage() {
   const filtered = category === 'All' ? rest : rest.filter(p => p.category === category);
 
   if (reading) return (
-    <BlogPost
-      post={reading}
-      onBack={() => setReading(null)}
-    />
+    <>
+      <BlogPost post={reading} onBack={() => setReading(null)} />
+      {!user && <SignupWidget />}
+    </>
   );
 
   return (
     <main className="page-content">
-      {/* Featured */}
       {featured && (
         <div className="blog-featured" onClick={() => setReading(featured)} style={{ cursor: 'pointer' }}>
           <img className="blog-featured-img" src={featured.coverImg} alt={featured.title} loading="lazy" />
@@ -58,7 +57,6 @@ export default function BlogPage() {
         </div>
       )}
 
-      {/* Category filter */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
         {CATEGORIES.map(c => (
           <button key={c} className={`filter-btn ${category === c ? 'active' : ''}`} onClick={() => setCategory(c)}>
@@ -67,7 +65,6 @@ export default function BlogPage() {
         ))}
       </div>
 
-      {/* Grid */}
       <div className="feed-grid">
         {filtered.map(post => (
           <BlogCard key={post.id} post={post} onClick={() => setReading(post)} />
@@ -82,9 +79,134 @@ export default function BlogPage() {
         </div>
       )}
 
-      {/* Contributor CTA */}
       <ContributorCTA />
+      {!user && <SignupWidget />}
     </main>
+  );
+}
+
+// ── Persistent signup widget for non-logged-in visitors ──
+function SignupWidget() {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: 'linear-gradient(135deg, #1A1A2E, #2D2550)',
+      padding: '16px 24px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: 16, flexWrap: 'wrap',
+      zIndex: 1000,
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+      borderTop: '1px solid rgba(108,93,211,0.3)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 200 }}>
+        <span style={{ fontSize: 24 }}>🍽️</span>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>Join Tableaux</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)' }}>Discover dining experiences & connect with food lovers</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Link
+          to="/auth"
+          style={{
+            background: 'var(--indigo)', color: 'white', padding: '9px 20px',
+            borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none',
+            display: 'inline-block',
+          }}
+        >
+          Create free account
+        </Link>
+        <button
+          onClick={() => setDismissed(true)}
+          style={{
+            background: 'none', border: 'none', color: 'rgba(255,255,255,.4)',
+            cursor: 'pointer', fontSize: 18, padding: '4px 8px', lineHeight: 1,
+          }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Social sharing buttons ──
+function SocialShareButtons({ url, title, excerpt }) {
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+  const encodedExcerpt = encodeURIComponent(excerpt || '');
+
+  const shareLinks = [
+    {
+      label: '𝕏',
+      name: 'X / Twitter',
+      href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+      bg: '#000',
+      color: '#fff',
+    },
+    {
+      label: 'f',
+      name: 'Facebook',
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      bg: '#1877F2',
+      color: '#fff',
+    },
+    {
+      label: 'in',
+      name: 'LinkedIn',
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      bg: '#0A66C2',
+      color: '#fff',
+    },
+  ];
+
+  function handleCopy() {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => window.alert('Link copied!'));
+    } else {
+      window.prompt('Copy this link:', url);
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      {shareLinks.map(link => (
+        <a
+          key={link.name}
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Share on ${link.name}`}
+          style={{
+            width: 34, height: 34, borderRadius: 8,
+            background: link.bg, color: link.color,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 700, textDecoration: 'none',
+            transition: 'opacity 0.15s',
+          }}
+          onMouseOver={e => e.currentTarget.style.opacity = '0.8'}
+          onMouseOut={e => e.currentTarget.style.opacity = '1'}
+        >
+          {link.label}
+        </a>
+      ))}
+      <button
+        onClick={handleCopy}
+        title="Copy link"
+        style={{
+          width: 34, height: 34, borderRadius: 8,
+          background: 'var(--page)', border: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 14, cursor: 'pointer', color: 'var(--ink2)',
+        }}
+      >
+        🔗
+      </button>
+    </div>
   );
 }
 
@@ -155,37 +277,27 @@ function BlogPost({ post, onBack }) {
 
   return (
     <main className="page-content" style={{ maxWidth: 680, margin: '0 auto' }}>
-      {/* SEO meta via document.head manipulation */}
       <button className="btn btn-ghost btn-sm" onClick={onBack} style={{ marginBottom: 20 }}>
         ← Back to Fork & Story
       </button>
 
-      {/* Cover */}
       <div style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden', marginBottom: 24, height: 280 }}>
         <img src={post.coverImg} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
 
-      {/* Meta */}
       <div style={{ marginBottom: 6 }}>
         <span className="chip chip-indigo">{post.category}</span>
       </div>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.25, marginBottom: 12, letterSpacing: -0.5 }}>
         {post.title}
       </h1>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
         <div className={`av av-sm av-${post.authorColor}`}>{post.authorInitials}</div>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 120 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{post.author}</div>
           <div style={{ fontSize: 12, color: 'var(--ink3)' }}>{post.date} · {post.readTime}</div>
         </div>
-        {/* Share button */}
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={handleShare}
-          style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}
-        >
-          🔗 Share
-        </button>
+        <SocialShareButtons url={postUrl} title={post.title} excerpt={post.excerpt} />
       </div>
 
       {/* Body */}
@@ -215,18 +327,15 @@ function BlogPost({ post, onBack }) {
         </p>
       </div>
 
-      {/* Share footer */}
+      {/* Share footer with social buttons */}
       <div style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ fontSize: 13, color: 'var(--ink2)' }}>Enjoyed this story?</div>
-        <button className="btn btn-primary btn-sm" onClick={handleShare}>🔗 Share this post</button>
+        <div style={{ fontSize: 13, color: 'var(--ink2)' }}>Enjoyed this story? Share it.</div>
+        <SocialShareButtons url={postUrl} title={post.title} excerpt={post.excerpt} />
       </div>
 
-      {/* Contributor CTA at bottom of every post */}
       <div style={{ marginTop: 40 }}>
         <ContributorCTA />
       </div>
     </main>
   );
 }
-
-

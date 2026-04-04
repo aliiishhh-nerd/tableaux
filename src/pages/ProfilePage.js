@@ -11,7 +11,11 @@ const SOCIAL_PLATFORMS = [
   { key: 'substack',  label: 'Substack',    icon: '📬', prefix: '',               cls: ''              },
 ];
 
-// #4 FIX: Safe event thumbnail — gradient fallback when image is missing/broken
+const DIETARY_OPTIONS = [
+  'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free', 'Nut allergy',
+  'Shellfish allergy', 'Halal', 'Kosher', 'Pescatarian', 'Keto', 'Low FODMAP', 'Other',
+];
+
 function EventThumb({ evt, size = 48 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const cover = evt.cover || {};
@@ -36,6 +40,59 @@ function EventThumb({ evt, size = 48 }) {
   );
 }
 
+// ── Friend action button — shows Add / Pending / Friends with appropriate actions ──
+function FriendButton({ userId, size = 'sm' }) {
+  const { getFriendStatus, sendFriendRequest, removeFriend, acceptFriendRequest, addToast } = useApp();
+  const status = getFriendStatus(userId);
+
+  if (userId === 'u1') return null; // Don't show for self
+
+  if (status === 'accepted') {
+    return (
+      <button
+        className={`btn btn-ghost btn-${size}`}
+        onClick={(e) => { e.stopPropagation(); removeFriend(userId); addToast('Friend removed', ''); }}
+        style={{ fontSize: 12 }}
+      >
+        ✓ Friends
+      </button>
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button
+          className={`btn btn-primary btn-${size}`}
+          onClick={(e) => { e.stopPropagation(); acceptFriendRequest(userId); addToast('Friend request accepted! 🎉', 'success'); }}
+          style={{ fontSize: 12 }}
+        >
+          ✓ Accept
+        </button>
+        <button
+          className={`btn btn-ghost btn-${size}`}
+          onClick={(e) => { e.stopPropagation(); removeFriend(userId); addToast('Request removed', ''); }}
+          style={{ fontSize: 12 }}
+        >
+          ✕
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      className={`btn btn-primary btn-${size}`}
+      onClick={(e) => { e.stopPropagation(); sendFriendRequest(userId); addToast('Friend request sent! 👋', 'success'); }}
+      style={{ fontSize: 12 }}
+    >
+      + Add Friend
+    </button>
+  );
+}
+
+export { FriendButton };
+
 export default function ProfilePage() {
   const { user, events, updateProfile, logout, addToast } = useApp();
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -50,7 +107,13 @@ export default function ProfilePage() {
   const passportEvents = events.filter(e => (e.isEnded || e.isPast) && e.mine).slice(0, 8);
 
   function startEdit() {
-    setDraft({ name: user.name, handle: user.handle || '', bio: user.bio || '', website: user.website || '', socials: { ...user.socials } });
+    setDraft({
+      name: user.name, handle: user.handle || '', bio: user.bio || '',
+      website: user.website || '', socials: { ...user.socials },
+      favoriteFood: user.favoriteFood || '',
+      favoriteRestaurant: user.favoriteRestaurant || '',
+      dietaryRestrictions: [...(user.dietaryRestrictions || [])],
+    });
     setEditing(true);
   }
 
@@ -59,9 +122,24 @@ export default function ProfilePage() {
       name: draft.name, handle: draft.handle, bio: draft.bio, website: draft.website,
       initials: draft.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
       socials: draft.socials,
+      favoriteFood: draft.favoriteFood,
+      favoriteRestaurant: draft.favoriteRestaurant,
+      dietaryRestrictions: draft.dietaryRestrictions,
     });
     setEditing(false);
     addToast('Profile updated ✓', 'success');
+  }
+
+  function toggleDietary(item) {
+    setDraft(d => {
+      const has = d.dietaryRestrictions.includes(item);
+      return {
+        ...d,
+        dietaryRestrictions: has
+          ? d.dietaryRestrictions.filter(x => x !== item)
+          : [...d.dietaryRestrictions, item],
+      };
+    });
   }
 
   const activeSocials = SOCIAL_PLATFORMS.filter(p => user.socials?.[p.key]);
@@ -90,6 +168,28 @@ export default function ProfilePage() {
               <div><div className="profile-stat-val">{user.friendsCount || 48}</div><div className="profile-stat-label">Friends</div></div>
               <div><div className="profile-stat-val">{passportEvents.length}</div><div className="profile-stat-label">Passport</div></div>
             </div>
+
+            {/* Foodie Facts */}
+            {(user.favoriteFood || user.favoriteRestaurant || (user.dietaryRestrictions && user.dietaryRestrictions.length > 0)) && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                {user.favoriteFood && (
+                  <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--amber-light)', color: '#B87A00', border: '1px solid #F0D78C' }}>
+                    🍜 {user.favoriteFood}
+                  </span>
+                )}
+                {user.favoriteRestaurant && (
+                  <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--teal-light)', color: '#07A87B', border: '1px solid #A7E8D2' }}>
+                    🏮 {user.favoriteRestaurant}
+                  </span>
+                )}
+                {(user.dietaryRestrictions || []).map(d => (
+                  <span key={d} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--coral-light)', color: '#D94545', border: '1px solid #F5B8B8' }}>
+                    ⚠️ {d}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {activeSocials.length > 0 && (
               <div className="profile-social">
                 {activeSocials.map(p => (
@@ -122,7 +222,6 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {hostedEvents.map(evt => (
                 <div key={evt.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'white', borderRadius: 12, border: '1px solid var(--border)', cursor: 'pointer', boxShadow: 'var(--shadow)' }} onClick={() => setSelectedEvent(evt)}>
-                  {/* #4 FIX: Use EventThumb with gradient fallback */}
                   <EventThumb evt={evt} size={48} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.title}</div>
@@ -142,7 +241,6 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
             {passportEvents.map((evt, i) => (
               <div key={i} style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', cursor: 'pointer' }} onClick={() => setSelectedEvent(evt)}>
-                {/* #4 FIX: Use EventThumb for passport stamps too */}
                 <div style={{ height: 72, overflow: 'hidden' }}>
                   <EventThumb evt={evt} size={72} />
                 </div>
@@ -159,7 +257,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* #3 FIX: Friends tab — Follow feature removed, just names + click to view */}
+      {/* Friends tab — with add/pending/accepted actions */}
       {tab === 'friends' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {USERS.filter(u => u.id !== 'u1').map(friend => (
@@ -168,8 +266,9 @@ export default function ProfilePage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{friend.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--ink2)' }}>{friend.handle}</div>
+                {friend.bio && <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{friend.bio}</div>}
               </div>
-              <span style={{ fontSize: 12, color: 'var(--ink3)' }}>→</span>
+              <FriendButton userId={friend.id} />
             </div>
           ))}
         </div>
@@ -183,6 +282,24 @@ export default function ProfilePage() {
             <div className="form-group"><label className="form-label">Handle</label><input className="form-input" value={user.handle || ''} readOnly placeholder="@yourhandle" /></div>
             <div className="form-group"><label className="form-label">Bio</label><textarea className="form-textarea" value={user.bio || ''} readOnly placeholder="Your food story..." style={{ minHeight: 70 }} /></div>
             <div className="form-group"><label className="form-label">🔗 Website</label><input className="form-input" value={user.website || ''} readOnly placeholder="https://yourwebsite.com" onClick={startEdit} /></div>
+
+            {/* Foodie facts display */}
+            <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>🍜 Foodie Facts</div>
+            <div className="form-group"><label className="form-label">Favorite Food</label><input className="form-input" value={user.favoriteFood || ''} readOnly placeholder="e.g. Sichuan Dan Dan Noodles" onClick={startEdit} /></div>
+            <div className="form-group"><label className="form-label">Favorite Restaurant</label><input className="form-input" value={user.favoriteRestaurant || ''} readOnly placeholder="e.g. Alinea, Chicago" onClick={startEdit} /></div>
+            <div className="form-group">
+              <label className="form-label">Dietary Restrictions</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {(user.dietaryRestrictions || []).length > 0 ? (
+                  user.dietaryRestrictions.map(d => (
+                    <span key={d} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--coral-light)', color: '#D94545' }}>⚠️ {d}</span>
+                  ))
+                ) : (
+                  <span style={{ fontSize: 12, color: 'var(--ink3)' }}>None set</span>
+                )}
+              </div>
+            </div>
+
             <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>🔗 Social Accounts</div>
             {SOCIAL_PLATFORMS.map(p => (
               <div key={p.key} className="form-group">
@@ -198,6 +315,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Edit modal */}
       {editing && draft && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setEditing(false)}>
           <div className="modal">
@@ -207,6 +325,37 @@ export default function ProfilePage() {
               <div className="form-group"><label className="form-label">Handle</label><input className="form-input" value={draft.handle} onChange={e => setDraft(d => ({ ...d, handle: e.target.value }))} placeholder="@yourhandle" /></div>
               <div className="form-group"><label className="form-label">Bio</label><textarea className="form-textarea" value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">🔗 Website</label><input className="form-input" value={draft.website} onChange={e => setDraft(d => ({ ...d, website: e.target.value }))} placeholder="https://yourwebsite.com" /></div>
+
+              {/* Foodie facts */}
+              <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>🍜 Foodie Facts</div>
+              <div className="form-group"><label className="form-label">Favorite Food</label><input className="form-input" value={draft.favoriteFood} onChange={e => setDraft(d => ({ ...d, favoriteFood: e.target.value }))} placeholder="e.g. Sichuan Dan Dan Noodles" /></div>
+              <div className="form-group"><label className="form-label">Favorite Restaurant</label><input className="form-input" value={draft.favoriteRestaurant} onChange={e => setDraft(d => ({ ...d, favoriteRestaurant: e.target.value }))} placeholder="e.g. Alinea, Chicago" /></div>
+              <div className="form-group">
+                <label className="form-label">Dietary Restrictions</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {DIETARY_OPTIONS.map(opt => {
+                    const active = draft.dietaryRestrictions.includes(opt);
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => toggleDietary(opt)}
+                        style={{
+                          fontSize: 12, padding: '5px 12px', borderRadius: 20, cursor: 'pointer',
+                          border: `1.5px solid ${active ? 'var(--coral)' : 'var(--border)'}`,
+                          background: active ? 'var(--coral-light)' : 'var(--page)',
+                          color: active ? '#D94545' : 'var(--ink2)',
+                          fontWeight: active ? 600 : 400,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {active ? '✓ ' : ''}{opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>🔗 Social Accounts</div>
               {SOCIAL_PLATFORMS.map(p => (
                 <div key={p.key} className="form-group">
@@ -231,36 +380,73 @@ export default function ProfilePage() {
   );
 }
 
-function FriendProfile({ user, onBack }) {
-  const activeSocials = SOCIAL_PLATFORMS.filter(p => user.socials?.[p.key]);
+function FriendProfile({ user: friendUser, onBack }) {
+  const { isFollowingHost, followHost, unfollowHost, addToast, events } = useApp();
+  const isFollowing = isFollowingHost(friendUser.id);
+  const hostedByThem = events.filter(e => e.hostId === friendUser.id && !e.mine);
+  const activeSocials = SOCIAL_PLATFORMS.filter(p => friendUser.socials?.[p.key]);
+
   return (
     <main className="page-content">
       <button className="btn btn-ghost btn-sm" onClick={onBack} style={{ marginBottom: 16 }}>← Back</button>
       <div className="profile-hero">
         <div className="profile-hero-inner">
-          <div className={'av av-xl av-' + (user.color || 'indigo')}>{user.initials}</div>
+          <div className={'av av-xl av-' + (friendUser.color || 'indigo')}>{friendUser.initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="profile-name">{user.name}</div>
-            <div className="profile-handle">{user.handle}</div>
-            {user.bio && <div className="profile-bio">{user.bio}</div>}
-            {user.website && (
-              <a href={user.website.startsWith('http') ? user.website : 'https://' + user.website} target="_blank" rel="noopener noreferrer"
+            <div className="profile-name">{friendUser.name}</div>
+            <div className="profile-handle">{friendUser.handle}</div>
+            {friendUser.bio && <div className="profile-bio">{friendUser.bio}</div>}
+            {friendUser.website && (
+              <a href={friendUser.website.startsWith('http') ? friendUser.website : 'https://' + friendUser.website} target="_blank" rel="noopener noreferrer"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--indigo)', marginTop: 6, textDecoration: 'none', fontWeight: 500 }}>
-                🔗 {user.website.replace(/^https?:\/\//, '')}
+                🔗 {friendUser.website.replace(/^https?:\/\//, '')}
               </a>
             )}
             {activeSocials.length > 0 && (
               <div className="profile-social" style={{ marginTop: 10 }}>
                 {activeSocials.map(p => (
-                  <a key={p.key} href={'https://' + (p.prefix || '') + user.socials[p.key]} target="_blank" rel="noopener noreferrer" className={'social-btn ' + p.cls}>
-                    <span>{p.icon}</span>@{user.socials[p.key]}
+                  <a key={p.key} href={'https://' + (p.prefix || '') + friendUser.socials[p.key]} target="_blank" rel="noopener noreferrer" className={'social-btn ' + p.cls}>
+                    <span>{p.icon}</span>@{friendUser.socials[p.key]}
                   </a>
                 ))}
               </div>
             )}
           </div>
         </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+          <FriendButton userId={friendUser.id} />
+          <button
+            className={`btn ${isFollowing ? 'btn-ghost' : 'btn-primary'} btn-sm`}
+            onClick={() => {
+              if (isFollowing) { unfollowHost(friendUser.id); addToast(`Unfollowed ${friendUser.name}`, ''); }
+              else { followHost(friendUser.id); addToast(`Following ${friendUser.name}! You'll see their new events. 🔔`, 'success'); }
+            }}
+          >
+            {isFollowing ? '✓ Following' : '🔔 Follow Host'}
+          </button>
+        </div>
       </div>
+
+      {/* Events they're hosting */}
+      {hostedByThem.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>
+            Upcoming events by {friendUser.name}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {hostedByThem.filter(e => !e.isEnded && !e.isPast).map(evt => (
+              <div key={evt.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'white', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 20 }}>🗓️</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{evt.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink3)' }}>{fmtDate(evt.date)} · {evt.loc}</div>
+                </div>
+                <span className="chip chip-indigo" style={{ fontSize: 11 }}>{evt.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
