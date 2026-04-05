@@ -51,7 +51,12 @@ export function AppProvider({ children }) {
     // Friend system: { userId, status: 'pending' | 'accepted' | 'blocked' }
     const [friends, setFriends] = useState(() => {
         const stored = loadFromStorage();
-        return stored?.friends || SEED_FRIENDSHIPS;
+        if (!stored?.friends) return SEED_FRIENDSHIPS;
+        
+        // Merge stored friends with seed friends (avoid duplicates)
+        const storedIds = stored.friends.map(f => f.userId);
+        const seedNotInStored = SEED_FRIENDSHIPS.filter(sf => !storedIds.includes(sf.userId));
+        return [...stored.friends, ...seedNotInStored];
     });
 
     // Hosts the current user follows (by hostId)
