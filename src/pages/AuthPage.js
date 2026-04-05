@@ -3,7 +3,7 @@ import { useApp } from '../hooks/useApp';
 import { useNavigate } from 'react-router-dom';
 
 export default function AuthPage() {
-  const { login, loginSocial } = useApp();
+  const { login } = useApp();
   const navigate = useNavigate();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
@@ -19,11 +19,6 @@ export default function AuthPage() {
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     }
-  };
-
-  const handleSocial = (provider) => {
-    loginSocial(provider);
-    navigate('/feed');
   };
 
   return (
