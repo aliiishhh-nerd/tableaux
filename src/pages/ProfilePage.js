@@ -94,7 +94,7 @@ function FriendButton({ userId, size = 'sm' }) {
 export { FriendButton };
 
 export default function ProfilePage() {
-  const { user, events, updateProfile, logout, addToast } = useApp();
+  const { user, events, updateProfile, logout, addToast, friends } = useApp();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [tab, setTab] = useState('events');
   const [editing, setEditing] = useState(false);
@@ -210,7 +210,7 @@ export default function ProfilePage() {
       <div className="tabs">
         <button className={'tab-btn ' + (tab === 'events' ? 'active' : '')} onClick={() => setTab('events')}>🗓️ Events ({hostedEvents.length})</button>
         <button className={'tab-btn ' + (tab === 'passport' ? 'active' : '')} onClick={() => setTab('passport')}>🌍 Passport</button>
-        <button className={'tab-btn ' + (tab === 'friends' ? 'active' : '')} onClick={() => setTab('friends')}>👥 Friends ({USERS.filter(u => u.id !== 'u1').length})</button>
+        <button className={'tab-btn ' + (tab === 'friends' ? 'active' : '')} onClick={() => setTab('friends')}>👥 Friends ({friends.filter(f => f.status === 'accepted').length})</button>
         <button className={'tab-btn ' + (tab === 'settings' ? 'active' : '')} onClick={() => setTab('settings')}>⚙️ Settings</button>
       </div>
 
