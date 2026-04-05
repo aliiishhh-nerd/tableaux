@@ -779,3 +779,15 @@ export const GRADIENT_COVERS = [
 ];
 
 export const EMOJI_PRESETS = ['🍽️','🥂','🎉','🍷','✨','🫕','🌿','🍜','🎊','🥘'];
+
+// Pre-populate with 8 accepted friendships for testing
+export const SEED_FRIENDSHIPS = [
+  { userId: 'u2', status: 'accepted', acceptedAt: '2026-03-15T10:00:00Z' }, // Sophie M.
+  { userId: 'u3', status: 'accepted', acceptedAt: '2026-03-16T14:30:00Z' }, // Raj K.
+  { userId: 'u4', status: 'accepted', acceptedAt: '2026-03-18T09:15:00Z' }, // Lena P.
+  { userId: 'u5', status: 'accepted', acceptedAt: '2026-03-20T16:45:00Z' }, // Marcus W.
+  { userId: 'u6', status: 'accepted', acceptedAt: '2026-03-22T11:20:00Z' }, // Priya N.
+  { userId: 'u7', status: 'accepted', acceptedAt: '2026-03-25T13:00:00Z' }, // Jake T.
+  { userId: 'u8', status: 'accepted', acceptedAt: '2026-03-28T15:30:00Z' }, // Yuki S.
+  { userId: 'u9', status: 'accepted', acceptedAt: '2026-04-01T10:45:00Z' }, // Dev P.
+];

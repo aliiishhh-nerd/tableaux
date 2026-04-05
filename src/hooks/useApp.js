@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { SEED_EVENTS, CURRENT_USER } from '../data/seed';
+import { SEED_EVENTS, CURRENT_USER, SEED_FRIENDSHIPS } from '../data/seed';
 import { signIn as supabaseSignIn, getProfile, supabase } from '../lib/supabase';
 
 const AppCtx = createContext(null);
@@ -51,7 +51,7 @@ export function AppProvider({ children }) {
     // Friend system: { userId, status: 'pending' | 'accepted' | 'blocked' }
     const [friends, setFriends] = useState(() => {
         const stored = loadFromStorage();
-        return stored?.friends || [];
+        return stored?.friends || SEED_FRIENDSHIPS;
     });
 
     // Hosts the current user follows (by hostId)
