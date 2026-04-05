@@ -11,7 +11,7 @@ export const CURRENT_USER = {
   website: '',
   socials: { instagram: 'adachen.eats', tiktok: 'adachen_cooks', x: 'adachen', substack: '' },
   eventsHosted: 12,
-  friendsCount: 48,
+  friendsCount: 8,
   passportCount: 7,
   hostStats: { dinnersHosted: 12, avgRating: 4.9, attendanceRate: 96 },
   pinnedQuotes: [],
