@@ -165,7 +165,7 @@ export default function ProfilePage() {
             )}
             <div className="profile-stats">
               <div><div className="profile-stat-val">{hostedEvents.length}</div><div className="profile-stat-label">Hosted</div></div>
-              <div><div className="profile-stat-val">{user.friendsCount || 8}</div><div className="profile-stat-label">Friends</div></div>
+              <div><div className="profile-stat-val">{friends.filter(f => f.status === 'accepted').length}</div><div className="profile-stat-label">Friends</div></div>
               <div><div className="profile-stat-val">{passportEvents.length}</div><div className="profile-stat-label">Passport</div></div>
             </div>
 
