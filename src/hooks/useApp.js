@@ -122,7 +122,6 @@ export function AppProvider({ children }) {
             if (stored) saveToStorage({ ...stored, user: null });
         } catch {}
         // Navigate to home page after logout
-        window.location.reload();
     }, []);
 
     // ── Events ───────────────────────────────────
