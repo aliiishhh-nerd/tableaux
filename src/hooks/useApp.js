@@ -121,6 +121,8 @@ export function AppProvider({ children }) {
             const stored = loadFromStorage();
             if (stored) saveToStorage({ ...stored, user: null });
         } catch {}
+        // Navigate to home page after logout
+        window.location.href = '/';
     }, []);
 
     // ── Events ───────────────────────────────────
