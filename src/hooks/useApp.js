@@ -21,7 +21,7 @@ const saveToStorage = (data) => {
 };
 
 // ── Hook ─────────────────────────────────────────────────────
-export default function useApp() {
+export function useApp() {
     const navigate = useNavigate();
     
     // ── State ────────────────────────────────────────────────
@@ -140,7 +140,7 @@ export default function useApp() {
     // ── Toasts ───────────────────────────────────
     const addToast = useCallback((message, type = 'info') => {
         const id = Date.now();
-        setToasts(prev => [...prev, { id, message, type }]);
+        setToasts(prev => [...prev, { id, msg: message, type }]);
         setTimeout(() => {
             setToasts(prev => prev.filter(t => t.id !== id));
         }, 3000);
