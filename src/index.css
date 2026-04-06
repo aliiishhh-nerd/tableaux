@@ -936,26 +936,20 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   MOBILE FIXES - Prevent horizontal scroll
-   ═══════════════════════════════════════════════════════ */
 
+/* Mobile overflow fix - targets actual DOM structure */
 @media (max-width: 768px) {
-  /* Prevent horizontal overflow */
-  body, #root, html {
+  body, html, #root {
     overflow-x: hidden !important;
-    max-width: 100vw;
+    max-width: 100vw !important;
   }
   
-  /* Fix My Events page specifically */
-  .my-events-container {
+  .app-shell {
     overflow-x: hidden !important;
-    max-width: 100%;
-    padding: 0 16px;
+    max-width: 100vw !important;
   }
   
-  /* Ensure all cards fit within viewport */
-  .event-card, .profile-card, .feed-card {
-    max-width: 100% !important;
-    box-sizing: border-box;
+  .app-shell > * {
+    max-width: 100vw !important;
   }
 }
