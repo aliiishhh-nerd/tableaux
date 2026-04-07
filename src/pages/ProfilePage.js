@@ -381,7 +381,7 @@ export default function ProfilePage() {
 }
 
 function FriendProfile({ user: friendUser, onBack }) {
-  const { addToast, events } = useApp();
+  const { events } = useApp();
   const hostedByThem = events.filter(e => e.hostId === friendUser.id && !e.mine);
   const activeSocials = SOCIAL_PLATFORMS.filter(p => friendUser.socials?.[p.key]);
 
