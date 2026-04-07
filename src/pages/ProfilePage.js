@@ -381,8 +381,7 @@ export default function ProfilePage() {
 }
 
 function FriendProfile({ user: friendUser, onBack }) {
-  const { isFollowingHost, followHost, unfollowHost, addToast, events } = useApp();
-  const isFollowing = isFollowingHost(friendUser.id);
+  const { addToast, events } = useApp();
   const hostedByThem = events.filter(e => e.hostId === friendUser.id && !e.mine);
   const activeSocials = SOCIAL_PLATFORMS.filter(p => friendUser.socials?.[p.key]);
 
@@ -415,15 +414,6 @@ function FriendProfile({ user: friendUser, onBack }) {
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
           <FriendButton userId={friendUser.id} />
-          <button
-            className={`btn ${isFollowing ? 'btn-ghost' : 'btn-primary'} btn-sm`}
-            onClick={() => {
-              if (isFollowing) { unfollowHost(friendUser.id); addToast(`Unfollowed ${friendUser.name}`, ''); }
-              else { followHost(friendUser.id); addToast(`Following ${friendUser.name}! You'll see their new events. 🔔`, 'success'); }
-            }}
-          >
-            {isFollowing ? '✓ Following' : '🔔 Follow Host'}
-          </button>
         </div>
       </div>
 

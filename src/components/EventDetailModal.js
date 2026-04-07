@@ -31,7 +31,7 @@ const QUOTE_STYLES = [
 ];
 
 export default function EventDetailModal({ event, onClose, onEdit }) {
-  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote, isFollowingHost, followHost, unfollowHost } = useApp();
+  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote } = useApp();
   const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
@@ -57,7 +57,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const isConfirmed = myGuest?.s === 'approved';
   const addrHidden = event.addrHidden && !isHost && !isConfirmed && !showFullAddr;
   const pendingGuests = event.guests?.filter(g => g.s === 'pending') || [];
-  const hostIsFollowed = isFollowingHost(event.hostId);
 
   // Dietary alerts for host
   const guestsWithDietary = event.guests?.filter(g => g.dietaryNote && g.s === 'approved') || [];
@@ -226,19 +225,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
 
-              {/* Follow host button (non-host view) */}
-              {!isHost && (
-                <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-                  <button
-                    className={`btn ${hostIsFollowed ? 'btn-ghost' : 'btn-primary'} btn-sm`}
-                    onClick={() => {
-                      if (hostIsFollowed) { unfollowHost(event.hostId); addToast(`Unfollowed ${event.host}`, ''); }
-                      else { followHost(event.hostId); addToast(`Following ${event.host}! 🔔`, 'success'); }
-                    }}
-                  >
-                    {hostIsFollowed ? '✓ Following' : '🔔 Follow'} {event.host}
-                  </button>
-                </div>
               )}
 
               {/* Address */}
