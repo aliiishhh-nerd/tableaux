@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import { fmtDate } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
@@ -94,6 +95,7 @@ function FriendButton({ userId, size = 'sm' }) {
 export { FriendButton };
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const { user, events, updateProfile, logout, addToast, friends } = useApp();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [tab, setTab] = useState('events');
@@ -164,9 +166,18 @@ export default function ProfilePage() {
               </a>
             )}
             <div className="profile-stats">
-              <div><div className="profile-stat-val">{hostedEvents.length}</div><div className="profile-stat-label">Hosted</div></div>
-              <div><div className="profile-stat-val">{friends.filter(f => f.status === 'accepted').length}</div><div className="profile-stat-label">Friends</div></div>
-              <div><div className="profile-stat-val">{passportEvents.length}</div><div className="profile-stat-label">Passport</div></div>
+              <div onClick={() => navigate('/events')} style={{ cursor: 'pointer' }}>
+                <div className="profile-stat-val">{hostedEvents.length}</div>
+                <div className="profile-stat-label">Hosted</div>
+              </div>
+              <div onClick={() => setTab('friends')} style={{ cursor: 'pointer' }}>
+                <div className="profile-stat-val">{friends.filter(f => f.status === 'accepted').length}</div>
+                <div className="profile-stat-label">Friends</div>
+              </div>
+              <div onClick={() => setTab('passport')} style={{ cursor: 'pointer' }}>
+                <div className="profile-stat-val">{passportEvents.length}</div>
+                <div className="profile-stat-label">Passport</div>
+              </div>
             </div>
 
             {/* Foodie Facts */}
