@@ -256,6 +256,26 @@ export function AppProvider({ children }) {
         return fr ? fr.status : null;
     }, [friends]);
 
+    // ── Invite Guests ────────────────────────────
+    const inviteGuests = useCallback((eventId, invites) => {
+        setEvents(e => e.map(ev => {
+            if (ev.id !== eventId) return ev;
+            const newInvites = invites.map(inv => ({
+                id: 'inv-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                recipientId: inv.userId || null,
+                recipientEmail: inv.email || null,
+                recipientName: inv.name,
+                status: inv.userId ? 'pending' : 'sent',
+                invitedAt: new Date().toISOString(),
+                message: inv.message || null
+            }));
+            return { 
+                ...ev, 
+                invites: [...(ev.invites || []), ...newInvites]
+            };
+        }));
+    }, []);
+
     // ── Follow Host ──────────────────────────────
     const followHost = useCallback((hostId) => {
         setFollowedHosts(h => h.includes(hostId) ? h : [...h, hostId]);
@@ -279,6 +299,8 @@ export function AppProvider({ children }) {
             following, setFollowing,
             // Friend system
             friends, sendFriendRequest, acceptFriendRequest, removeFriend, getFriendStatus,
+            // Invite guests
+            inviteGuests,
             // Follow host
             followedHosts, followHost, unfollowHost, isFollowingHost,
             toasts, addToast,

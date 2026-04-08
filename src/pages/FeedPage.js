@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
 import EventDetailModal from '../components/EventDetailModal';
+import { FriendButton } from '../pages/ProfilePage';
 
 const CITIES = [
   { key: 'chicago', label: 'Chicago'     },
@@ -66,7 +68,8 @@ function eventMatchesCity(event, cityKey) {
 }
 
 export default function FeedPage() {
-  const { events, user, isFollowingHost } = useApp();
+  const navigate = useNavigate();
+  const { events, user, isFollowingHost, friends } = useApp();
   const [selected, setSelected]   = useState(null);
   const [typeFilter, setTypeFilter] = useState('all');
   const [city, setCity]           = useState(() => 'auto');
@@ -126,9 +129,9 @@ export default function FeedPage() {
   });
 
   const stats = [
-    { icon: '🗓️', color: 'purple', val: upcoming.length, label: 'Upcoming', badge: '+2 this month', badgeColor: 'green', dark: false, action: null },
-    { icon: '👥', color: 'teal', val: 48, label: 'In Network', badge: 'Avg 7 per event', badgeColor: 'blue', dark: false, action: null },
-    { icon: '🥂', color: 'amber', val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted', badgeColor: 'green', dark: false, action: null },
+    { icon: '🗓️', color: 'purple', val: upcoming.length, label: 'Upcoming', badge: '+2 this month', badgeColor: 'green', dark: false, action: () => navigate('/events') },
+    { icon: '👥', color: 'teal', val: friends.filter(f => f.status === 'accepted').length, label: 'In Network', badge: 'Avg 7 per event', badgeColor: 'blue', dark: false, action: () => navigate('/profile') },
+    { icon: '🥂', color: 'amber', val: events.filter(e => e.isEnded || e.isPast).length, label: 'Past Dinners', badge: '92% accepted', badgeColor: 'green', dark: false, action: () => navigate('/events') },
     { icon: '🔔', color: 'coral', val: allBanners.length, label: 'Wrap-ups',
       badge: allBanners.length > 0 ? 'tap to view' : 'all clear',
       badgeColor: allBanners.length > 0 ? 'amber' : 'green',
@@ -255,6 +258,7 @@ export default function FeedPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span className="activity-time">{act.time}</span>
+                        {u && u.id !== 'u1' && <FriendButton userId={u.id} size="sm" />}
                       </div>
                     </div>
                   </div>

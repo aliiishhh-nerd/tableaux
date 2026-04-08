@@ -10,6 +10,7 @@ import BlogPage from '../pages/BlogPage';
 import FAQPage from '../pages/FAQPage';
 import LandingPage from '../pages/LandingPage';
 import EmptyStatePage from '../pages/EmptyStatePage';
+import OnboardingTour from './OnboardingTour';
 import CreateEventModal from './CreateEventModal';
 
 const NAV = [
@@ -198,6 +199,9 @@ function PublicEventPage() {
 export default function AppShell() {
   const { user, events, toasts } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showTour, setShowTour] = useState(() => {
+    try { return sessionStorage.getItem('tableaux-tour-done') !== '1'; } catch { return true; }
+  });
   const [creatingEvent, setCreatingEvent] = useState(false);
   const location = useLocation();
 
@@ -218,6 +222,11 @@ export default function AppShell() {
   const isNewUser = !hasAnyActivity;
 
   const pageInfo = getPageInfo(location.pathname);
+
+  function handleTourDone() {
+    try { sessionStorage.setItem('tableaux-tour-done', '1'); } catch {}
+    setShowTour(false);
+  }
 
   return (
     <div className="app-shell">
@@ -377,6 +386,7 @@ export default function AppShell() {
         ))}
       </div>
 
+      {showTour && <OnboardingTour onDone={handleTourDone} />}
       {creatingEvent && <CreateEventModal onClose={() => setCreatingEvent(false)} />}
     </div>
   );

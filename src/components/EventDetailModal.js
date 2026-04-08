@@ -2,6 +2,33 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FriendButton } from '../pages/ProfilePage';
+import InviteGuestsModal from './InviteGuestsModal';
+
+// Helper functions for dynamic language based on event type & time
+function getTimeOfDay(eventTime) {
+  if (!eventTime) return 'time';
+  const hour = parseInt(eventTime.split(':')[0]);
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  return 'evening';
+}
+
+function getMealName(event) {
+  const type = event.type;
+  const hour = event.time ? parseInt(event.time.split(':')[0]) : 19;
+  
+  // Explicit event types
+  if (type === 'Brunch') return 'brunch';
+  if (type === 'Potluck') return 'potluck';
+  if (type === 'Supper Club') return 'dinner';
+  if (type === 'Tasting') return 'tasting';
+  
+  // Time-based for generic types
+  if (hour >= 5 && hour < 12) return 'breakfast';
+  if (hour >= 12 && hour < 15) return 'lunch';
+  if (hour >= 15 && hour < 18) return 'gathering';
+  return 'dinner';
+}
 
 const REMINDER_OPTIONS = [
   { key: '2d',  label: '2 days before',  icon: '📅', desc: 'Give guests plenty of notice' },
@@ -43,6 +70,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const [dietaryNote, setDietaryNote] = useState('');
   const [taggingPhoto, setTaggingPhoto] = useState(null);
   const [tagInput, setTagInput] = useState('');
+  const [showingInvites, setShowingInvites] = useState(false);
   const fileRef = useRef();
 
   if (!event) return null;
@@ -225,6 +253,8 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
 
+              )}
+
               {/* Address */}
               {event.addr && (
                 <div style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--page)', borderRadius: 10, border: '1px solid var(--border)' }}>
@@ -359,7 +389,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
 
           {/* POTLUCK */}
           {tab === 'potluck' && event.potluck && (
-            <PotluckTab event={event} onClaim={claimPotluckItem} onUnclaim={unclaimPotluckItem} addToast={addToast} />
+            <PotluckTab event={event} myGuest={myGuest} onClaim={claimPotluckItem} onUnclaim={unclaimPotluckItem} addToast={addToast} />
           )}
 
           {/* GUESTS — with friend buttons and dietary indicators */}
@@ -424,11 +454,17 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
 
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Close</button>
-          {isHost && onEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {isHost && <button className="btn btn-ghost" onClick={() => setShowingInvites(true)}>📨 Invite</button>}
+            {isHost && onEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>}
+          </div>
         </div>
 
         <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPhoto} />
       </div>
+
+      {/* Invite Guests Modal */}
+      {showingInvites && <InviteGuestsModal event={event} onClose={() => setShowingInvites(false)} />}
 
       {/* Lightbox with tagging */}
       {lightbox && (
@@ -568,9 +604,11 @@ function CommentsTab({ event, user, myComment, passportStamped, commentText, set
       )}
       {!myComment ? (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>How was your evening?</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
+            How was your {getTimeOfDay(event.time)}?
+          </div>
           <textarea className="form-textarea" value={commentText} onChange={e => setCommentText(e.target.value)}
-            placeholder="Share what made this dinner special..." style={{ minHeight: 90, marginBottom: 10 }} />
+            placeholder={`Share what made this ${getMealName(event)} special...`} style={{ minHeight: 90, marginBottom: 10 }} />
           <button className="btn btn-primary btn-full" onClick={onSubmit} disabled={!commentText.trim()}>Share my moment & stamp passport 🗺️</button>
         </div>
       ) : (
@@ -622,10 +660,25 @@ function CommentsTab({ event, user, myComment, passportStamped, commentText, set
   );
 }
 
-function PotluckTab({ event, onClaim, onUnclaim, addToast }) {
+function PotluckTab({ event, myGuest, onClaim, onUnclaim, addToast }) {
+  const isApproved = myGuest && myGuest.s === 'approved';
   const cats = { food: '🍽️ Food', drinks: '🥂 Drinks', other: '🧺 Other' };
+  
   return (
     <div>
+      {!isApproved && (
+        <div style={{ 
+          padding: '12px 16px', 
+          background: 'var(--amber-light)', 
+          border: '1px solid #F0D78C', 
+          borderRadius: 10, 
+          marginBottom: 16,
+          fontSize: 13,
+          color: '#B87A00'
+        }}>
+          ⚠️ You must be accepted to this event before claiming items
+        </div>
+      )}
       <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16 }}>Tap an unclaimed item to add your dish!</div>
       {Object.entries(cats).map(([catKey, catLabel]) => {
         const items = event.potluck.items.filter(it => it.cat === catKey);
@@ -642,8 +695,20 @@ function PotluckTab({ event, onClaim, onUnclaim, addToast }) {
                     <span className="potluck-item-claimant">✓ {item.claimerName}</span>
                     {item.claimedBy === 'u1' && <button className="btn btn-ghost btn-sm potluck-item-btn" onClick={() => { onUnclaim(event.id, item.id); addToast('Item released', ''); }}>Undo</button>}
                   </>
+                ) : isApproved ? (
+                  <button 
+                    className="btn btn-primary btn-sm potluck-item-btn" 
+                    onClick={() => { 
+                      onClaim(event.id, item.id); 
+                      addToast("Item claimed! 🙌", 'success'); 
+                    }}
+                  >
+                    I'll bring it
+                  </button>
                 ) : (
-                  <button className="btn btn-primary btn-sm potluck-item-btn" onClick={() => { onClaim(event.id, item.id); addToast("Item claimed! 🙌", 'success'); }}>I'll bring it</button>
+                  <span style={{ fontSize: 12, color: 'var(--ink3)', fontStyle: 'italic' }}>
+                    Accept invite to claim
+                  </span>
                 )}
               </div>
             ))}
