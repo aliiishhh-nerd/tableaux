@@ -4,7 +4,6 @@ import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
 import EventDetailModal from '../components/EventDetailModal';
-import { FriendButton } from '../pages/ProfilePage';
 
 const CITIES = [
   { key: 'chicago', label: 'Chicago'     },
@@ -258,7 +257,6 @@ export default function FeedPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span className="activity-time">{act.time}</span>
-                        {u && u.id !== 'u1' && <FriendButton userId={u.id} size="sm" />}
                       </div>
                     </div>
                   </div>
