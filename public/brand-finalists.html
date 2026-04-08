@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Finalists — Full Identity Review</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0908;--surface:#111009;--surface2:#181510;--border:#222018;
+  --gold:#D4AF37;--gold-dim:#7A5800;--gold-light:#FDF0C0;
+  --ink:#F0EDE8;--ink2:#AAA49A;--ink3:#555048;--ink4:#2A2620;
+  --teal:#2EC4B6;--coral:#E94560;--purple:#9B8EE8;--green:#6EC46A;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh}
+
+/* NAV */
+.sidenav{position:fixed;left:0;top:0;bottom:0;width:200px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;z-index:100;overflow-y:auto}
+.sidenav-logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sidenav-logo-text{font-family:'Playfair Display',serif;font-style:italic;font-size:14px;color:var(--gold);font-weight:900}
+.sidenav-sub{font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
+.nav-section{padding:0 12px;margin-bottom:4px}
+.nav-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink4);padding:8px 4px 4px}
+.nav-item{display:block;padding:6px 8px;border-radius:6px;font-size:12px;font-weight:500;color:var(--ink3);text-decoration:none;cursor:pointer;transition:all 0.12s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--ink)}
+.nav-item.active{background:var(--gold-dim);color:var(--gold);font-weight:700}
+.finalist-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;flex-shrink:0;vertical-align:middle}
+
+/* MAIN */
+.main{margin-left:200px;min-height:100vh}
+
+/* HERO */
+.hero{background:var(--surface);border-bottom:1px solid var(--border);padding:48px 48px 40px}
+.hero-eyebrow{font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:12px}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:44px;font-weight:900;color:var(--ink);letter-spacing:-1px;line-height:1.1;margin-bottom:12px}
+.hero p{font-size:15px;color:var(--ink2);max-width:600px;line-height:1.7}
+.finalist-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.finalist-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:'Playfair Display',serif;font-style:italic;letter-spacing:-0.2px}
+
+/* BRAND PRINCIPLES */
+.section{padding:48px}
+.section-alt{background:var(--surface)}
+.section-eyebrow{font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:8px}
+.section h2{font-family:'Playfair Display',serif;font-style:italic;font-size:28px;font-weight:900;color:var(--ink);margin-bottom:4px;letter-spacing:-0.5px}
+.section-sub{font-size:14px;color:var(--ink3);margin-bottom:32px}
+.principles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.principle-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px}
+.principle-icon{font-size:24px;margin-bottom:10px}
+.principle-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.principle-body{font-size:12px;color:var(--ink3);line-height:1.7}
+.principle-rule{font-size:11px;color:var(--gold-dim);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-weight:600}
+
+/* SEO TABLE */
+.seo-table{width:100%;border-collapse:collapse;margin-top:16px}
+.seo-table th{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.seo-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+.seo-table tr:hover td{background:var(--surface2)}
+.seo-name{font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:15px}
+.seo-bar-wrap{background:var(--border);border-radius:20px;height:6px;width:100px;overflow:hidden;display:inline-block;vertical-align:middle}
+.seo-bar{height:100%;border-radius:20px}
+.badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:0.06em;margin-left:4px}
+.badge-high{background:#0A2010;color:var(--green)}
+.badge-med{background:#1A1200;color:var(--gold)}
+.badge-low{background:#1A0808;color:var(--coral)}
+
+/* FINALIST CARDS */
+.finalist-section{padding:48px;border-bottom:1px solid var(--border)}
+.finalist-section:nth-child(even){background:var(--surface)}
+.finalist-header{display:flex;align-items:flex-start;gap:24px;margin-bottom:32px;flex-wrap:wrap}
+.finalist-wordmark-block{flex-shrink:0}
+.finalist-number{font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink4);margin-bottom:6px}
+
+/* ICON DESIGNS — SVG-based */
+.icon-showcase{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
+.icon-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.icon-label{font-size:10px;color:var(--ink3);font-weight:600;text-align:center}
+.icon-box{border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* TYPOGRAPHY SHOWCASE */
+.type-showcase{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.type-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.type-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink4);margin-bottom:10px}
+.type-specimen-large{line-height:1;margin-bottom:6px;font-weight:900}
+.type-specimen-tag{font-size:11px;color:var(--ink3);line-height:1.4}
+
+/* TAGLINES */
+.taglines-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.tagline-item{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.tagline-num{font-size:10px;font-weight:800;color:var(--ink4);width:16px;flex-shrink:0;margin-top:2px}
+.tagline-text{font-family:'DM Serif Display',serif;font-size:15px;font-style:italic;color:var(--ink);line-height:1.5;flex:1}
+.tagline-context{font-size:11px;color:var(--ink3);margin-top:3px}
+
+/* PALETTE */
+.palette-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.swatch{width:44px;height:44px;border-radius:8px;position:relative}
+.swatch-label{font-size:9px;color:var(--ink3);text-align:center;margin-top:4px}
+
+/* COLOR / DIRECTION GRID */
+.direction-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+.direction-card{padding:14px;border-radius:10px;border:1px solid var(--border)}
+.direction-title{font-size:11px;font-weight:700;margin-bottom:4px}
+.direction-body{font-size:11px;color:var(--ink3);line-height:1.5}
+
+/* DIVIDER */
+.rule{border:none;border-top:1px solid var(--border);margin:32px 0}
+
+/* COMPARE TABLE */
+.compare-table{width:100%;border-collapse:collapse}
+.compare-table th{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);padding:10px 12px;text-align:left;border-bottom:2px solid var(--border)}
+.compare-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top}
+.compare-table tr:hover td{background:var(--surface2)}
+.star-cell{font-size:14px}
+.check{color:var(--green);font-weight:700}
+.x{color:var(--coral)}
+.maybe{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<nav class="sidenav">
+  <div class="sidenav-logo">
+    <div class="sidenav-logo-text">Brand Finalists</div>
+    <div class="sidenav-sub">8 candidates · Full review</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <button class="nav-item active" onclick="scrollTo('principles')">Brand Principles</button>
+    <button class="nav-item" onclick="scrollTo('seo')">SEO Analysis</button>
+    <button class="nav-item" onclick="scrollTo('compare')">Side-by-Side</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Finalists</div>
+    <button class="nav-item" onclick="scrollTo('dinemate')"><span class="finalist-dot" style="background:#D4AF37"></span>Dinemate</button>
+    <button class="nav-item" onclick="scrollTo('dinevite')"><span class="finalist-dot" style="background:#E94560"></span>Dinevite</button>
+    <button class="nav-item" onclick="scrollTo('seatmate')"><span class="finalist-dot" style="background:#2EC4B6"></span>Seatmate</button>
+    <button class="nav-item" onclick="scrollTo('discodine')"><span class="finalist-dot" style="background:#9B8EE8"></span>Disco Dine</button>
+    <button class="nav-item" onclick="scrollTo('noshbook')"><span class="finalist-dot" style="background:#FF6B6B"></span>Noshbook</button>
+    <button class="nav-item" onclick="scrollTo('forkfriends')"><span class="finalist-dot" style="background:#87BBA2"></span>Fork Friends</button>
+    <button class="nav-item" onclick="scrollTo('dinetribe')"><span class="finalist-dot" style="background:#E94560"></span>Dine Tribe</button>
+    <button class="nav-item" onclick="scrollTo('tablefolk')"><span class="finalist-dot" style="background:#D4AF37"></span>Tablefolk</button>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">April 2026 · Naming & Brand Identity</div>
+  <h1>Eight Finalists.<br>One Direction.</h1>
+  <p>A full brand identity review covering logo concepts, typography direction, SEO opportunity, tagline library, and design principles — for every finalist across all naming rounds.</p>
+  <div class="finalist-pills">
+    <span class="finalist-pill" style="background:#2A1F00;color:#D4AF37;border:1px solid #5A4000">Dinemate</span>
+    <span class="finalist-pill" style="background:#1F0008;color:#E94560;border:1px solid #5A0020">Dinevite</span>
+    <span class="finalist-pill" style="background:#001A18;color:#2EC4B6;border:1px solid #005A50">Seatmate</span>
+    <span class="finalist-pill" style="background:#180A2A;color:#9B8EE8;border:1px solid #4A2A8A">Disco Dine</span>
+    <span class="finalist-pill" style="background:#1F0808;color:#FF6B6B;border:1px solid #5A1818">Noshbook</span>
+    <span class="finalist-pill" style="background:#0A1810;color:#87BBA2;border:1px solid #2A5040">Fork Friends</span>
+    <span class="finalist-pill" style="background:#1F0008;color:#E94560;border:1px solid #5A0020">Dine Tribe</span>
+    <span class="finalist-pill" style="background:#2A1F00;color:#D4AF37;border:1px solid #5A4000">Tablefolk</span>
+  </div>
+</div>
+
+<!-- BRAND PRINCIPLES -->
+<div id="principles" class="section">
+  <div class="section-eyebrow">Foundation</div>
+  <h2>Brand & Logo Principles</h2>
+  <div class="section-sub">What makes a dining app brand timeless, adaptable, and culturally durable</div>
+  <div class="principles-grid">
+    <div class="principle-card">
+      <div class="principle-icon">◯</div>
+      <div class="principle-title">The Icon Must Work at 16px</div>
+      <div class="principle-body">Your app icon will appear as a 60x60 dot on a home screen surrounded by 35 other apps. If the mark is not instantly legible at that size, it does not exist. Test every concept at 16px, 32px, and 64px before committing.</div>
+      <div class="principle-rule">Rule: One shape. One idea. No more than two elements.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">⬛</div>
+      <div class="principle-title">Black & White First</div>
+      <div class="principle-body">A great logo works in pure black on white and pure white on black before it earns color. If it needs color to make sense, the mark itself is not strong enough. Build in monochrome, add color as a reward.</div>
+      <div class="principle-rule">Rule: Design in black. Add color last.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">⟲</div>
+      <div class="principle-title">Timeless Over Trendy</div>
+      <div class="principle-body">Gradients, 3D effects, and drop shadows date a brand within 18 months. Flat geometric marks, clean wordmarks, and single-weight iconography have survived decades. The Helvetica wordmark. The Nike swoosh. The CBS eye. All flat. All still here.</div>
+      <div class="principle-rule">Rule: If a design trend has a name, avoid it.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">⊕</div>
+      <div class="principle-title">The System Not the Logo</div>
+      <div class="principle-body">A brand is not a logo. It is a system — mark, wordmark, color, typography, voice, motion, and space working together. Pick a typeface that will live in every email, notification, and screen. It will be seen more than the logo itself.</div>
+      <div class="principle-rule">Rule: Choose one display font and one body font. Use them everywhere.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">⬡</div>
+      <div class="principle-title">Adaptable Across Contexts</div>
+      <div class="principle-body">Your mark will appear on a dark app header, a white email, a TikTok thumbnail, a tote bag, a wax seal on an invitation card, and an OG social share card. Design a mark that welcomes all of those surfaces without modification.</div>
+      <div class="principle-rule">Rule: Build a horizontal lockup, a stacked lockup, and an icon-only mark from day one.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">◈</div>
+      <div class="principle-title">Avoid Food Clichés</div>
+      <div class="principle-body">Forks, knives, plates, chef hats, and speech bubbles are the visual landfill of the food app space. Every food app since 2010 has used them. The brands that stand out — Eater, Bon Appétit, Momofuku — use abstract geometry, editorial photography, and typography as the identity, not kitchen objects.</div>
+      <div class="principle-rule">Rule: If it would be on a restaurant menu, it should not be your logo.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">▲</div>
+      <div class="principle-title">Typography IS the Brand</div>
+      <div class="principle-body">For a named brand like yours — one where the name is the product — the wordmark is the logo. A beautifully set name in the right typeface at the right weight is more powerful than any icon. Think Slack, Stripe, Notion. The name IS the mark.</div>
+      <div class="principle-rule">Rule: Spend 80% of identity budget on getting the wordmark perfect.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">◐</div>
+      <div class="principle-title">One Accent Color Rule</div>
+      <div class="principle-body">The most durable food and lifestyle brands use one dominant color with one accent. Eater uses red. Bon Appétit uses cream and black. The New York Times Cooking uses a single saturated red. One color creates recognition. Two creates confusion. Five creates noise.</div>
+      <div class="principle-rule">Rule: Pick one color that owns an emotion. Use it once, powerfully.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SEO ANALYSIS -->
+<div id="seo" class="section section-alt">
+  <div class="section-eyebrow">Search Visibility</div>
+  <h2>SEO Opportunity Analysis</h2>
+  <div class="section-sub">Which names give you the best organic search foundation — brand search, category search, and content SEO</div>
+
+  <table class="seo-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Brand Search</th>
+        <th>Category Clarity</th>
+        <th>Content SEO</th>
+        <th>Collision Risk</th>
+        <th>Overall</th>
+        <th>Key Insight</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="seo-name" style="color:#D4AF37">Dinemate</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:90%;background:#D4AF37"></div></div><span style="font-size:11px;color:#888;margin-left:6px">High</span></td>
+        <td><span class="badge badge-high">Excellent</span></td>
+        <td><span class="badge badge-high">Strong</span></td>
+        <td><span class="badge badge-high">Very Low</span></td>
+        <td><span class="badge badge-high">★★★★★</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">Invented compound — zero existing SERP competition. "Dine" + "mate" both index well in dining and social app searches. Best overall SEO position of all finalists.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#E94560">Dinevite</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:88%;background:#E94560"></div></div><span style="font-size:11px;color:#888;margin-left:6px">High</span></td>
+        <td><span class="badge badge-high">Excellent</span></td>
+        <td><span class="badge badge-high">Strong</span></td>
+        <td><span class="badge badge-high">Very Low</span></td>
+        <td><span class="badge badge-high">★★★★★</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">Another invented word — dominates its SERP from day one. "Dine" + "invite" keywords both have high dining-social search intent. Extremely clean brand search.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#D4AF37">Tablefolk</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:85%;background:#D4AF37"></div></div><span style="font-size:11px;color:#888;margin-left:6px">High</span></td>
+        <td><span class="badge badge-high">Excellent</span></td>
+        <td><span class="badge badge-high">Strong</span></td>
+        <td><span class="badge badge-high">Low</span></td>
+        <td><span class="badge badge-high">★★★★★</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">Invented compound with strong semantic richness. "Folk" is trending in lifestyle branding. "Table" keywords dominate dining search. Excellent content SEO around community dining topics.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#FF6B6B">Noshbook</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:82%;background:#FF6B6B"></div></div><span style="font-size:11px;color:#888;margin-left:6px">High</span></td>
+        <td><span class="badge badge-med">Good</span></td>
+        <td><span class="badge badge-high">Excellent</span></td>
+        <td><span class="badge badge-high">Low</span></td>
+        <td><span class="badge badge-high">★★★★½</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">"Nosh" has genuine search volume in food culture. "Book" implies review and reservation — both high-intent dining searches. Strong content hub potential around dining reviews and food culture.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#2EC4B6">Seatmate</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:78%;background:#2EC4B6"></div></div><span style="font-size:11px;color:#888;margin-left:6px">Good</span></td>
+        <td><span class="badge badge-med">Good</span></td>
+        <td><span class="badge badge-med">Medium</span></td>
+        <td><span class="badge badge-med">Medium</span></td>
+        <td><span class="badge badge-med">★★★★</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">"Seatmate" has existing search volume from travel/airline context — creates noise you would need to overcome. However the travel association is actually a positive brand signal for the social dining context.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#87BBA2">Fork Friends</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:72%;background:#87BBA2"></div></div><span style="font-size:11px;color:#888;margin-left:6px">Good</span></td>
+        <td><span class="badge badge-high">Excellent</span></td>
+        <td><span class="badge badge-med">Medium</span></td>
+        <td><span class="badge badge-med">Medium</span></td>
+        <td><span class="badge badge-med">★★★★</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">Alliterative names are highly memorable and strong in brand search. Some SERP competition from unrelated "fork" content. Great social SEO potential — the phrase is inherently shareable.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#E94560">Dine Tribe</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:70%;background:#E94560"></div></div><span style="font-size:11px;color:#888;margin-left:6px">Good</span></td>
+        <td><span class="badge badge-high">Excellent</span></td>
+        <td><span class="badge badge-high">Strong</span></td>
+        <td><span class="badge badge-med">Medium</span></td>
+        <td><span class="badge badge-med">★★★½</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">"Tribe" has broad search volume but also significant competition from unrelated brands and cultural contexts. Strong content SEO opportunity around community dining. Two-word name helps disambiguation.</td>
+      </tr>
+      <tr>
+        <td><div class="seo-name" style="color:#9B8EE8">Disco Dine</div></td>
+        <td><div class="seo-bar-wrap"><div class="seo-bar" style="width:60%;background:#9B8EE8"></div></div><span style="font-size:11px;color:#888;margin-left:6px">Medium</span></td>
+        <td><span class="badge badge-med">Good</span></td>
+        <td><span class="badge badge-med">Medium</span></td>
+        <td><span class="badge badge-low">Higher</span></td>
+        <td><span class="badge badge-med">★★★</span></td>
+        <td style="font-size:11px;color:#888;max-width:200px">"Disco" has very high existing search volume across music, nightlife, and fashion — creates significant SERP competition. Brand personality is the strongest of all finalists but SEO requires most work to own the space.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:20px;padding:16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">SEO Bottom Line</div>
+    <div style="font-size:13px;color:var(--ink2);line-height:1.7">The <strong style="color:var(--ink)">invented compounds win on SEO</strong> — Dinemate, Dinevite, and Tablefolk will rank #1 for their own brand name from day one with zero competition. For a startup with no domain authority yet, owning your brand SERP immediately is critical. The two-word names (Dine Tribe, Fork Friends, Disco Dine) require more content investment to rank because common words create noise. <strong style="color:var(--gold)">If SEO is a significant factor, Dinemate leads the field.</strong></div>
+  </div>
+</div>
+
+<!-- COMPARE TABLE -->
+<div id="compare" class="section">
+  <div class="section-eyebrow">Side by Side</div>
+  <h2>Full Comparison</h2>
+  <div class="section-sub">Every finalist across every critical brand dimension</div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Memorable</th>
+        <th>Versatile</th>
+        <th>Domain</th>
+        <th>Logo Ease</th>
+        <th>App Icon</th>
+        <th>Social Verb</th>
+        <th>Longevity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#D4AF37">Dinemate</strong></td><td class="check">✓✓</td><td class="check">✓✓</td><td style="color:#2EC4B6;font-size:11px;font-weight:600">.app clean</td><td class="check">Easy</td><td class="check">Strong</td><td style="color:#2EC4B6;font-size:11px">"dinemate me"</td><td class="check">Timeless</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#E94560">Dinevite</strong></td><td class="check">✓✓</td><td class="check">✓✓</td><td style="color:#2EC4B6;font-size:11px;font-weight:600">.app clean</td><td class="check">Easy</td><td class="check">Strong</td><td style="color:#2EC4B6;font-size:11px">"dinevite them"</td><td class="check">Timeless</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#2EC4B6">Seatmate</strong></td><td class="check">✓✓</td><td class="check">✓</td><td style="color:#D4AF37;font-size:11px;font-weight:600">check .app</td><td class="check">Easy</td><td class="check">Strong</td><td style="color:#2EC4B6;font-size:11px">"find a seatmate"</td><td class="check">Timeless</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#9B8EE8">Disco Dine</strong></td><td class="check">✓✓✓</td><td class="x">Limited</td><td style="color:#2EC4B6;font-size:11px;font-weight:600">.app likely</td><td class="check">Easy</td><td class="check">Fun</td><td style="color:#2EC4B6;font-size:11px">"let's disco dine"</td><td class="x">Trend-risk</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#FF6B6B">Noshbook</strong></td><td class="check">✓✓</td><td class="check">✓✓</td><td style="color:#2EC4B6;font-size:11px;font-weight:600">.app clean</td><td class="check">Easy</td><td class="check">Strong</td><td style="color:#2EC4B6;font-size:11px">"check the noshbook"</td><td class="check">Timeless</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#87BBA2">Fork Friends</strong></td><td class="check">✓✓✓</td><td class="check">✓</td><td style="color:#D4AF37;font-size:11px;font-weight:600">check .app</td><td class="maybe">Medium</td><td class="maybe">Medium</td><td style="color:#2EC4B6;font-size:11px">"fork friends forever"</td><td class="check">Strong</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#E94560">Dine Tribe</strong></td><td class="check">✓✓</td><td class="check">✓✓</td><td style="color:#2EC4B6;font-size:11px;font-weight:600">.app clean</td><td class="check">Easy</td><td class="check">Strong</td><td style="color:#2EC4B6;font-size:11px">"my dine tribe"</td><td class="check">Strong</td></tr>
+      <tr><td><strong style="font-family:'Playfair Display',serif;font-style:italic;color:#D4AF37">Tablefolk</strong></td><td class="check">✓✓</td><td class="check">✓✓</td><td style="color:#2EC4B6;font-size:11px;font-weight:600">.app clean</td><td class="check">Easy</td><td class="check">Strong</td><td style="color:#2EC4B6;font-size:11px">"my tablefolk"</td><td class="check">Timeless</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 1: DINEMATE -->
+<div id="dinemate" class="finalist-section">
+  <div class="finalist-number">Finalist 01</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="280" height="80" viewBox="0 0 280 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#D4AF37" letter-spacing="-2">Dine<tspan fill="#F0EDE8" opacity="0.5">mate</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#7A5800;margin-top:-4px;padding-left:12px">dinemate.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">
+        Invented compound — "dine" + "mate." Names the relationship the app creates. A dinemate is the person across from you who makes the meal worth remembering. The portmanteau structure is inherently verbal — "I need a dinemate tonight" is a natural sentence.
+      </div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="14" cy="22" r="8" fill="#0A0908"/><circle cx="30" cy="22" r="8" fill="#0A0908" opacity="0.5"/></svg>
+      </div>
+      <div class="icon-label">Two circles<br>the pair</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#1A1500;border:1px solid #D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="8" y="30" font-family="Georgia,serif" font-size="28" font-weight="900" font-style="italic" fill="#D4AF37">Dm</text></svg>
+      </div>
+      <div class="icon-label">Monogram<br>editorial</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="8" y="14" width="28" height="16" rx="2" fill="#0A0908"/><rect x="14" y="22" width="16" height="2" fill="#D4AF37"/><circle cx="14" cy="18" r="2" fill="#D4AF37"/><circle cx="30" cy="18" r="2" fill="#D4AF37" opacity="0.5"/></svg>
+      </div>
+      <div class="icon-label">Table for two<br>minimal</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:2px solid #D4AF37;border-radius:16px">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="7" y="30" font-family="Georgia,serif" font-size="26" font-weight="900" fill="#D4AF37">D</text><text x="24" y="30" font-family="Georgia,serif" font-size="26" font-weight="900" fill="#D4AF37" opacity="0.45">m</text></svg>
+      </div>
+      <div class="icon-label">Letterform<br>contrast weight</div>
+    </div>
+  </div>
+
+  <div class="type-showcase">
+    <div class="type-card">
+      <div class="type-label">Option A — Serif Italic (Recommended)</div>
+      <div class="type-specimen-large" style="font-family:'Playfair Display',serif;font-style:italic;font-size:36px;color:#D4AF37">Dine<span style="opacity:.4">mate</span></div>
+      <div class="type-specimen-tag">Playfair Display Italic · Weight contrast between "Dine" and "mate" signals hierarchy and warmth. Used by New York Times, The Atlantic, Bon Appétit.</div>
+    </div>
+    <div class="type-card">
+      <div class="type-label">Option B — Bold Sans Compound</div>
+      <div class="type-specimen-large" style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:#D4AF37">DINE<span style="opacity:.35">MATE</span></div>
+      <div class="type-specimen-tag">Space Grotesk · All caps with weight drop on second syllable. Functional, modern, app-native. Strong in small sizes.</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">The person across from you makes the meal.</div><div class="tagline-context">Core brand — relationship first, food second</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Find your dinemate. Feed the friendship.</div><div class="tagline-context">Community / social graph angle</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">Good food is better when it's shared. We find you someone to share it with.</div><div class="tagline-context">Functional onboarding / longer form</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">Host more. Connect deeper. Eat well.</div><div class="tagline-context">Feature summary — hosting + social + food</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Every great evening starts with the right dinemate.</div><div class="tagline-context">Occasion / aspirational — works for ads and OG cards</div></div></div>
+  </div>
+
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold</div></div>
+    <div><div class="swatch" style="background:#1A1500"></div><div class="swatch-label">Deep</div></div>
+    <div><div class="swatch" style="background:#F0EDE8"></div><div class="swatch-label">Cream</div></div>
+    <div><div class="swatch" style="background:#2EC4B6"></div><div class="swatch-label">Teal acc.</div></div>
+    <div><div class="swatch" style="background:#F5F0E8;border:1px solid #DDD"></div><div class="swatch-label">Light bg</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 2: DINEVITE -->
+<div id="dinevite" class="finalist-section section-alt">
+  <div class="finalist-number">Finalist 02</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="280" height="80" viewBox="0 0 280 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#E94560" letter-spacing="-2">Dine<tspan fill="#F0EDE8" opacity="0.45">vite</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#7A1028;margin-top:-4px;padding-left:12px">dinevite.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">Dine + Invite. Names the primary action of the app in a single invented word. The instant verbification — "I'll dinevite you" — is the strongest natural-language signal of any finalist. It creates its own vocabulary.</div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="8" y="14" width="28" height="20" rx="3" fill="none" stroke="#0A0908" stroke-width="2.5"/><path d="M8 16 L22 26 L36 16" fill="none" stroke="#0A0908" stroke-width="2.5"/></svg>
+      </div>
+      <div class="icon-label">Envelope<br>the invitation</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:2px solid #E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="7" y="30" font-family="Georgia,serif" font-size="28" font-weight="900" font-style="italic" fill="#E94560">Dv</text></svg>
+      </div>
+      <div class="icon-label">Monogram<br>dark mode</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="14" fill="#0A0908"/><text x="12" y="28" font-family="Georgia,serif" font-size="18" font-weight="900" fill="#E94560">+1</text></svg>
+      </div>
+      <div class="icon-label">Plus one<br>action mark</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:1px solid #E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="10" y="16" width="24" height="16" rx="2" fill="none" stroke="#E94560" stroke-width="1.5"/><line x1="10" y1="22" x2="34" y2="22" stroke="#E94560" stroke-width="1" opacity="0.4"/><circle cx="30" cy="12" r="5" fill="#E94560"/><line x1="28" y1="12" x2="32" y2="12" stroke="#0A0908" stroke-width="1.5"/><line x1="30" y1="10" x2="30" y2="14" stroke="#0A0908" stroke-width="1.5"/></svg>
+      </div>
+      <div class="icon-label">Add to invite<br>functional</div>
+    </div>
+  </div>
+
+  <div class="type-showcase">
+    <div class="type-card">
+      <div class="type-label">Option A — Italic with color split</div>
+      <div class="type-specimen-large" style="font-family:'DM Serif Display',serif;font-style:italic;font-size:36px;color:#E94560">Dine<span style="color:#F0EDE8;opacity:0.45">vite</span></div>
+      <div class="type-specimen-tag">DM Serif Display · The color break at "Dine/vite" makes the compound readable. Warm, editorial, approachable.</div>
+    </div>
+    <div class="type-card">
+      <div class="type-label">Option B — All lowercase modern</div>
+      <div class="type-specimen-large" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#E94560;letter-spacing:-1px">dinevite</div>
+      <div class="type-specimen-tag">Space Grotesk Lowercase · All-lowercase wordmarks feel modern and approachable. Instagram, Spotify, notion all use this convention.</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">One word for everything this app does.</div><div class="tagline-context">Brand clarity — the name is the pitch</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Send a dinevite. Change someone's evening.</div><div class="tagline-context">Action / emotional — works in push notifications</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">The dinevite is the new dinner reservation.</div><div class="tagline-context">Positioning against OpenTable / Resy</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">Host. Invite. Gather. That's a dinevite.</div><div class="tagline-context">Feature explanation — onboarding</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">You've been dinevited. The best two words in your inbox.</div><div class="tagline-context">Email / notification copy — the verb in action</div></div></div>
+  </div>
+
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#E94560"></div><div class="swatch-label">Coral red</div></div>
+    <div><div class="swatch" style="background:#0A0908"></div><div class="swatch-label">Deep</div></div>
+    <div><div class="swatch" style="background:#FFF0F3"></div><div class="swatch-label">Blush</div></div>
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold acc.</div></div>
+    <div><div class="swatch" style="background:#2EC4B6"></div><div class="swatch-label">Teal acc.</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 3: SEATMATE -->
+<div id="seatmate" class="finalist-section">
+  <div class="finalist-number">Finalist 03</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="280" height="80" viewBox="0 0 280 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#2EC4B6" letter-spacing="-2">Seat<tspan fill="#F0EDE8" opacity="0.45">mate</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#0A5050;margin-top:-4px;padding-left:12px">seatmate.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">The person you are seated next to who changes the evening. Familiar from travel (airplane seatmate) — recontextualized as the most intimate social dining concept. Bridges "Seated" and "Tablemate" simultaneously.</div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#2EC4B6">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="10" y="10" width="10" height="14" rx="2" fill="#0A0908"/><rect x="10" y="26" width="10" height="4" rx="1" fill="#0A0908" opacity="0.6"/><rect x="24" y="10" width="10" height="14" rx="2" fill="#0A0908" opacity="0.45"/><rect x="24" y="26" width="10" height="4" rx="1" fill="#0A0908" opacity="0.3"/></svg>
+      </div>
+      <div class="icon-label">Two seats<br>angled in</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A1A18;border:1px solid #2EC4B6">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="7" y="30" font-family="Georgia,serif" font-size="28" font-weight="900" font-style="italic" fill="#2EC4B6">Sm</text></svg>
+      </div>
+      <div class="icon-label">Monogram<br>teal</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#2EC4B6">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="16" cy="18" r="6" fill="#0A0908"/><circle cx="28" cy="18" r="6" fill="#0A0908" opacity="0.45"/><line x1="10" y1="32" x2="22" y2="32" stroke="#0A0908" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="32" x2="34" y2="32" stroke="#0A0908" stroke-width="2.5" stroke-linecap="round" opacity="0.45"/></svg>
+      </div>
+      <div class="icon-label">Two people<br>at table</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">Better than your best flight upgrade.</div><div class="tagline-context">Cultural reference — the comparison is the brand</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Every great story starts with who you sat next to.</div><div class="tagline-context">Long form — emotional, narrative</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">Find your seatmate. Keep the best ones.</div><div class="tagline-context">Social graph / dining friends feature</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">Your seat is waiting. So is the right company.</div><div class="tagline-context">RSVP / event discovery angle</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Intimate dining, curated company, one seat at a time.</div><div class="tagline-context">App store description / formal brand copy</div></div></div>
+  </div>
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#2EC4B6"></div><div class="swatch-label">Teal</div></div>
+    <div><div class="swatch" style="background:#0A1A18"></div><div class="swatch-label">Deep teal</div></div>
+    <div><div class="swatch" style="background:#E0F7F5"></div><div class="swatch-label">Teal light</div></div>
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold acc.</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 4: DISCO DINE -->
+<div id="discodine" class="finalist-section section-alt">
+  <div class="finalist-number">Finalist 04</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="320" height="80" viewBox="0 0 320 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#9B8EE8" letter-spacing="-2">Disco <tspan fill="#F0EDE8" opacity="0.5">Dine</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#3A2888;margin-top:-4px;padding-left:12px">discodine.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">The wildcard. Disco (discover + the era) + Dine. The most memorable name of all finalists by a significant margin. The personality risk is real — but personality-led brands often win in social categories. Highest viral potential.</div>
+    </div>
+  </div>
+
+  <div style="padding:12px 14px;background:#0E0820;border:1px solid #2A1A5A;border-radius:8px;margin-bottom:20px">
+    <div style="font-size:11px;font-weight:700;color:#9B8EE8;margin-bottom:4px">⚠ Brand Risk Note</div>
+    <div style="font-size:12px;color:#666;line-height:1.6">Disco Dine is the highest-personality option. The risk is that "Disco" dates the brand to a specific era and limits expansion into more formal dining contexts (Michelin-starred supper clubs, corporate dining). The reward is instant recognition, shareability, and a brand voice nobody else has. This is a strategic choice, not a quality choice.</div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:linear-gradient(135deg,#9B8EE8,#E94560)">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="10" fill="none" stroke="#0A0908" stroke-width="2.5"/><circle cx="22" cy="22" r="4" fill="#0A0908"/><line x1="22" y1="8" x2="22" y2="12" stroke="#0A0908" stroke-width="2"/><line x1="22" y1="32" x2="22" y2="36" stroke="#0A0908" stroke-width="2"/><line x1="8" y1="22" x2="12" y2="22" stroke="#0A0908" stroke-width="2"/><line x1="32" y1="22" x2="36" y2="22" stroke="#0A0908" stroke-width="2"/></svg>
+      </div>
+      <div class="icon-label">Disco ball<br>abstracted</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:2px solid #9B8EE8">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="8" y="30" font-family="Georgia,serif" font-size="28" font-weight="900" font-style="italic" fill="#9B8EE8">DD</text></svg>
+      </div>
+      <div class="icon-label">Double D<br>monogram</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#9B8EE8">
+        <svg width="44" height="44" viewBox="0 0 44 44"><polygon points="22,8 26,18 37,18 28,25 31,36 22,29 13,36 16,25 7,18 18,18" fill="#0A0908"/></svg>
+      </div>
+      <div class="icon-label">Star burst<br>energy</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">Find it. Show up. Dance a little.</div><div class="tagline-context">Brand personality in 6 words</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Discover the dining scene you didn't know existed.</div><div class="tagline-context">Discovery / Explore feature angle</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">The 70s called. They want you to have more dinner parties.</div><div class="tagline-context">Social / viral — irreverent, shareable</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">Good food. Great company. No cover charge.</div><div class="tagline-context">Inclusion — no gatekeeping, everyone welcome</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Dine like nobody's watching. But invite everyone.</div><div class="tagline-context">Community + personality — app store</div></div></div>
+  </div>
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#9B8EE8"></div><div class="swatch-label">Lavender</div></div>
+    <div><div class="swatch" style="background:#E94560"></div><div class="swatch-label">Coral</div></div>
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold</div></div>
+    <div><div class="swatch" style="background:#0A0908"></div><div class="swatch-label">Black</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 5: NOSHBOOK -->
+<div id="noshbook" class="finalist-section">
+  <div class="finalist-number">Finalist 05</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="280" height="80" viewBox="0 0 280 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#FF6B6B" letter-spacing="-2">Nosh<tspan fill="#F0EDE8" opacity="0.45">book</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#7A1818;margin-top:-4px;padding-left:12px">noshbook.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">Nosh (warm Yiddish for casual eating) + Book (to reserve, and the little black book of contacts). Your dining social record — friends, favorites, and reservations in one. The anti-pretentious dining companion.</div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#FF6B6B">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="12" y="8" width="20" height="28" rx="2" fill="#0A0908"/><line x1="16" y1="16" x2="28" y2="16" stroke="#FF6B6B" stroke-width="1.5"/><line x1="16" y1="20" x2="28" y2="20" stroke="#FF6B6B" stroke-width="1.5" opacity="0.6"/><line x1="16" y1="24" x2="22" y2="24" stroke="#FF6B6B" stroke-width="1.5" opacity="0.4"/><line x1="9" y1="8" x2="9" y2="36" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="icon-label">Little black<br>book</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:2px solid #FF6B6B">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="8" y="30" font-family="Georgia,serif" font-size="26" font-weight="900" font-style="italic" fill="#FF6B6B">Nb</text></svg>
+      </div>
+      <div class="icon-label">Monogram<br>warm red</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#FF6B6B">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="10" y="12" width="24" height="20" rx="2" fill="#0A0908"/><line x1="10" y1="20" x2="34" y2="20" stroke="#FF6B6B" stroke-width="1.5"/><circle cx="17" cy="28" r="3" fill="#FF6B6B"/><circle cx="27" cy="28" r="3" fill="#FF6B6B" opacity="0.5"/><line x1="7" y1="12" x2="7" y2="32" stroke="#0A0908" stroke-width="3" stroke-linecap="round" opacity="0.4"/></svg>
+      </div>
+      <div class="icon-label">Book + plate<br>combined</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">Your little black book. For dinners.</div><div class="tagline-context">Brand — the dining address book concept</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Keep the people. Remember the meals. Find the next one.</div><div class="tagline-context">Full feature description — social + memory + discovery</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">Everyone needs a noshbook.</div><div class="tagline-context">Tagline as brand declaration — simple and definitive</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">The app for people who take eating seriously but not themselves.</div><div class="tagline-context">Personality — anti-pretentious food culture</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Book the nosh. Build the circle. Keep the memories.</div><div class="tagline-context">Three-part brand promise — all features in one sentence</div></div></div>
+  </div>
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#FF6B6B"></div><div class="swatch-label">Warm red</div></div>
+    <div><div class="swatch" style="background:#1A0808"></div><div class="swatch-label">Deep</div></div>
+    <div><div class="swatch" style="background:#FFF0EE"></div><div class="swatch-label">Blush</div></div>
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold acc.</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 6: FORK FRIENDS -->
+<div id="forkfriends" class="finalist-section section-alt">
+  <div class="finalist-number">Finalist 06</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="320" height="80" viewBox="0 0 320 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="50" font-weight="900" font-style="italic" fill="#87BBA2" letter-spacing="-2">Fork <tspan fill="#F0EDE8" opacity="0.45">Friends</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#2A5040;margin-top:-4px;padding-left:12px">forkfriends.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">Alliterative, impossible to say without smiling, and genuinely describes your dining circle. Fork Friends are the people you return to the table with. The FF monogram is one of the strongest of all finalists.</div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#87BBA2">
+        <svg width="44" height="44" viewBox="0 0 44 44"><line x1="16" y1="10" x2="16" y2="34" stroke="#0A1A14" stroke-width="2.5" stroke-linecap="round"/><line x1="13" y1="10" x2="13" y2="18" stroke="#0A1A14" stroke-width="1.5"/><line x1="16" y1="10" x2="16" y2="18" stroke="#0A1A14" stroke-width="1.5"/><line x1="19" y1="10" x2="19" y2="18" stroke="#0A1A14" stroke-width="1.5"/><line x1="28" y1="10" x2="28" y2="34" stroke="#0A1A14" stroke-width="2.5" stroke-linecap="round" opacity="0.45"/><line x1="25" y1="10" x2="25" y2="18" stroke="#0A1A14" stroke-width="1.5" opacity="0.45"/><line x1="28" y1="10" x2="28" y2="18" stroke="#0A1A14" stroke-width="1.5" opacity="0.45"/><line x1="31" y1="10" x2="31" y2="18" stroke="#0A1A14" stroke-width="1.5" opacity="0.45"/></svg>
+      </div>
+      <div class="icon-label">Two forks<br>side by side</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A1A14;border:2px solid #87BBA2">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="8" y="30" font-family="Georgia,serif" font-size="26" font-weight="900" font-style="italic" fill="#87BBA2">FF</text></svg>
+      </div>
+      <div class="icon-label">FF monogram<br>clean</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#87BBA2">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="16" cy="20" r="8" fill="#0A1A14"/><circle cx="28" cy="20" r="8" fill="#0A1A14" opacity="0.45"/><text x="12" y="24" font-family="Georgia,serif" font-size="10" font-weight="900" fill="#87BBA2">FF</text></svg>
+      </div>
+      <div class="icon-label">F in circles<br>pair mark</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">Make fork friends everywhere you go.</div><div class="tagline-context">Community discovery — the app CTA in one sentence</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Your fork friends are your real friends.</div><div class="tagline-context">Relationship depth — dining bonds as genuine connection</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">Life is better with fork friends.</div><div class="tagline-context">Simple, warm, universal — works in every context</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">Find your people at the table. Keep them forever.</div><div class="tagline-context">Social graph + retention — dining circle feature</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Fork friends first. Great dinners always.</div><div class="tagline-context">Alliterative brand line — rhythmically matches the name</div></div></div>
+  </div>
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#87BBA2"></div><div class="swatch-label">Sage</div></div>
+    <div><div class="swatch" style="background:#0A1A14"></div><div class="swatch-label">Forest</div></div>
+    <div><div class="swatch" style="background:#EAF4EC"></div><div class="swatch-label">Mint</div></div>
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold acc.</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 7: DINE TRIBE -->
+<div id="dinetribe" class="finalist-section">
+  <div class="finalist-number">Finalist 07</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="300" height="80" viewBox="0 0 300 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#E94560" letter-spacing="-2">Dine <tspan fill="#F0EDE8" opacity="0.45">Tribe</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#7A1028;margin-top:-4px;padding-left:12px">dinetribe.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">Tribe is already the word people use for their chosen family. Applied to dining, it names the deepest social bond the app creates. "My dine tribe" becomes a phrase users own and repeat.</div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="16" r="5" fill="#0A0908"/><circle cx="12" cy="28" r="5" fill="#0A0908" opacity="0.7"/><circle cx="32" cy="28" r="5" fill="#0A0908" opacity="0.45"/><line x1="22" y1="21" x2="12" y2="23" stroke="#0A0908" stroke-width="1.5"/><line x1="22" y1="21" x2="32" y2="23" stroke="#0A0908" stroke-width="1.5"/></svg>
+      </div>
+      <div class="icon-label">Three people<br>the tribe</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:2px solid #E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="10" y="30" font-family="Georgia,serif" font-size="28" font-weight="900" font-style="italic" fill="#E94560">Dt</text></svg>
+      </div>
+      <div class="icon-label">Monogram<br>bold</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#E94560">
+        <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="14" fill="none" stroke="#0A0908" stroke-width="2"/><circle cx="22" cy="22" r="7" fill="#0A0908"/><circle cx="16" cy="16" r="3" fill="#0A0908" opacity="0.5"/><circle cx="28" cy="16" r="3" fill="#0A0908" opacity="0.5"/><circle cx="16" cy="28" r="3" fill="#0A0908" opacity="0.5"/><circle cx="28" cy="28" r="3" fill="#0A0908" opacity="0.5"/></svg>
+      </div>
+      <div class="icon-label">Circle tribe<br>orbital</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">Find your dine tribe.</div><div class="tagline-context">Brand line — four words, complete idea</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Your dine tribe is your best tribe.</div><div class="tagline-context">Warmth — chosen family through food</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">Every tribe needs a table. We build both.</div><div class="tagline-context">Feature-forward — community + event hosting</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">The people you eat with become the people you keep.</div><div class="tagline-context">Emotional depth — dining as lasting bond</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Host. Gather. Tribe up.</div><div class="tagline-context">Action-oriented — app store, ads, social</div></div></div>
+  </div>
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#E94560"></div><div class="swatch-label">Coral</div></div>
+    <div><div class="swatch" style="background:#0A0908"></div><div class="swatch-label">Black</div></div>
+    <div><div class="swatch" style="background:#FFF0F3"></div><div class="swatch-label">Blush</div></div>
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ FINALIST 8: TABLEFOLK -->
+<div id="tablefolk" class="finalist-section section-alt">
+  <div class="finalist-number">Finalist 08</div>
+  <div class="finalist-header">
+    <div class="finalist-wordmark-block">
+      <svg width="320" height="80" viewBox="0 0 320 80">
+        <text x="10" y="58" font-family="Georgia,serif" font-size="52" font-weight="900" font-style="italic" fill="#D4AF37" letter-spacing="-2">Table<tspan fill="#F0EDE8" opacity="0.45">folk</tspan></text>
+      </svg>
+      <div style="font-size:11px;color:#7A5800;margin-top:-4px;padding-left:12px">tablefolk.app</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:12px;color:#888;line-height:1.7;max-width:400px">Table + Folk. Your dining tribe, as a single invented word. "Folk" is trending across lifestyle branding (folk music, folk design, folk food). Warm, ancient, community-rooted without being nostalgic. Best overall SEO position of the two-syllable compounds.</div>
+    </div>
+  </div>
+
+  <div class="icon-showcase">
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><rect x="10" y="22" width="24" height="12" rx="1" fill="#0A0908"/><line x1="10" y1="22" x2="10" y2="34" stroke="#0A0908" stroke-width="2"/><line x1="34" y1="22" x2="34" y2="34" stroke="#0A0908" stroke-width="2"/><circle cx="16" cy="18" r="3" fill="#0A0908"/><circle cx="22" cy="16" r="3" fill="#0A0908" opacity="0.7"/><circle cx="28" cy="18" r="3" fill="#0A0908" opacity="0.45"/></svg>
+      </div>
+      <div class="icon-label">People at<br>a table</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#1A1500;border:2px solid #D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><text x="8" y="30" font-family="Georgia,serif" font-size="28" font-weight="900" font-style="italic" fill="#D4AF37">Tf</text></svg>
+      </div>
+      <div class="icon-label">Monogram<br>gold on dark</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><line x1="8" y1="28" x2="36" y2="28" stroke="#0A0908" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="22" r="4" fill="#0A0908"/><circle cx="22" cy="20" r="4" fill="#0A0908" opacity="0.7"/><circle cx="30" cy="22" r="4" fill="#0A0908" opacity="0.45"/></svg>
+      </div>
+      <div class="icon-label">Folk around<br>the table</div>
+    </div>
+    <div class="icon-wrap">
+      <div class="icon-box" style="width:72px;height:72px;background:#0A0908;border:1px solid #D4AF37">
+        <svg width="44" height="44" viewBox="0 0 44 44"><path d="M22 10 L26 18 L36 19 L29 26 L31 36 L22 31 L13 36 L15 26 L8 19 L18 18 Z" fill="none" stroke="#D4AF37" stroke-width="1.5"/><circle cx="22" cy="22" r="4" fill="#D4AF37"/></svg>
+      </div>
+      <div class="icon-label">Folk star<br>community</div>
+    </div>
+  </div>
+
+  <div class="type-showcase">
+    <div class="type-card">
+      <div class="type-label">Option A — Serif Gold Split (Recommended)</div>
+      <div class="type-specimen-large" style="font-family:'Playfair Display',serif;font-style:italic;font-size:36px;color:#D4AF37">Table<span style="opacity:.35">folk</span></div>
+      <div class="type-specimen-tag">Playfair Display · The gold-to-cream weight drop makes "Table" dominant and "folk" warm. Reads like a magazine masthead. Long-term durable.</div>
+    </div>
+    <div class="type-card">
+      <div class="type-label">Option B — Folk-inspired hand-feel</div>
+      <div class="type-specimen-large" style="font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:#D4AF37;letter-spacing:-0.5px">tablefolk</div>
+      <div class="type-specimen-tag">DM Serif Display lowercase · The lowercase conveys warmth and approachability. Feels editorial but not corporate. Strong in headers and hero text.</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:12px">5 Taglines</div>
+  <div class="taglines-list">
+    <div class="tagline-item"><div class="tagline-num">1</div><div><div class="tagline-text">Find your tablefolk.</div><div class="tagline-context">Brand line — three words, everything said</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">2</div><div><div class="tagline-text">Your tablefolk are out there. Go eat with them.</div><div class="tagline-context">Discovery + action — works in ads and onboarding</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">3</div><div><div class="tagline-text">Good folk. Good table. That's all you need.</div><div class="tagline-context">Simplicity — the anti-Yelp, anti-algorithm brand position</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">4</div><div><div class="tagline-text">The place where tablefolk gather, host, and remember.</div><div class="tagline-context">Platform description — all three app pillars in one</div></div></div>
+    <div class="tagline-item"><div class="tagline-num">5</div><div><div class="tagline-text">Some folk eat to live. Tablefolk live to eat — and to gather.</div><div class="tagline-context">Identity — speaks directly to the foodie culture audience</div></div></div>
+  </div>
+  <div class="palette-row" style="margin-top:20px">
+    <div><div class="swatch" style="background:#D4AF37"></div><div class="swatch-label">Gold</div></div>
+    <div><div class="swatch" style="background:#1A1200"></div><div class="swatch-label">Dark</div></div>
+    <div><div class="swatch" style="background:#FDF0C0"></div><div class="swatch-label">Cream</div></div>
+    <div><div class="swatch" style="background:#87BBA2"></div><div class="swatch-label">Sage acc.</div></div>
+    <div><div class="swatch" style="background:#E94560"></div><div class="swatch-label">Coral acc.</div></div>
+  </div>
+</div>
+
+<!-- FINAL NOTE -->
+<div class="section" style="border-top:2px solid var(--gold-dim)">
+  <div class="section-eyebrow">Strategic Recommendation</div>
+  <h2>The final decision framework</h2>
+  <div class="section-sub">Three questions to narrow from 8 to 1</div>
+  <div class="direction-grid">
+    <div class="direction-card" style="border-color:#D4AF37;background:#1A1200">
+      <div class="direction-title" style="color:#D4AF37">If SEO and brand clarity win →</div>
+      <div class="direction-body" style="color:#888"><strong style="color:#F0EDE8">Dinemate</strong> or <strong style="color:#F0EDE8">Tablefolk</strong>. Both are invented compounds with zero SERP competition, strong verbal identity, and timeless logo potential. Either will rank #1 for their own name from day one.</div>
+    </div>
+    <div class="direction-card" style="border-color:#E94560;background:#180008">
+      <div class="direction-title" style="color:#E94560">If the verb and the product action win →</div>
+      <div class="direction-body" style="color:#888"><strong style="color:#F0EDE8">Dinevite</strong>. The name IS the primary user action. "I'll dinevite you" is a sentence that writes the product brief, the onboarding, and the push notification in three words.</div>
+    </div>
+    <div class="direction-card" style="border-color:#9B8EE8;background:#0E0820">
+      <div class="direction-title" style="color:#9B8EE8">If personality and virality win →</div>
+      <div class="direction-body" style="color:#888"><strong style="color:#F0EDE8">Disco Dine</strong> or <strong style="color:#F0EDE8">Fork Friends</strong>. Highest social shareability of any finalist. The brand writes itself. The risk is trend-dating — offset by building the visual identity around timeless geometry, not disco references.</div>
+    </div>
+  </div>
+  <div style="margin-top:24px;padding:18px;background:var(--surface2);border-radius:10px;border:1px solid var(--gold-dim)">
+    <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:6px">One final thought</div>
+    <div style="font-size:13px;color:var(--ink2);line-height:1.8">The strongest brand in this list is the one you can say out loud, use as a verb, wear on a t-shirt, and put on a wax seal simultaneously. By that test — <strong style="color:var(--ink)">Dinemate</strong> and <strong style="color:var(--ink)">Tablefolk</strong> are the most durable. <strong style="color:var(--ink)">Dinevite</strong> is the most functional. <strong style="color:var(--ink)">Disco Dine</strong> is the most memorable. None of these is wrong. The right choice is the one that sounds like you.</div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
