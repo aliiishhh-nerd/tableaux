@@ -253,8 +253,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
 
-              )}
-
               {/* Address */}
               {event.addr && (
                 <div style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--page)', borderRadius: 10, border: '1px solid var(--border)' }}>
