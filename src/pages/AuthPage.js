@@ -1,23 +1,48 @@
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp';
 import { useNavigate } from 'react-router-dom';
+import { signUp as supabaseSignUp } from '../lib/supabase';
 
 export default function AuthPage() {
   const { login } = useApp();
   const navigate = useNavigate();
   const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
+
     try {
-      await login(email, password);
-      navigate('/feed');
+      if (mode === 'signup') {
+        // Create new account
+        await supabaseSignUp(email, password, name);
+        // Log them in immediately after signup
+        await login(email, password);
+        navigate('/feed');
+      } else {
+        // Regular login
+        await login(email, password);
+        navigate('/feed');
+      }
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      // Handle specific error messages
+      if (err.message?.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link to continue.');
+      } else if (err.message?.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.message?.includes('User already registered')) {
+        setError('An account with this email already exists. Try signing in instead.');
+      } else {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,11 +60,22 @@ export default function AuthPage() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
+          {mode === 'signup' && (
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 12, fontSize: 14, fontFamily: 'inherit' }}
+            />
+          )}
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
             style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 12, fontSize: 14, fontFamily: 'inherit' }}
           />
           <input
@@ -47,6 +83,8 @@ export default function AuthPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
             style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 16, fontSize: 14, fontFamily: 'inherit' }}
           />
           
@@ -58,9 +96,22 @@ export default function AuthPage() {
 
           <button
             type="submit"
-            style={{ width: '100%', padding: '12px 16px', background: 'var(--indigo)', color: 'white', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            disabled={loading}
+            style={{ 
+              width: '100%', 
+              padding: '12px 16px', 
+              background: loading ? 'var(--ink3)' : 'var(--indigo)', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: 8, 
+              fontSize: 14, 
+              fontWeight: 600, 
+              cursor: loading ? 'not-allowed' : 'pointer', 
+              fontFamily: 'inherit',
+              opacity: loading ? 0.6 : 1
+            }}
           >
-            {mode === 'login' ? 'Sign in' : 'Sign up'}
+            {loading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign in' : 'Sign up')}
           </button>
         </form>
 
@@ -69,7 +120,7 @@ export default function AuthPage() {
             <>
               Don't have an account?{' '}
               <button
-                onClick={() => { setMode('signup'); setError(''); }}
+                onClick={() => { setMode('signup'); setError(''); setName(''); }}
                 style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
               >
                 Sign up
@@ -79,22 +130,20 @@ export default function AuthPage() {
             <>
               Already have an account?{' '}
               <button
-                onClick={() => { setMode('login'); setError(''); }}
+                onClick={() => { setMode('login'); setError(''); setName(''); }}
                 style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
               >
-                Log in
+                Sign in
               </button>
             </>
           )}
         </div>
 
-        {/* Footer Links */}
-        <div style={{ marginTop: 24, display: 'flex', gap: 20, justifyContent: 'center', fontSize: 13 }}>
-          <a href="/blog" style={{ color: 'var(--ink2)', textDecoration: 'none' }}>Blog</a>
-          <a href="/faq" style={{ color: 'var(--ink2)', textDecoration: 'none' }}>Help & FAQ</a>
-          <a href="/about" style={{ color: 'var(--ink2)', textDecoration: 'none' }}>About</a>
-        </div>
-
+        {mode === 'login' && (
+          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--ink3)', marginTop: 16, padding: '8px 12px', background: 'var(--canvas)', borderRadius: 6 }}>
+            Demo: ada@tableaux.com / TableauxDemo1!
+          </div>
+        )}
       </div>
     </div>
   );
