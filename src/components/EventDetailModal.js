@@ -69,7 +69,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const [dietaryNote, setDietaryNote] = useState('');
   const [taggingPhoto, setTaggingPhoto] = useState(null);
   const [tagInput, setTagInput] = useState('');
-  const [showingInvites] = useState(false);
   const fileRef = useRef();
 
   if (!event) return null;
