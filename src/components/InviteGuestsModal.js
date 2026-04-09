@@ -9,13 +9,13 @@ export default function InviteGuestsModal({ event, onClose }) {
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Get friends who aren't already guests or invited - safety check for friends
+  // Get friends who aren't already guests or invited - safety check for friends AND required properties
   const availableFriends = (friends || [])
-    .filter(f => f.status === 'accepted')
+    .filter(f => f && f.name && f.status === 'accepted')
     .filter(f => !event.guests?.find(g => g.id === f.userId))
     .filter(f => !event.invites?.find(i => i.recipientId === f.userId));
 
-  // Filter by search
+  // Filter by search - now safe because we know f.name exists
   const filteredFriends = searchQuery
     ? availableFriends.filter(f => 
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,7 +126,7 @@ export default function InviteGuestsModal({ event, onClose }) {
                     <div className={`av av-sm av-${friend.color || 'indigo'}`}>{friend.initials}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 500, fontSize: 14 }}>{friend.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--ink3)' }}>{friend.handle || '@' + friend.name.toLowerCase().replace(/\s/g, '')}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink3)' }}>{friend.handle || '@' + (friend.name || 'user').toLowerCase().replace(/\s/g, '')}</div>
                     </div>
                     <span style={{ fontSize: 11, color: 'var(--teal)', fontWeight: 500 }}>✓ On Tableaux</span>
                   </label>
