@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FriendButton } from '../pages/ProfilePage';
-import InviteGuestsModal from './InviteGuestsModal';
 
 // Helper functions for dynamic language based on event type & time
 function getTimeOfDay(eventTime) {
@@ -462,7 +461,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
       </div>
 
       {/* Invite Guests Modal */}
-      {showingInvites && <InviteGuestsModal event={event} onClose={() => setShowingInvites(false)} />}
 
       {/* Lightbox with tagging */}
       {lightbox && (
