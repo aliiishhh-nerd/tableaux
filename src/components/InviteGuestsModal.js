@@ -66,7 +66,13 @@ export default function InviteGuestsModal({ event, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+      <div className="modal-card" style={{ 
+        maxWidth: 500,
+        background: 'var(--white, #ffffff)',
+        borderRadius: 'var(--r-lg, 20px)',
+        boxShadow: 'var(--shadow-lg, 0 8px 40px rgba(0,0,0,0.13))',
+        overflow: 'hidden'
+      }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Invite Guests</h2>
           <button className="modal-close" onClick={onClose}>×</button>
