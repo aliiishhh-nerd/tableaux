@@ -9,8 +9,8 @@ export default function InviteGuestsModal({ event, onClose }) {
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Get friends who aren't already guests or invited
-  const availableFriends = friends
+  // Get friends who aren't already guests or invited - safety check for friends
+  const availableFriends = (friends || [])
     .filter(f => f.status === 'accepted')
     .filter(f => !event.guests?.find(g => g.id === f.userId))
     .filter(f => !event.invites?.find(i => i.recipientId === f.userId));
