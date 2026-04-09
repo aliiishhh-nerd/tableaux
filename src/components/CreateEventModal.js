@@ -8,7 +8,7 @@ const STEPS = {
 };
 
 export default function CreateEventModal({ onClose }) {
-  const { friends, createEvent, addToast } = useApp();
+  const { user, friends, createEvent, addToast } = useApp();
   const [currentStep, setCurrentStep] = useState(STEPS.DETAILS);
   
   // Step 1: Event Details
@@ -16,12 +16,12 @@ export default function CreateEventModal({ onClose }) {
   const [selectedGradient, setSelectedGradient] = useState('midnight');
   const [title, setTitle] = useState('');
   const [eventType, setEventType] = useState('dinnerParty');
-  const [visibility] = useState('inviteOnly');
+  const [visibility, setVisibility] = useState('inviteOnly');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('19:00');
   const [location, setLocation] = useState('');
-  const [maxGuests] = useState(10);
-  const [description] = useState('');
+  const [maxGuests, setMaxGuests] = useState(10);
+  const [description, setDescription] = useState('');
   
   // Step 2: Invites
   const [selectedFriends, setSelectedFriends] = useState([]);
