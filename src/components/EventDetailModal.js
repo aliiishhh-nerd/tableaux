@@ -452,7 +452,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Close</button>
           <div style={{ display: 'flex', gap: 8 }}>
-            {isHost && <button className="btn btn-ghost" onClick={() => setShowingInvites(true)}>📨 Invite</button>}
             {isHost && onEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>}
           </div>
         </div>
