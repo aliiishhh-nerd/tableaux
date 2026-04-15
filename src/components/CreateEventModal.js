@@ -14,16 +14,31 @@ export default function CreateEventModal({ onClose }) {
   // Step 1: Event Details
   const [coverType, setCoverType] = useState('gradient');
   const [selectedGradient, setSelectedGradient] = useState('midnight');
+  const [selectedEmoji, setSelectedEmoji] = useState('🍷');
+  const [photoFile, setPhotoFile] = useState(null);
   const [title, setTitle] = useState('');
   const [eventType, setEventType] = useState('dinnerParty');
-  const [visibility] = useState('inviteOnly');
+  const [visibility, setVisibility] = useState('inviteOnly');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('19:00');
+  const [isTBD, setIsTBD] = useState(false);
   const [location, setLocation] = useState('');
-  const [maxGuests] = useState(10);
-  const [description] = useState('');
-  
+  const [maxGuests, setMaxGuests] = useState(10);
+  const [description, setDescription] = useState('');
+  const [menu, setMenu] = useState('');
+  const [dietaryNotes, setDietaryNotes] = useState('');
+  const [bringAnything, setBringAnything] = useState('');
+
   // Step 2: Invites
+  const [personalMessage, setPersonalMessage] = useState('');
+  const [potluckItems, setPotluckItems] = useState([]);
+  const [seriesName, setSeriesName] = useState('');
+  const [seriesVolume, setSeriesVolume] = useState(1);
+  const [tastingItems, setTastingItems] = useState([]);
+  const [useDatePoll, setUseDatePoll] = useState(false);
+  const [pollDates, setPollDates] = useState(['', '']);
+  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [playlistPlatform, setPlaylistPlatform] = useState('spotify');
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [emailInvites, setEmailInvites] = useState([]);
   const [newEmail, setNewEmail] = useState('');
@@ -109,7 +124,10 @@ export default function CreateEventModal({ onClose }) {
       maxGuests,
       description,
       coverType,
-      selectedGradient,
+      selectedGradient: coverType === 'gradient' ? selectedGradient : null,
+      selectedEmoji: coverType === 'emoji' ? selectedEmoji : null,
+      photoFile: coverType === 'photo' ? photoFile : null,
+      personalMessage,
       invites: [
         ...selectedFriends.map(userId => {
           const friend = friends.find(f => f.userId === userId);
@@ -134,6 +152,15 @@ export default function CreateEventModal({ onClose }) {
     { id: 'sky', colors: ['#56cfe1', '#90e0ef'] },
     { id: 'grape', colors: ['#7209b7', '#9d4edd'] }
   ];
+
+  const POTLUCK_FOOD     = ['Main dish','Side dish','Salad','Dessert','Bread','Cheese board','Charcuterie','Fruit platter'];
+  const POTLUCK_CUTLERY  = ['Plates','Napkins','Glasses','Utensils','Serving spoons','Ice & cooler'];
+  const POTLUCK_OTHER    = ['Flowers','Candles','Music speaker','Extra chairs'];
+  const TASTING_OPTIONS  = ['Wine','Champagne','Cognac','Whiskey','Cocktails','Mocktails','Beer & Cider','Sake','Tequila'];
+
+  function toggleItem(item, list, setList) {
+    setList(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -240,37 +267,29 @@ export default function CreateEventModal({ onClose }) {
             <div>
               {/* Cover Selection */}
               <div style={{ marginBottom: 20 }}>
-                <label style={{ 
-                  fontSize: 11, 
-                  fontWeight: 600, 
-                  color: 'var(--ink2, #6b7280)', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.5px',
-                  display: 'block',
-                  marginBottom: 10
-                }}>
-                  Cover
-                </label>
-                <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-                  {gradients.map(grad => (
-                    <button
-                      key={grad.id}
-                      onClick={() => {
-                        setCoverType('gradient');
-                        setSelectedGradient(grad.id);
-                      }}
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 12,
-                        border: selectedGradient === grad.id ? '3px solid var(--indigo, #6c5dd3)' : '2px solid var(--border, #e5e7eb)',
-                        background: `linear-gradient(135deg, ${grad.colors[0]}, ${grad.colors[1]})`,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s'
-                      }}
-                    />
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Cover</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  {[{id:'gradient',label:'🎨 Gradient'},{id:'emoji',label:'✨ Emoji'},{id:'photo',label:'📷 Photo'}].map(t => (
+                    <button key={t.id} onClick={() => setCoverType(t.id)} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: coverType === t.id ? 'var(--indigo-light, #f0eeff)' : 'transparent', border: coverType === t.id ? '2px solid var(--indigo, #6c5dd3)' : '1px solid var(--border, #e5e7eb)' }}>{t.label}</button>
                   ))}
                 </div>
+                {coverType === 'gradient' && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {gradients.map(grad => (
+                      <button key={grad.id} onClick={() => setSelectedGradient(grad.id)} style={{ width: 48, height: 48, borderRadius: 12, border: selectedGradient === grad.id ? '3px solid var(--indigo, #6c5dd3)' : '2px solid var(--border, #e5e7eb)', background: `linear-gradient(135deg, ${grad.colors[0]}, ${grad.colors[1]})`, cursor: 'pointer', transition: 'all 0.15s' }} />
+                    ))}
+                  </div>
+                )}
+                {coverType === 'emoji' && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {['🍷','🥂','🍽️','🥘','🍕','🍝','🥞','🎂','🍾','☕','🍜','🥗'].map(em => (
+                      <button key={em} onClick={() => setSelectedEmoji(em)} style={{ width: 48, height: 48, borderRadius: 12, fontSize: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page, #f8f7ff)', border: selectedEmoji === em ? '3px solid var(--indigo, #6c5dd3)' : '2px solid var(--border, #e5e7eb)' }}>{em}</button>
+                    ))}
+                  </div>
+                )}
+                {coverType === 'photo' && (
+                  <input type="file" accept="image/*" onChange={e => setPhotoFile(e.target.files[0])} style={{ width: '100%', padding: 12, border: '2px dashed var(--border, #e5e7eb)', borderRadius: 12, fontSize: 14, cursor: 'pointer' }} />
+                )}
               </div>
 
               {/* Title */}
@@ -345,89 +364,142 @@ export default function CreateEventModal({ onClose }) {
                 </div>
               </div>
 
-              {/* Date & Time */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                <div>
-                  <label style={{ 
-                    fontSize: 11, 
-                    fontWeight: 600, 
-                    color: 'var(--ink2, #6b7280)', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.5px',
-                    display: 'block',
-                    marginBottom: 10
-                  }}>
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: '1px solid var(--border, #e5e7eb)',
-                      borderRadius: 12,
-                      fontSize: 16,
-                      fontFamily: 'inherit'
-                    }}
-                  />
+              {/* Potluck section */}
+              {eventType === 'potluck' && (
+                <div style={{ background: 'var(--page, #f8f7ff)', border: '1px solid var(--indigo-light, #e0d9ff)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo, #6c5dd3)', marginBottom: 12 }}>🥘 What should guests bring?</div>
+                  {[['Food & dishes', POTLUCK_FOOD], ['Cutlery & supplies', POTLUCK_CUTLERY], ['Other', POTLUCK_OTHER]].map(([cat, items]) => (
+                    <div key={cat} style={{ marginBottom: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink3, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>{cat}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {items.map(item => (
+                          <button key={item} onClick={() => toggleItem(item, potluckItems, setPotluckItems)} style={{ padding: '5px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer', border: potluckItems.includes(item) ? '1.5px solid var(--indigo, #6c5dd3)' : '1px solid var(--border, #e5e7eb)', background: potluckItems.includes(item) ? 'var(--indigo-light, #f0eeff)' : 'transparent', color: potluckItems.includes(item) ? 'var(--indigo, #6c5dd3)' : 'inherit', minHeight: 36 }}>{item}</button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label style={{ 
-                    fontSize: 11, 
-                    fontWeight: 600, 
-                    color: 'var(--ink2, #6b7280)', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.5px',
-                    display: 'block',
-                    marginBottom: 10
-                  }}>
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    value={time}
-                    onChange={e => setTime(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      border: '1px solid var(--border, #e5e7eb)',
-                      borderRadius: 12,
-                      fontSize: 16,
-                      fontFamily: 'inherit'
-                    }}
-                  />
-                </div>
-              </div>
+              )}
 
+              {/* Supper Club series section */}
+              {eventType === 'supperClub' && (
+                <div style={{ background: 'var(--page, #f8f7ff)', border: '1px solid var(--indigo-light, #e0d9ff)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo, #6c5dd3)', marginBottom: 12 }}>🕯️ Supper Club Series</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 8 }}>Series Name</label>
+                      <input type="text" value={seriesName} onChange={e => setSeriesName(e.target.value)} placeholder="e.g. The Long Table" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', background: 'white', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 8 }}>Volume #</label>
+                      <input type="number" value={seriesVolume} onChange={e => setSeriesVolume(parseInt(e.target.value) || 1)} min="1" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', background: 'white', boxSizing: 'border-box' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tasting section */}
+              {eventType === 'tasting' && (
+                <div style={{ background: 'var(--page, #f8f7ff)', border: '1px solid var(--indigo-light, #e0d9ff)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo, #6c5dd3)', marginBottom: 12 }}>🍾 What are we tasting?</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {TASTING_OPTIONS.map(item => (
+                      <button key={item} onClick={() => toggleItem(item, tastingItems, setTastingItems)} style={{ padding: '5px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer', border: tastingItems.includes(item) ? '1.5px solid var(--indigo, #6c5dd3)' : '1px solid var(--border, #e5e7eb)', background: tastingItems.includes(item) ? 'var(--indigo-light, #f0eeff)' : 'transparent', color: tastingItems.includes(item) ? 'var(--indigo, #6c5dd3)' : 'inherit', minHeight: 36 }}>{item}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Date & Time */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Date & Time</label>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+                    <input type="radio" name="dateMode" checked={!isTBD && !useDatePoll} onChange={() => { setIsTBD(false); setUseDatePoll(false); }} style={{ width: 16, height: 16 }} />
+                    Set a date
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+                    <input type="radio" name="dateMode" checked={isTBD} onChange={() => { setIsTBD(true); setUseDatePoll(false); }} style={{ width: 16, height: 16 }} />
+                    Date TBD
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+                    <input type="radio" name="dateMode" checked={useDatePoll} onChange={() => { setIsTBD(false); setUseDatePoll(true); }} style={{ width: 16, height: 16 }} />
+                    Let guests vote
+                  </label>
+                </div>
+                {!isTBD && !useDatePoll && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    <input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                  </div>
+                )}
+                {useDatePoll && (
+                  <div>
+                    <div style={{ fontSize: 12, color: 'var(--ink2, #6b7280)', marginBottom: 8 }}>Add date options for guests to vote on:</div>
+                    {pollDates.map((d, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                        <input type="date" value={d} onChange={e => { const next = [...pollDates]; next[i] = e.target.value; setPollDates(next); }} style={{ flex: 1, padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit' }} />
+                        {pollDates.length > 2 && <button onClick={() => setPollDates(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink3, #9ca3af)', minWidth: 32, minHeight: 32 }}>×</button>}
+                      </div>
+                    ))}
+                    <button onClick={() => setPollDates(prev => [...prev, ''])} style={{ background: 'transparent', border: '1px dashed var(--border, #e5e7eb)', borderRadius: 10, padding: '8px 16px', fontSize: 13, cursor: 'pointer', color: 'var(--indigo, #6c5dd3)', width: '100%', minHeight: 40 }}>+ Add another date option</button>
+                  </div>
+                )}
+              </div>
               {/* Location */}
               <div style={{ marginBottom: 20 }}>
-                <label style={{ 
-                  fontSize: 11, 
-                  fontWeight: 600, 
-                  color: 'var(--ink2, #6b7280)', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '0.5px',
-                  display: 'block',
-                  marginBottom: 10
-                }}>
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={e => setLocation(e.target.value)}
-                  placeholder="Venue or neighborhood"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid var(--border, #e5e7eb)',
-                    borderRadius: 12,
-                    fontSize: 16,
-                    fontFamily: 'inherit'
-                  }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Location</label>
+                <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="Venue or neighborhood" style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit' }} />
+              </div>
+
+              {/* Visibility */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Visibility</label>
+                <select value={visibility} onChange={e => setVisibility(e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', cursor: 'pointer' }}>
+                  <option value="inviteOnly">🔒 Invite Only</option>
+                  <option value="public">🌍 Public</option>
+                </select>
+              </div>
+
+              {/* Max Guests */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Max Guests</label>
+                <input type="number" value={maxGuests} onChange={e => setMaxGuests(parseInt(e.target.value) || 10)} min="1" style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit' }} />
+              </div>
+
+              {/* Description */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Description (Optional)</label>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell guests what to expect..." rows={3} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', resize: 'vertical' }} />
+              </div>
+
+              {/* Menu */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Menu (Optional)</label>
+                <textarea value={menu} onChange={e => setMenu(e.target.value)} placeholder="What's on the menu?" rows={3} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', resize: 'vertical' }} />
+              </div>
+
+              {/* Dietary Notes */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Dietary Accommodations (Optional)</label>
+                <input type="text" value={dietaryNotes} onChange={e => setDietaryNotes(e.target.value)} placeholder="e.g. Vegetarian options available" style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit' }} />
+              </div>
+
+              {/* Bring Anything */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Should Guests Bring Anything? (Optional)</label>
+                <input type="text" value={bringAnything} onChange={e => setBringAnything(e.target.value)} placeholder="e.g. Bring a bottle of wine" style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit' }} />
+              </div>
+
+              {/* Playlist */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Playlist (Optional)</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                  {[{id:'spotify',label:'Spotify'},{id:'apple',label:'Apple Music'},{id:'youtube',label:'YouTube'}].map(p => (
+                    <button key={p.id} onClick={() => setPlaylistPlatform(p.id)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: playlistPlatform === p.id ? '1.5px solid var(--indigo, #6c5dd3)' : '1px solid var(--border, #e5e7eb)', background: playlistPlatform === p.id ? 'var(--indigo-light, #f0eeff)' : 'transparent', color: playlistPlatform === p.id ? 'var(--indigo, #6c5dd3)' : 'inherit', minHeight: 36 }}>{p.label}</button>
+                  ))}
+                </div>
+                <input type="url" value={playlistUrl} onChange={e => setPlaylistUrl(e.target.value)} placeholder="Paste playlist link..." style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit' }} />
               </div>
             </div>
           )}
@@ -435,6 +507,12 @@ export default function CreateEventModal({ onClose }) {
           {/* STEP 2: INVITES */}
           {currentStep === STEPS.INVITES && (
             <div>
+              {/* Personal Message */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Personal Message (Optional)</label>
+                <textarea value={personalMessage} onChange={e => setPersonalMessage(e.target.value)} placeholder="Looking forward to seeing you! 🍷" rows={3} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', resize: 'vertical' }} />
+              </div>
+
               {/* Friends List */}
               {availableFriends.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
