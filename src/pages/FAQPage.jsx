@@ -36,11 +36,35 @@ const FAQ_DATA = [
     questions: [
       {
         q: 'How do I host my first event?',
-        a: 'Tap the "Host a dinner" button from the feed or your home screen. You\'ll be guided through setting your event type, date, location, capacity, dress code, and guest visibility. You can create a one-time event or start a recurring Supper Club Series.'
+        a: 'Tap the "+ New Event" button from the feed or your home screen. You\'ll go through three steps: (1) Event Details — set your event type, cover, date, location, capacity, dress code, menu, and playlist, (2) Invite — select friends or add guests by email with a personal message, (3) Publish — review and confirm. For Potlucks, Supper Clubs, and Tastings, additional fields appear for that format.'
       },
       {
         q: 'What is a Supper Club Series?',
         a: "A Supper Club Series lets you run recurring dinner events under the same banner (e.g., \"Terroir Vol. I, II, III...\"). Each event in the series requires individual RSVPs — guests don't auto-enroll across volumes. After each event, you can choose to re-invite select past attendees to future editions."
+      },
+      {
+        q: 'What event types can I create?',
+        a: 'Six types with tailored features: Dinner Party (hosted meal), Potluck (guests claim items to bring), Supper Club (multi-course menu with host note and wine pairings), Tasting (wine, whiskey, cognac, cocktails, and more), Restaurant (group dining out), and Other.'
+      },
+      {
+        q: 'How does the Potluck item list work?',
+        a: 'When creating a Potluck, build a list of items guests can claim — organized into Food, Drinks, and Other. Select from presets or add custom items. Guests see unclaimed items when they RSVP and can claim what they will bring.'
+      },
+      {
+        q: 'How does the Supper Club course builder work?',
+        a: 'When creating a Supper Club, build a course-by-course menu. Each course has a dish name, description, and optional wine pairing. Mark one as the signature dish and write a Host Note shown to guests above the menu.'
+      },
+      {
+        q: 'Can I let guests vote on the date?',
+        a: 'Yes — select "Let guests vote" under Date & Time when creating any event. Add two or more date and time options. Guests can vote on their preferred time after receiving their invitation.'
+      },
+      {
+        q: 'Can I add a playlist to my event?',
+        a: 'Yes — add a Spotify, Apple Music, or YouTube playlist link when creating your event. Guests will see a Listen button in the event detail view.'
+      },
+      {
+        q: 'Can I add the event to my calendar?',
+        a: 'Yes — open any event and tap "Add to Calendar" in the footer. This downloads an ICS file compatible with Apple Calendar, Google Calendar, Outlook, and any other calendar app.'
       },
       {
         q: 'How does the dress code work?',
