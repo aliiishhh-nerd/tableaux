@@ -1182,11 +1182,183 @@ export const GRADIENT_COVERS = [
   { label: 'Rose',     value: 'linear-gradient(135deg, #E91E8C, #FF6B6B)' },
   { label: 'Ocean',    value: 'linear-gradient(135deg, #0EA5E9, #2EC4B6)' },
   { label: 'Plum',     value: 'linear-gradient(135deg, #4A0E8F, #9B59B6)' },
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // DEMO SEEDS — Potluck, Supper Club, Tasting
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  {
+    id: 'evt-demo-pot-1', title: 'Spring Harvest Potluck', type: 'Potluck',
+    date: daysFromNow(18), time: '17:00', isEnded: false,
+    loc: 'Wicker Park, Chicago', addr: '1520 N Damen Ave, Chicago, IL 60622',
+    cap: 14, vis: 'Friends Only', dressCode: 'Casual',
+    desc: 'A seasonal spread celebrating spring produce. Bring a dish to share.',
+    host: 'Ada Chen', hostId: 'u1', mine: true,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #2EC4B6, #87BBA2)' },
+    invH: 'Come Share a Dish', invBg: '#2EC4B6',
+    guests: [
+      { id: 'u2', n: 'Sophie Martin', s: 'approved', initials: 'SM', color: 'coral' },
+      { id: 'u3', n: 'Raj Kumar',     s: 'approved', initials: 'RK', color: 'amber' },
+      { id: 'u4', n: 'Lena Park',     s: 'approved', initials: 'LP', color: 'teal' },
+    ],
+    potluck: { items: [
+      { id: 'pi1', name: 'Strawberry Rhubarb Tart', emoji: '🍰', cat: 'food', claimedBy: 'u2', claimerName: 'Sophie Martin' },
+      { id: 'pi2', name: 'Roasted Asparagus', emoji: '🥦', cat: 'food' },
+      { id: 'pi3', name: 'Natural Rose (2 bottles)', emoji: '🥂', cat: 'drinks' },
+      { id: 'pi4', name: 'Serving Utensils', emoji: '🍴', cat: 'other' },
+    ]},
+    playlist: { url: 'https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO', platform: 'spotify' },
+    galleryEnabled: true, photoGalleryEnabled: true,
+    photoGallery: [
+      { id: 'dp1ph1', url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80', tags: ['Salad', 'Food'], uploadedBy: 'u2', uploaderName: 'Sophie Martin' },
+    ],
+    eventComments: [
+      { id: 'dp1c1', userId: 'u2', userName: 'Sophie Martin', initials: 'SM', color: 'coral', text: 'That strawberry rhubarb tart was the best thing I have eaten this spring. The table was overflowing with color and love.', createdAt: new Date().toISOString(), passportStamped: true },
+    ],
+    pinnedQuotes: ['dp1c1'], supperClub: null,
+  },
+
+  {
+    id: 'evt-demo-pot-2', title: 'Neighborhood Block Potluck', type: 'Potluck',
+    date: daysFromNow(28), time: '16:00', isEnded: false,
+    loc: 'Logan Square, Chicago', addr: '3100 W Logan Blvd, Chicago, IL 60647',
+    cap: 20, vis: 'Public', dressCode: 'Casual',
+    desc: 'Open to all neighbors. Bring a dish from your heritage or your heart.',
+    host: 'Marcus Webb', hostId: 'u5', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #FF6B6B, #FFB347)' },
+    invH: 'All Are Welcome', invBg: '#FF6B6B',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',      s: 'approved', initials: 'AC', color: 'indigo' },
+      { id: 'u2', n: 'Sophie Martin', s: 'approved', initials: 'SM', color: 'coral' },
+    ],
+    potluck: { items: [
+      { id: 'pi5', name: 'Jerk Chicken', emoji: '🍗', cat: 'food' },
+      { id: 'pi6', name: 'Macaroni Salad', emoji: '🥗', cat: 'food' },
+      { id: 'pi7', name: 'Lemonade Pitcher', emoji: '🍋', cat: 'drinks' },
+      { id: 'pi8', name: 'Paper Plates', emoji: '🍽️', cat: 'other' },
+    ]},
+    datePoll: [{ date: daysFromNow(28), time: '16:00' }, { date: daysFromNow(29), time: '15:00' }],
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], supperClub: null,
+  },
+
+  {
+    id: 'evt-demo-sc-1', title: 'Coastal Japan Vol. I: Seafood Omakase', type: 'Supper Club',
+    seriesName: 'Coastal Japan', seriesVolume: 1,
+    date: daysFromNow(22), time: '19:30', isEnded: false,
+    loc: 'River North, Chicago', addr: '540 N Michigan Ave, Chicago, IL 60611',
+    cap: 8, vis: 'Invite Only', dressCode: 'Smart Casual',
+    desc: 'A five-course Japanese coastal journey. Sashimi, dashi broths, aged sake.',
+    host: 'Yuki Sato', hostId: 'u8', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #0EA5E9, #2EC4B6)' },
+    invH: 'Coastal Japan Vol. I', invBg: '#0EA5E9',
+    guests: [
+      { id: 'u1', n: 'Ada Chen', s: 'approved', initials: 'AC', color: 'indigo' },
+      { id: 'u3', n: 'Raj Kumar', s: 'approved', initials: 'RK', color: 'amber' },
+    ],
+    supperClub: {
+      hostNote: "I grew up eating at my grandmother's table in Hokkaido. This menu is a love letter to the sea — every course uses sustainable seafood and traditional Japanese techniques I learned from her.",
+      courses: [
+        { num: 1, name: 'Oysters & Yuzu Mignonette', desc: 'Kumamoto oysters with house-made yuzu mignonette.', wine: 'Junmai Daiginjo Sake' },
+        { num: 2, name: 'Sashimi Moriawase', desc: 'Chef selection of seasonal fish, aged 24-48 hours.', wine: 'Hakutsuru Nigori Sake' },
+        { num: 3, name: 'Dashi Chawanmushi', desc: 'Silken egg custard steamed in kombu dashi with crab.', wine: 'Dry Riesling 2021' },
+        { num: 4, name: 'Grilled Miso Black Cod', desc: 'Black cod marinated 3 days in white miso.', wine: 'Burgundy Chardonnay 2020', highlight: true },
+        { num: 5, name: 'Matcha Mochi Ice Cream', desc: 'House-made matcha mochi with black sesame.', wine: 'Sparkling Umeshu' },
+      ],
+    },
+    playlist: { url: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6', platform: 'spotify' },
+    galleryEnabled: true, photoGalleryEnabled: true,
+    photoGallery: [
+      { id: 'dsc1ph1', url: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80', tags: ['Sashimi', 'Course 2'], uploadedBy: 'u1', uploaderName: 'Ada Chen' },
+      { id: 'dsc1ph2', url: 'https://images.unsplash.com/photo-1617196034234-d71b9e31f292?w=600&q=80', tags: ['Sake', 'Drinks'], uploadedBy: 'u3', uploaderName: 'Raj Kumar' },
+    ],
+    eventComments: [
+      { id: 'dsc1c1', userId: 'u1', userName: 'Ada Chen', initials: 'AC', color: 'indigo', text: 'The miso black cod was transcendent. Yuki has been marinating it for three days and every hour showed in the flavor.', createdAt: new Date().toISOString(), passportStamped: true },
+      { id: 'dsc1c2', userId: 'u3', userName: 'Raj Kumar', initials: 'RK', color: 'amber', text: 'That sake pairing with the oysters was genius. I have been to sake bars in Tokyo that could not match this selection.', createdAt: new Date().toISOString(), passportStamped: true },
+    ],
+    pinnedQuotes: ['dsc1c1'], potluck: null,
+  },
+
+  {
+    id: 'evt-demo-sc-2', title: 'La Table Provencale Vol. II', type: 'Supper Club',
+    seriesName: 'La Table Provencale', seriesVolume: 2,
+    date: daysFromNow(35), time: '19:00', isEnded: false,
+    loc: 'Lincoln Park, Chicago', addr: '2100 N Lincoln Park West, Chicago, IL 60614',
+    cap: 10, vis: 'Invite Only', dressCode: 'Cocktail Attire',
+    desc: 'The second volume of our Provencal series. Summer vegetables and Rhone wines.',
+    host: 'Sophie Martin', hostId: 'u2', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #D4AF37, #E8C84A)' },
+    invH: 'La Table Vol. II', invBg: '#D4AF37',
+    guests: [
+      { id: 'u1', n: 'Ada Chen', s: 'approved', initials: 'AC', color: 'indigo' },
+      { id: 'u4', n: 'Lena Park', s: 'pending', initials: 'LP', color: 'teal' },
+    ],
+    supperClub: {
+      hostNote: "Provence in summer is the most beautiful place on earth. This menu came from three weeks in the markets of Aix-en-Provence.",
+      courses: [
+        { num: 1, name: 'Tapenade & Crudites', desc: 'House olive tapenade, anchoiade, fresh garden vegetables.', wine: 'Bandol Rose 2022' },
+        { num: 2, name: 'Soupe au Pistou', desc: 'Provencal vegetable soup finished with fresh basil pistou.', wine: 'Cotes du Rhone Blanc 2021' },
+        { num: 3, name: 'Bouillabaisse', desc: 'Classic Marseille fish stew with rouille and grilled croutons.', wine: 'Chateauneuf-du-Pape Blanc 2020', highlight: true },
+        { num: 4, name: 'Lavender Creme Brulee', desc: 'Silky custard infused with Provencal lavender, torched to order.', wine: 'Muscat de Beaumes-de-Venise' },
+      ],
+    },
+    datePoll: [{ date: daysFromNow(35), time: '19:00' }, { date: daysFromNow(36), time: '18:30' }],
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null,
+  },
+
+  {
+    id: 'evt-demo-tasting-1', title: 'Natural Wine Deep Dive: Jura & Alsace', type: 'Tasting',
+    date: daysFromNow(14), time: '18:30', isEnded: false,
+    loc: 'West Loop, Chicago', addr: '800 W Fulton Market, Chicago, IL 60607',
+    cap: 12, vis: 'Public', dressCode: 'Smart Casual',
+    desc: 'Six natural wines from Jura and Alsace with guided tasting notes. Cheese and charcuterie provided.',
+    host: 'Raj Kumar', hostId: 'u3', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #4A0E8F, #9B59B6)' },
+    invH: 'Natural Wine Night', invBg: '#4A0E8F',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',      s: 'approved', initials: 'AC', color: 'indigo' },
+      { id: 'u2', n: 'Sophie Martin', s: 'approved', initials: 'SM', color: 'coral' },
+      { id: 'u5', n: 'Marcus Webb',   s: 'pending',  initials: 'MW', color: 'sage' },
+    ],
+    tasting: { items: ['Wine', 'Champagne'] },
+    playlist: { url: 'https://open.spotify.com/playlist/37i9dQZF1DXbITWG1ZJKYt', platform: 'spotify' },
+    galleryEnabled: true, photoGalleryEnabled: true,
+    photoGallery: [
+      { id: 'dt1ph1', url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&q=80', tags: ['Wine', 'Tasting'], uploadedBy: 'u1', uploaderName: 'Ada Chen' },
+    ],
+    eventComments: [
+      { id: 'dt1c1', userId: 'u1', userName: 'Ada Chen', initials: 'AC', color: 'indigo', text: 'The Savagnin from Jura was unlike anything I have had. Oxidative, complex, and completely unforgettable.', createdAt: new Date().toISOString(), passportStamped: true },
+      { id: 'dt1c2', userId: 'u2', userName: 'Sophie Martin', initials: 'SM', color: 'coral', text: 'Raj curated this perfectly. Every wine told a story. The Alsatian Riesling with aged Comte was the pairing of the year.', createdAt: new Date().toISOString(), passportStamped: true },
+    ],
+    pinnedQuotes: ['dt1c2'], potluck: null, supperClub: null,
+  },
+
+  {
+    id: 'evt-demo-tasting-2', title: 'Whiskey & Cognac Exploration', type: 'Tasting',
+    date: daysFromNow(25), time: '20:00', isEnded: false,
+    loc: 'Gold Coast, Chicago', addr: '1 E Wacker Dr, Chicago, IL 60601',
+    cap: 10, vis: 'Invite Only', dressCode: 'Business Casual',
+    desc: 'Side-by-side comparison of 4 whiskeys and 3 cognacs. Tasting cards and dark chocolate pairings.',
+    host: 'James Torres', hostId: 'u7', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #2d1b00, #c8860a)' },
+    invH: 'Whiskey & Cognac Night', invBg: '#2d1b00',
+    guests: [
+      { id: 'u1', n: 'Ada Chen', s: 'approved', initials: 'AC', color: 'indigo' },
+      { id: 'u3', n: 'Raj Kumar', s: 'approved', initials: 'RK', color: 'amber' },
+    ],
+    tasting: { items: ['Whiskey', 'Cognac'] },
+    datePoll: [{ date: daysFromNow(25), time: '20:00' }, { date: daysFromNow(26), time: '19:00' }],
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null, supperClub: null,
+  },
+
+
 ];
 
 export const EMOJI_PRESETS = ['🍽️','🥂','🎉','🍷','✨','🫕','🌿','🍜','🎊','🥘'];
 
 // Pre-populate with 8 accepted friendships for testing
+
 export const SEED_FRIENDSHIPS = [
   { userId: 'u2', status: 'accepted', acceptedAt: '2026-03-15T10:00:00Z' }, // Sophie M.
   { userId: 'u3', status: 'accepted', acceptedAt: '2026-03-16T14:30:00Z' }, // Raj K.

@@ -7,41 +7,49 @@ const STEPS = {
   REVIEW: 3
 };
 
-export default function CreateEventModal({ onClose }) {
-  const { friends, createEvent, addToast } = useApp();
+export default function CreateEventModal({ onClose, event: editEvent }) {
+  const { friends, createEvent, updateEvent, addToast } = useApp();
+  const isEditing = !!editEvent;
   const [currentStep, setCurrentStep] = useState(STEPS.DETAILS);
-  
-  // Step 1: Event Details
-  const [coverType, setCoverType] = useState('gradient');
+
+  function normalizeType(t) {
+    if (!t) return 'dinnerParty';
+    const map = { 'Dinner Party': 'dinnerParty', 'Potluck': 'potluck', 'Restaurant': 'restaurant', 'Supper Club': 'supperClub', 'Tasting': 'tasting', 'Other': 'other' };
+    return map[t] || t;
+  }
+
+  // Step 1: Event Details — pre-filled from editEvent if editing
+  const [coverType, setCoverType] = useState(editEvent?.cover?.type || 'gradient');
   const [selectedGradient, setSelectedGradient] = useState('midnight');
-  const [selectedEmoji, setSelectedEmoji] = useState('🍷');
+  const [selectedEmoji, setSelectedEmoji] = useState(editEvent?.cover?.emoji || '🍷');
   const [photoFile, setPhotoFile] = useState(null);
-  const [title, setTitle] = useState('');
-  const [eventType, setEventType] = useState('dinnerParty');
-  const [visibility, setVisibility] = useState('inviteOnly');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('19:00');
-  const [isTBD, setIsTBD] = useState(false);
-  const [location, setLocation] = useState('');
-  const [maxGuests, setMaxGuests] = useState(10);
-  const [description, setDescription] = useState('');
-  const [menu, setMenu] = useState('');
-  const [dietaryNotes, setDietaryNotes] = useState('');
-  const [bringAnything, setBringAnything] = useState('');
-  const [dressCode, setDressCode] = useState('No dress code');
+  const [photoPreview, setPhotoPreview] = useState(editEvent?.cover?.value || null);
+  const [title, setTitle] = useState(editEvent?.title || '');
+  const [eventType, setEventType] = useState(normalizeType(editEvent?.type));
+  const [visibility, setVisibility] = useState(editEvent?.vis || editEvent?.visibility || 'inviteOnly');
+  const [date, setDate] = useState(editEvent?.date || '');
+  const [time, setTime] = useState(editEvent?.time || '19:00');
+  const [isTBD, setIsTBD] = useState(editEvent?.isTBD || false);
+  const [location, setLocation] = useState(editEvent?.loc || editEvent?.location || '');
+  const [maxGuests, setMaxGuests] = useState(editEvent?.cap || editEvent?.maxGuests || 10);
+  const [description, setDescription] = useState(editEvent?.desc || editEvent?.description || '');
+  const [menu, setMenu] = useState(editEvent?.menu || '');
+  const [dietaryNotes, setDietaryNotes] = useState(editEvent?.dietaryNotes || '');
+  const [bringAnything, setBringAnything] = useState(editEvent?.bringAnything || '');
+  const [dressCode, setDressCode] = useState(editEvent?.dressCode || 'No dress code');
 
   // Step 2: Invites
   const [personalMessage, setPersonalMessage] = useState('');
-  const [potluckItems, setPotluckItems] = useState([]);
-  const [seriesName, setSeriesName] = useState('');
-  const [hostNote, setHostNote] = useState('');
-  const [courses, setCourses] = useState([{ num: 1, name: '', wine: '', desc: '', highlight: false }]);
-  const [seriesVolume, setSeriesVolume] = useState(1);
-  const [tastingItems, setTastingItems] = useState([]);
+  const [potluckItems, setPotluckItems] = useState(editEvent?.potluck?.items || []);
+  const [seriesName, setSeriesName] = useState(editEvent?.supperClub?.seriesName || editEvent?.seriesName || '');
+  const [hostNote, setHostNote] = useState(editEvent?.supperClub?.hostNote || '');
+  const [courses, setCourses] = useState(editEvent?.supperClub?.courses || [{ num: 1, name: '', wine: '', desc: '', highlight: false }]);
+  const [seriesVolume, setSeriesVolume] = useState(editEvent?.supperClub?.seriesVolume || editEvent?.seriesVolume || 1);
+  const [tastingItems, setTastingItems] = useState(editEvent?.tasting?.items || []);
   const [useDatePoll, setUseDatePoll] = useState(false);
   const [pollDates, setPollDates] = useState([{ date: '', time: '19:00' }, { date: '', time: '19:00' }]);
-  const [playlistUrl, setPlaylistUrl] = useState('');
-  const [playlistPlatform, setPlaylistPlatform] = useState('spotify');
+  const [playlistUrl, setPlaylistUrl] = useState(editEvent?.playlist?.url || '');
+  const [playlistPlatform, setPlaylistPlatform] = useState(editEvent?.playlist?.platform || 'spotify');
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [emailInvites, setEmailInvites] = useState([]);
   const [newEmail, setNewEmail] = useState('');
@@ -120,7 +128,7 @@ export default function CreateEventModal({ onClose }) {
       date: isTBD ? null : date,
       time: isTBD ? null : time,
       isTBD,
-      datePoll: useDatePoll ? pollDates.filter(d => d.trim()) : null,
+      datePoll: useDatePoll ? pollDates.filter(d => d.date?.trim()) : null,
       location,
       loc: location,
       dressCode,
@@ -149,8 +157,13 @@ export default function CreateEventModal({ onClose }) {
       ]
     };
 
-    createEvent(eventData);
-    addToast('Event created! 🎉', 'success');
+    if (isEditing) {
+      updateEvent(editEvent.id, eventData);
+      addToast('Event updated! ✓', 'success');
+    } else {
+      createEvent(eventData);
+      addToast('Event created! 🎉', 'success');
+    }
     onClose();
   }
 
@@ -285,7 +298,7 @@ export default function CreateEventModal({ onClose }) {
                     ? (() => { const g = gradients.find(g => g.id === selectedGradient); return g ? `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` : 'var(--indigo)'; })()
                     : coverType === 'emoji' ? '#1a1a2e' : 'var(--border, #e5e7eb)' }}>
                   {coverType === 'emoji' && <span style={{ fontSize: 48 }}>{selectedEmoji}</span>}
-                  {coverType === 'photo' && photoFile && <img src={URL.createObjectURL(photoFile)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }} />}
+                  {coverType === 'photo' && photoPreview && <img src={photoPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }} />}
                   {coverType === 'photo' && !photoFile && <span style={{ fontSize: 13, color: 'var(--ink3, #9ca3af)' }}>No photo selected</span>}
                   {title && <div style={{ position: 'absolute', bottom: 10, left: 14, fontSize: 15, fontWeight: 600, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none' }}>{title}</div>}
                 </div>
@@ -309,7 +322,14 @@ export default function CreateEventModal({ onClose }) {
                   </div>
                 )}
                 {coverType === 'photo' && (
-                  <input type="file" accept="image/*" onChange={e => setPhotoFile(e.target.files[0])} style={{ width: '100%', padding: 12, border: '2px dashed var(--border, #e5e7eb)', borderRadius: 12, fontSize: 14, cursor: 'pointer' }} />
+                  <input type="file" accept="image/*" onChange={e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    setPhotoFile(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => setPhotoPreview(reader.result);
+                    reader.readAsDataURL(file);
+                  }} style={{ width: '100%', padding: 12, border: '2px dashed var(--border, #e5e7eb)', borderRadius: 12, fontSize: 14, cursor: 'pointer' }} />
                 )}
               </div>
 
@@ -901,7 +921,7 @@ export default function CreateEventModal({ onClose }) {
                 flex: window.innerWidth < 640 ? 1 : 'none'
               }}
             >
-              🎉 Publish Event
+              {isEditing ? '✓ Save Changes' : '🎉 Publish Event'}
             </button>
           )}
         </div>
