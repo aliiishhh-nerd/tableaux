@@ -4,7 +4,7 @@ import { fmtDate, fmtTime, getEventMonthsAgo, getEventYear } from '../data/utils
 import EventDetailModal from '../components/EventDetailModal';
 import CreateEventModal from '../components/CreateEventModal';
 
-const EVENT_TYPES = ['All', 'Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting'];
+const EVENT_TYPES = ['All', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting'];
 
 export default function EventsPage() {
   const { events, deleteEvent, addToast } = useApp();
@@ -219,7 +219,7 @@ function EventRow({ event, onClick, onEdit, onDelete, past }) {
           <span>📅 {fmtDate(event.date)}</span>
           <span>🕖 {fmtTime(event.time)}</span>
           {event.loc && <span>📍 {event.loc}</span>}
-          <span className="chip chip-gray" style={{ padding: '2px 8px' }}>{event.type}</span>
+          <span className="chip chip-gray" style={{ padding: '2px 8px' }}>{event.type ? event.type.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim() : ''}</span>
           {(event.isEnded || event.isPast) && (
             <span className="chip chip-gray" style={{ padding: '2px 8px' }}>Ended</span>
           )}

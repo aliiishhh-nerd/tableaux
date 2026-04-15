@@ -27,11 +27,10 @@ const CITY_KEYWORDS = {
 };
 
 const EVENT_TYPES = [
-  'Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting',
+  'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting',
 ];
 
 const TYPE_PILLS = {
-  'Brunch':       { bg: 'rgba(212,175,55,.85)',  label: '🥞 Brunch'        },
   'Dinner Party': { bg: 'rgba(108,93,211,.85)',  label: '🍷 Dinner Party'  },
   'Other':        { bg: 'rgba(100,100,100,.75)', label: '🍽️ Other'         },
   'Potluck':      { bg: 'rgba(46,196,182,.85)',  label: '🥘 Potluck'       },

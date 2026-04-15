@@ -33,10 +33,12 @@ export default function CreateEventModal({ onClose }) {
   const [personalMessage, setPersonalMessage] = useState('');
   const [potluckItems, setPotluckItems] = useState([]);
   const [seriesName, setSeriesName] = useState('');
+  const [hostNote, setHostNote] = useState('');
+  const [courses, setCourses] = useState([{ num: 1, name: '', wine: '', desc: '', highlight: false }]);
   const [seriesVolume, setSeriesVolume] = useState(1);
   const [tastingItems, setTastingItems] = useState([]);
   const [useDatePoll, setUseDatePoll] = useState(false);
-  const [pollDates, setPollDates] = useState(['', '']);
+  const [pollDates, setPollDates] = useState([{ date: '', time: '19:00' }, { date: '', time: '19:00' }]);
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [playlistPlatform, setPlaylistPlatform] = useState('spotify');
   const [selectedFriends, setSelectedFriends] = useState([]);
@@ -87,8 +89,8 @@ export default function CreateEventModal({ onClose }) {
         addToast('Please enter an event title', 'error');
         return;
       }
-      if (!date) {
-        addToast('Please select a date', 'error');
+      if (!isTBD && !useDatePoll && !date) {
+        addToast('Please select a date or choose TBD / Let guests vote', 'error');
         return;
       }
       if (!location.trim()) {
@@ -109,28 +111,35 @@ export default function CreateEventModal({ onClose }) {
     }
   }
 
-  function handleSkipInvites() {
-    setCurrentStep(STEPS.REVIEW);
-  }
-
   function handlePublish() {
     const eventData = {
       title,
       type: eventType,
       visibility,
-      date,
-      time,
+      date: isTBD ? null : date,
+      time: isTBD ? null : time,
+      isTBD,
+      datePoll: useDatePoll ? pollDates.filter(d => d.trim()) : null,
       location,
       maxGuests,
       description,
+      menu,
+      dietaryNotes,
+      bringAnything,
       coverType,
-      selectedGradient: coverType === 'gradient' ? selectedGradient : null,
-      selectedEmoji: coverType === 'emoji' ? selectedEmoji : null,
-      photoFile: coverType === 'photo' ? photoFile : null,
+      cover: coverType === 'gradient'
+        ? { type: 'gradient', value: gradients.find(g => g.id === selectedGradient)?.colors ? `linear-gradient(135deg, ${gradients.find(g => g.id === selectedGradient).colors[0]}, ${gradients.find(g => g.id === selectedGradient).colors[1]})` : selectedGradient }
+        : coverType === 'emoji'
+        ? { type: 'emoji', emoji: selectedEmoji, bg: '#2e3440' }
+        : { type: 'image', value: photoFile ? URL.createObjectURL(photoFile) : '' },
+      playlist: playlistUrl.trim() ? { url: playlistUrl.trim(), platform: playlistPlatform } : null,
+      potluck: eventType === 'potluck' ? { items: potluckItems } : null,
+      supperClub: eventType === 'supperClub' ? { seriesName, seriesVolume, hostNote, courses } : null,
+      tasting: eventType === 'tasting' ? { items: tastingItems } : null,
       personalMessage,
       invites: [
         ...selectedFriends.map(userId => {
-          const friend = friends.find(f => f.userId === userId);
+          const friend = (friends || []).find(f => f.userId === userId);
           return { userId, name: friend?.name || 'Friend' };
         }),
         ...emailInvites.map(email => ({ email, name: email.split('@')[0] }))
@@ -154,7 +163,6 @@ export default function CreateEventModal({ onClose }) {
   ];
 
   const POTLUCK_FOOD     = ['Main dish','Side dish','Salad','Dessert','Bread','Cheese board','Charcuterie','Fruit platter'];
-  const POTLUCK_CUTLERY  = ['Plates','Napkins','Glasses','Utensils','Serving spoons','Ice & cooler'];
   const POTLUCK_OTHER    = ['Flowers','Candles','Music speaker','Extra chairs'];
   const TASTING_OPTIONS  = ['Wine','Champagne','Cognac','Whiskey','Cocktails','Mocktails','Beer & Cider','Sake','Tequila'];
 
@@ -367,17 +375,35 @@ export default function CreateEventModal({ onClose }) {
               {/* Potluck section */}
               {eventType === 'potluck' && (
                 <div style={{ background: 'var(--page, #f8f7ff)', border: '1px solid var(--indigo-light, #e0d9ff)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo, #6c5dd3)', marginBottom: 12 }}>🥘 What should guests bring?</div>
-                  {[['Food & dishes', POTLUCK_FOOD], ['Cutlery & supplies', POTLUCK_CUTLERY], ['Other', POTLUCK_OTHER]].map(([cat, items]) => (
-                    <div key={cat} style={{ marginBottom: 10 }}>
-                      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink3, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>{cat}</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {items.map(item => (
-                          <button key={item} onClick={() => toggleItem(item, potluckItems, setPotluckItems)} style={{ padding: '5px 12px', borderRadius: 20, fontSize: 13, cursor: 'pointer', border: potluckItems.includes(item) ? '1.5px solid var(--indigo, #6c5dd3)' : '1px solid var(--border, #e5e7eb)', background: potluckItems.includes(item) ? 'var(--indigo-light, #f0eeff)' : 'transparent', color: potluckItems.includes(item) ? 'var(--indigo, #6c5dd3)' : 'inherit', minHeight: 36 }}>{item}</button>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo, #6c5dd3)', marginBottom: 12 }}>🥘 Potluck Items</div>
+                  {[
+                    { key: 'food', label: 'Food & Dishes', emoji: '🍽️', presets: POTLUCK_FOOD },
+                    { key: 'drinks', label: 'Drinks', emoji: '🥂', presets: ['Wine (2 bottles)', 'Beer (6-pack)', 'Sparkling water', 'Juice', 'Cocktail mixer'] },
+                    { key: 'other', label: 'Other', emoji: '🧺', presets: POTLUCK_OTHER },
+                  ].map(cat => {
+                    const catItems = potluckItems.filter(it => it.cat === cat.key);
+                    return (
+                      <div key={cat.key} style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink3, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>{cat.emoji} {cat.label}</div>
+                        {catItems.map(item => (
+                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'white', borderRadius: 8, marginBottom: 4, border: '1px solid var(--border, #e5e7eb)' }}>
+                            <span style={{ fontSize: 16 }}>{item.emoji}</span>
+                            <span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
+                            <button onClick={() => setPotluckItems(prev => prev.filter(i => i.id !== item.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink3, #9ca3af)', fontSize: 14, minWidth: 24, minHeight: 24 }}>✕</button>
+                          </div>
                         ))}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                          {cat.presets.filter(p => !catItems.find(i => i.name === p)).slice(0, 6).map(preset => (
+                            <button key={preset} onClick={() => setPotluckItems(prev => [...prev, { id: Date.now() + Math.random(), name: preset, emoji: cat.emoji, cat: cat.key }])} style={{ padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px dashed var(--border, #e5e7eb)', background: 'transparent', color: 'var(--ink2, #6b7280)', minHeight: 30 }}>+ {preset}</button>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <input type="text" placeholder={`Add custom ${cat.label.toLowerCase()}...`} id={`custom-pot-${cat.key}`} style={{ flex: 1, padding: '7px 10px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', minWidth: 0 }} onKeyDown={e => { if (e.key === 'Enter') { const val = e.target.value.trim(); if (val) { setPotluckItems(prev => [...prev, { id: Date.now(), name: val, emoji: cat.emoji, cat: cat.key }]); e.target.value = ''; } }}} />
+                          <button onClick={() => { const inp = document.getElementById(`custom-pot-${cat.key}`); const val = inp?.value?.trim(); if (val) { setPotluckItems(prev => [...prev, { id: Date.now(), name: val, emoji: cat.emoji, cat: cat.key }]); inp.value = ''; }}} style={{ padding: '7px 14px', background: 'var(--indigo-light, #f0eeff)', border: '1px solid var(--indigo, #6c5dd3)', borderRadius: 8, fontSize: 13, cursor: 'pointer', color: 'var(--indigo, #6c5dd3)', whiteSpace: 'nowrap', minHeight: 36 }}>+ Add</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -385,7 +411,7 @@ export default function CreateEventModal({ onClose }) {
               {eventType === 'supperClub' && (
                 <div style={{ background: 'var(--page, #f8f7ff)', border: '1px solid var(--indigo-light, #e0d9ff)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--indigo, #6c5dd3)', marginBottom: 12 }}>🕯️ Supper Club Series</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                     <div>
                       <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 8 }}>Series Name</label>
                       <input type="text" value={seriesName} onChange={e => setSeriesName(e.target.value)} placeholder="e.g. The Long Table" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', background: 'white', boxSizing: 'border-box' }} />
@@ -395,6 +421,30 @@ export default function CreateEventModal({ onClose }) {
                       <input type="number" value={seriesVolume} onChange={e => setSeriesVolume(parseInt(e.target.value) || 1)} min="1" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', background: 'white', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 8 }}>Host Note (shown to guests)</label>
+                    <textarea value={hostNote} onChange={e => setHostNote(e.target.value)} placeholder="Share your inspiration, a personal note, or what guests should expect..." rows={3} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', resize: 'vertical', background: 'white', boxSizing: 'border-box' }} />
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10 }}>Menu Courses</div>
+                  {courses.map((course, i) => (
+                    <div key={i} style={{ background: 'white', borderRadius: 10, padding: 12, marginBottom: 8, border: '1px solid var(--border, #e5e7eb)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 6, background: course.highlight ? '#fef3c7' : 'var(--indigo-light, #f0eeff)', color: course.highlight ? '#92400e' : 'var(--indigo, #6c5dd3)', fontWeight: 700, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{course.num}</div>
+                        <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>Course {course.num}</span>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer', color: course.highlight ? '#92400e' : 'var(--ink3, #9ca3af)' }}>
+                          <input type="checkbox" checked={course.highlight} onChange={() => setCourses(prev => prev.map((c, idx) => idx === i ? { ...c, highlight: !c.highlight } : c))} style={{ width: 14, height: 14 }} />
+                          ⭐ Signature
+                        </label>
+                        {courses.length > 1 && <button onClick={() => setCourses(prev => prev.filter((_, idx) => idx !== i).map((c, idx) => ({ ...c, num: idx + 1 })))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--coral, #ff6b6b)', fontSize: 16, minWidth: 24, minHeight: 24 }}>✕</button>}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                        <input type="text" value={course.name} onChange={e => setCourses(prev => prev.map((c, idx) => idx === i ? { ...c, name: e.target.value } : c))} placeholder="Dish name" style={{ padding: '8px 12px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit' }} />
+                        <input type="text" value={course.wine} onChange={e => setCourses(prev => prev.map((c, idx) => idx === i ? { ...c, wine: e.target.value } : c))} placeholder="Wine pairing (optional)" style={{ padding: '8px 12px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit' }} />
+                      </div>
+                      <input type="text" value={course.desc} onChange={e => setCourses(prev => prev.map((c, idx) => idx === i ? { ...c, desc: e.target.value } : c))} placeholder="Short description..." style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    </div>
+                  ))}
+                  <button onClick={() => setCourses(prev => [...prev, { num: prev.length + 1, name: '', wine: '', desc: '', highlight: false }])} style={{ width: '100%', padding: '9px 16px', background: 'transparent', border: '1px dashed var(--border, #e5e7eb)', borderRadius: 10, fontSize: 13, cursor: 'pointer', color: 'var(--indigo, #6c5dd3)', minHeight: 40 }}>+ Add Course</button>
                 </div>
               )}
 
@@ -435,14 +485,15 @@ export default function CreateEventModal({ onClose }) {
                 )}
                 {useDatePoll && (
                   <div>
-                    <div style={{ fontSize: 12, color: 'var(--ink2, #6b7280)', marginBottom: 8 }}>Add date options for guests to vote on:</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink2, #6b7280)', marginBottom: 8 }}>Add date + time options for guests to vote on:</div>
                     {pollDates.map((d, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                        <input type="date" value={d} onChange={e => { const next = [...pollDates]; next[i] = e.target.value; setPollDates(next); }} style={{ flex: 1, padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit' }} />
+                      <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input type="date" value={d.date || ''} onChange={e => { const next = [...pollDates]; next[i] = { ...next[i], date: e.target.value }; setPollDates(next); }} style={{ flex: '1 1 140px', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', minWidth: 0 }} />
+                        <input type="time" value={d.time || '19:00'} onChange={e => { const next = [...pollDates]; next[i] = { ...next[i], time: e.target.value }; setPollDates(next); }} style={{ flex: '1 1 100px', padding: '10px 14px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 10, fontSize: 16, fontFamily: 'inherit', minWidth: 0 }} />
                         {pollDates.length > 2 && <button onClick={() => setPollDates(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink3, #9ca3af)', minWidth: 32, minHeight: 32 }}>×</button>}
                       </div>
                     ))}
-                    <button onClick={() => setPollDates(prev => [...prev, ''])} style={{ background: 'transparent', border: '1px dashed var(--border, #e5e7eb)', borderRadius: 10, padding: '8px 16px', fontSize: 13, cursor: 'pointer', color: 'var(--indigo, #6c5dd3)', width: '100%', minHeight: 40 }}>+ Add another date option</button>
+                    <button onClick={() => setPollDates(prev => [...prev, { date: '', time: '19:00' }])} style={{ background: 'transparent', border: '1px dashed var(--border, #e5e7eb)', borderRadius: 10, padding: '8px 16px', fontSize: 13, cursor: 'pointer', color: 'var(--indigo, #6c5dd3)', width: '100%', minHeight: 40 }}>+ Add another option</button>
                   </div>
                 )}
               </div>
@@ -765,7 +816,7 @@ export default function CreateEventModal({ onClose }) {
           
           {currentStep === STEPS.INVITES && (
             <button
-              onClick={handleSkipInvites}
+              onClick={() => setCurrentStep(STEPS.REVIEW)}
               style={{
                 padding: '12px 24px',
                 background: 'transparent',
