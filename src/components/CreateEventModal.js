@@ -28,6 +28,7 @@ export default function CreateEventModal({ onClose }) {
   const [menu, setMenu] = useState('');
   const [dietaryNotes, setDietaryNotes] = useState('');
   const [bringAnything, setBringAnything] = useState('');
+  const [dressCode, setDressCode] = useState('No dress code');
 
   // Step 2: Invites
   const [personalMessage, setPersonalMessage] = useState('');
@@ -121,6 +122,8 @@ export default function CreateEventModal({ onClose }) {
       isTBD,
       datePoll: useDatePoll ? pollDates.filter(d => d.trim()) : null,
       location,
+      loc: location,
+      dressCode,
       maxGuests,
       description,
       menu,
@@ -276,6 +279,16 @@ export default function CreateEventModal({ onClose }) {
               {/* Cover Selection */}
               <div style={{ marginBottom: 20 }}>
                 <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Cover</label>
+                {/* Live Preview */}
+                <div style={{ width: '100%', height: 120, borderRadius: 12, marginBottom: 12, overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: coverType === 'gradient'
+                    ? (() => { const g = gradients.find(g => g.id === selectedGradient); return g ? `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` : 'var(--indigo)'; })()
+                    : coverType === 'emoji' ? '#1a1a2e' : 'var(--border, #e5e7eb)' }}>
+                  {coverType === 'emoji' && <span style={{ fontSize: 48 }}>{selectedEmoji}</span>}
+                  {coverType === 'photo' && photoFile && <img src={URL.createObjectURL(photoFile)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }} />}
+                  {coverType === 'photo' && !photoFile && <span style={{ fontSize: 13, color: 'var(--ink3, #9ca3af)' }}>No photo selected</span>}
+                  {title && <div style={{ position: 'absolute', bottom: 10, left: 14, fontSize: 15, fontWeight: 600, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none' }}>{title}</div>}
+                </div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                   {[{id:'gradient',label:'🎨 Gradient'},{id:'emoji',label:'✨ Emoji'},{id:'photo',label:'📷 Photo'}].map(t => (
                     <button key={t.id} onClick={() => setCoverType(t.id)} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', background: coverType === t.id ? 'var(--indigo-light, #f0eeff)' : 'transparent', border: coverType === t.id ? '2px solid var(--indigo, #6c5dd3)' : '1px solid var(--border, #e5e7eb)' }}>{t.label}</button>
@@ -344,12 +357,12 @@ export default function CreateEventModal({ onClose }) {
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
                   {[
-                    { id: 'brunch', label: 'Brunch', emoji: '🥞' },
                     { id: 'dinnerParty', label: 'Dinner Party', emoji: '🍷' },
-                    { id: 'potluck', label: 'Potluck', emoji: '🥘' },
-                    { id: 'restaurant', label: 'Restaurant', emoji: '🍽️' },
-                    { id: 'supperClub', label: 'Supper Club', emoji: '✨' },
-                    { id: 'tasting', label: 'Tasting', emoji: '🍾' }
+                    { id: 'potluck',     label: 'Potluck',      emoji: '🥘' },
+                    { id: 'restaurant', label: 'Restaurant',   emoji: '🍽️' },
+                    { id: 'supperClub', label: 'Supper Club',  emoji: '🕯️' },
+                    { id: 'tasting',    label: 'Tasting',      emoji: '🍾' },
+                    { id: 'other',      label: 'Other',        emoji: '🎉' },
                   ].map(type => (
                     <button
                       key={type.id}
@@ -540,6 +553,21 @@ export default function CreateEventModal({ onClose }) {
               <div style={{ marginBottom: 20 }}>
                 <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Should Guests Bring Anything? (Optional)</label>
                 <input type="text" value={bringAnything} onChange={e => setBringAnything(e.target.value)} placeholder="e.g. Bring a bottle of wine" style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit' }} />
+              </div>
+
+              {/* Dress Code */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink2, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 10 }}>Dress Code</label>
+                <select value={dressCode} onChange={e => setDressCode(e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--border, #e5e7eb)', borderRadius: 12, fontSize: 16, fontFamily: 'inherit', cursor: 'pointer' }}>
+                  <option value="No dress code">No dress code</option>
+                  <option value="Casual">Casual</option>
+                  <option value="Smart Casual">Smart Casual</option>
+                  <option value="Business Casual">Business Casual</option>
+                  <option value="Cocktail Attire">Cocktail Attire</option>
+                  <option value="Black Tie Optional">Black Tie Optional</option>
+                  <option value="Black Tie">Black Tie</option>
+                  <option value="Themed">Themed (specify in description)</option>
+                </select>
               </div>
 
               {/* Playlist */}
@@ -761,9 +789,13 @@ export default function CreateEventModal({ onClose }) {
               }}>
                 <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{title}</h3>
                 <div style={{ fontSize: 14, color: 'var(--ink2, #6b7280)', lineHeight: 1.6 }}>
-                  <div style={{ marginBottom: 8 }}>📅 {date} at {time}</div>
-                  <div style={{ marginBottom: 8 }}>📍 {location}</div>
-                  <div>🎉 {eventType.replace(/([A-Z])/g, ' $1').trim()}</div>
+                  {isTBD && <div style={{ marginBottom: 8 }}>📅 Date TBD</div>}
+                  {useDatePoll && <div style={{ marginBottom: 8 }}>📅 Letting guests vote on date</div>}
+                  {!isTBD && !useDatePoll && date && <div style={{ marginBottom: 8 }}>📅 {date} at {time}</div>}
+                  {location && <div style={{ marginBottom: 8 }}>📍 {location}</div>}
+                  <div style={{ marginBottom: 8 }}>🎉 {eventType.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()}</div>
+                  {dressCode && dressCode !== 'No dress code' && <div style={{ marginBottom: 8 }}>👗 {dressCode}</div>}
+                  <div>👥 Max {maxGuests} guests</div>
                 </div>
               </div>
 

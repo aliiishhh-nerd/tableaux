@@ -218,7 +218,7 @@ function EventRow({ event, onClick, onEdit, onDelete, past }) {
         <div className="event-row-meta">
           <span>📅 {fmtDate(event.date)}</span>
           <span>🕖 {fmtTime(event.time)}</span>
-          {event.loc && <span>📍 {event.loc}</span>}
+          {(event.loc || event.location) && <span>📍 {event.loc || event.location}</span>}
           <span className="chip chip-gray" style={{ padding: '2px 8px' }}>{event.type ? event.type.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim() : ''}</span>
           {(event.isEnded || event.isPast) && (
             <span className="chip chip-gray" style={{ padding: '2px 8px' }}>Ended</span>
@@ -226,7 +226,6 @@ function EventRow({ event, onClick, onEdit, onDelete, past }) {
         </div>
       </div>
       <div className="event-row-actions" onClick={e => e.stopPropagation()}>
-        {!past && onEdit   && <button className="btn btn-ghost btn-sm" onClick={onEdit}>✏️</button>}
         {!past && onDelete && <button className="btn btn-ghost btn-sm" onClick={onDelete} style={{ color: 'var(--coral)' }}>🗑️</button>}
         {event.mine && (
           <button
