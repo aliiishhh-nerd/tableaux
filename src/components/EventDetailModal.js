@@ -3,6 +3,17 @@ import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FriendButton } from '../pages/ProfilePage';
 
+function downloadICS(event) {
+  const pad = n => String(n).padStart(2, "0");
+  const toICS = (ds, ts) => { if (!ds) return ""; const d = new Date(ds + "T" + (ts||"19:00") + ":00"); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"T"+pad(d.getHours())+pad(d.getMinutes())+"00"; };
+  const start = toICS(event.date, event.time);
+  const p = (event.time||"19:00").split(":"); const endHr = String(parseInt(p[0])+2).padStart(2,"0")+":"+p[1];
+  const end = toICS(event.date, endHr);
+  const ics = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Tableaux//EN","BEGIN:VEVENT","DTSTART:"+start,"DTEND:"+end,"SUMMARY:"+(event.title||"Tableaux Event"),"DESCRIPTION:"+(event.desc||"").replace(/\n/g,"\\n"),"LOCATION:"+(event.addr||event.loc||""),"UID:tableaux-"+event.id+"@tableaux.app","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const blob = new Blob([ics],{type:"text/calendar"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href=url; a.download=(event.title||"event").replace(/\s+/g,"-")+".ics"; a.click(); URL.revokeObjectURL(url);
+}
+
+
 // Helper functions for dynamic language based on event type & time
 function getTimeOfDay(eventTime) {
   if (!eventTime) return 'time';
@@ -451,6 +462,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Close</button>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-ghost" onClick={() => downloadICS(event)} style={{ fontSize: 13 }}>📅 Add to Calendar</button>
             {isHost && onEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>}
           </div>
         </div>

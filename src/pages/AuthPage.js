@@ -33,7 +33,7 @@ export default function AuthPage() {
     } catch (err) {
       // Handle specific error messages
       if (err.message?.includes('Email not confirmed')) {
-        setError('Please check your email and click the confirmation link to continue.');
+        setError('Welcome to Tableaux! We sent a confirmation link to ' + email + '. Please check your inbox and click the link to activate your account.');
       } else if (err.message?.includes('Invalid login credentials')) {
         setError('Invalid email or password. Please try again.');
       } else if (err.message?.includes('User already registered')) {

@@ -18,18 +18,32 @@ export const CURRENT_USER = {
 };
 
 export const USERS = [
-  { id: 'u1',  name: 'Ada Chen',     initials: 'AC', color: 'indigo', handle: '@adachen',   bio: 'Sichuan obsessed. Always hungry.',                  socials: { instagram: 'adachen.eats' } },
-  { id: 'u2',  name: 'Sophie M.',    initials: 'SM', color: 'coral',  handle: '@sophiem',    bio: 'French cuisine enthusiast & dinner party host.',    socials: { instagram: 'sophiem_cooks' } },
-  { id: 'u3',  name: 'Raj K.',       initials: 'RK', color: 'amber',  handle: '@rajk',       bio: 'Spice merchant. Mumbai to Chicago.',                socials: { instagram: 'rajk_spices' } },
-  { id: 'u4',  name: 'Lena P.',      initials: 'LP', color: 'teal',   handle: '@lenap',      bio: 'Fermentation nerd. Sourdough and kimchi.',          socials: { instagram: 'lenap_ferments' } },
-  { id: 'u5',  name: 'Marcus W.',    initials: 'MW', color: 'sage',   handle: '@marcusw',    bio: 'Wine guy. Natural and biodynamic only.',            socials: { instagram: 'marcusw_wine' } },
-  { id: 'u6',  name: 'Priya N.',     initials: 'PN', color: 'amber',  handle: '@priyan',     bio: 'Pastry chef. Baking is my love language.',          socials: { instagram: 'priya_pastry' } },
-  { id: 'u7',  name: 'James T.',     initials: 'JT', color: 'teal',   handle: '@jamest',     bio: 'Grill master. Smoke everything.',                   socials: { instagram: 'jamest_bbq' } },
-  { id: 'u8',  name: 'Yuki S.',      initials: 'YS', color: 'indigo', handle: '@yukis',      bio: 'Ramen and izakaya devotee.',                        socials: { instagram: 'yukis_ramen' } },
-  { id: 'u9',  name: 'Elena V.',     initials: 'EV', color: 'coral',  handle: '@elenav',     bio: 'Austin food scene obsessive.',                      socials: { instagram: 'elenav_eats' } },
-  { id: 'u10', name: 'Diego R.',     initials: 'DR', color: 'amber',  handle: '@diegor',     bio: 'LA supper club circuit regular.',                   socials: { instagram: 'diegor_dining' } },
-  { id: 'u11', name: 'Kai M.',       initials: 'KM', color: 'teal',   handle: '@kaim',       bio: 'Seattle forager and fermentation nerd.',            socials: { instagram: 'kaim_forage' } },
-  { id: 'u12', name: 'Nadia L.',     initials: 'NL', color: 'sage',   handle: '@nadial',     bio: 'French pastry, Austin heat.',                       socials: { instagram: 'nadial_patisserie' } },
+  { id: 'u1',  name: 'Ada Chen',      initials: 'AC', color: 'indigo', handle: '@adachen',    email: 'ada@tableaux.app',     bio: 'Sichuan obsessed. Always hungry.',                  socials: { instagram: 'adachen.eats' } },
+  { id: 'u2',  name: 'Sophie Martin', initials: 'SM', color: 'coral',  handle: '@sophiem',    email: 'sophie@tableaux.app',  bio: 'French cuisine enthusiast and dinner party host.',  socials: { instagram: 'sophiem_cooks' } },
+  { id: 'u3',  name: 'Raj Kumar',     initials: 'RK', color: 'amber',  handle: '@rajk',       email: 'raj@tableaux.app',     bio: 'Spice merchant. Mumbai to Chicago.',                socials: { instagram: 'rajk_spices' } },
+  { id: 'u4',  name: 'Lena Park',     initials: 'LP', color: 'teal',   handle: '@lenap',      email: 'lena@tableaux.app',    bio: 'Fermentation nerd. Sourdough and kimchi.',          socials: { instagram: 'lenap_ferments' } },
+  { id: 'u5',  name: 'Marcus Webb',   initials: 'MW', color: 'sage',   handle: '@marcusw',    email: 'marcus@tableaux.app',  bio: 'Natural wine only. Biodynamic or bust.',            socials: { instagram: 'marcusw_wine' } },
+  { id: 'u6',  name: 'Priya Nair',    initials: 'PN', color: 'amber',  handle: '@priyan',     email: 'priya@tableaux.app',   bio: 'Pastry chef. Baking is my love language.',          socials: { instagram: 'priya_pastry' } },
+  { id: 'u7',  name: 'James Torres',  initials: 'JT', color: 'teal',   handle: '@jamest',     email: 'james@tableaux.app',   bio: 'Grill master. Smoke everything.',                   socials: { instagram: 'jamest_bbq' } },
+  { id: 'u8',  name: 'Yuki Sato',     initials: 'YS', color: 'indigo', handle: '@yukis',      email: 'yuki@tableaux.app',    bio: 'Ramen and izakaya devotee from Hokkaido.',          socials: { instagram: 'yukis_ramen' } },
+  { id: 'u9',  name: 'Elena Vasquez', initials: 'EV', color: 'coral',  handle: '@elenav',     email: 'elena@tableaux.app',   bio: 'Austin food scene obsessive. Taco evangelist.',     socials: { instagram: 'elenav_eats' } },
+  { id: 'u10', name: 'Diego Reyes',   initials: 'DR', color: 'amber',  handle: '@diegor',     email: 'diego@tableaux.app',   bio: 'LA supper club circuit regular.',                   socials: { instagram: 'diegor_dining' } },
+  { id: 'u11', name: 'Kai Mercer',    initials: 'KM', color: 'teal',   handle: '@kaim',       email: 'kai@tableaux.app',     bio: 'Seattle forager and fermentation nerd.',            socials: { instagram: 'kaim_forage' } },
+  { id: 'u12', name: 'Nadia Laurent', initials: 'NL', color: 'sage',   handle: '@nadial',     email: 'nadia@tableaux.app',   bio: 'French pastry, Chicago heat.',                      socials: { instagram: 'nadial_patisserie' } },
+];
+
+// Beta tester credentials (all share password: Tableaux2026!)
+export const BETA_TESTERS = [
+  { id: 'u2',  name: 'Sophie Martin', email: 'sophie@tableaux.app',  password: 'Tableaux2026!', role: 'Host & Guest' },
+  { id: 'u3',  name: 'Raj Kumar',     email: 'raj@tableaux.app',     password: 'Tableaux2026!', role: 'Guest & Potluck Host' },
+  { id: 'u4',  name: 'Lena Park',     email: 'lena@tableaux.app',    password: 'Tableaux2026!', role: 'Potluck & Supper Club' },
+  { id: 'u5',  name: 'Marcus Webb',   email: 'marcus@tableaux.app',  password: 'Tableaux2026!', role: 'Supper Club Host' },
+  { id: 'u6',  name: 'Priya Nair',    email: 'priya@tableaux.app',   password: 'Tableaux2026!', role: 'Dinner Party Host' },
+  { id: 'u7',  name: 'James Torres',  email: 'james@tableaux.app',   password: 'Tableaux2026!', role: 'Tasting Host' },
+  { id: 'u8',  name: 'Yuki Sato',     email: 'yuki@tableaux.app',    password: 'Tableaux2026!', role: 'Guest & RSVP Tester' },
+  { id: 'u9',  name: 'Elena Vasquez', email: 'elena@tableaux.app',   password: 'Tableaux2026!', role: 'Guest & Feed Tester' },
+  { id: 'u10', name: 'Diego Reyes',   email: 'diego@tableaux.app',   password: 'Tableaux2026!', role: 'Restaurant Host' },
+  { id: 'u11', name: 'Kai Mercer',    email: 'kai@tableaux.app',     password: 'Tableaux2026!', role: 'Other Event Host' },
 ];
 
 const now = new Date();
@@ -228,6 +242,175 @@ export const SEED_EVENTS = [
     galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
     eventComments: [], pinnedQuotes: [], potluck: null, supperClub: null,
   },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // BETA TESTER INVITES — one per event type
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // INVITE: Dinner Party
+  {
+    id: 'evt-beta-inv-1',
+    title: 'An Evening of Modern French',
+    type: 'Dinner Party',
+    date: daysFromNow(9), time: '19:30',
+    isEnded: false, isInvitedTo: true,
+    loc: 'Gold Coast, Chicago',
+    addr: '1 E Wacker Dr, Chicago, IL 60601',
+    cap: 8, vis: 'Invite Only', dressCode: 'Cocktail Attire',
+    desc: 'A four-course modern French dinner. Think bistro classics with a contemporary twist, paired with natural wines from the Loire Valley.',
+    host: 'Sophie Martin', hostId: 'u2', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #1A1A2E, #2D2550)' },
+    invH: 'You are invited', invBg: '#1A1A2E',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',    s: 'pending',  initials: 'AC', color: 'indigo' },
+      { id: 'u3', n: 'Raj Kumar',   s: 'approved', initials: 'RK', color: 'amber' },
+      { id: 'u5', n: 'Marcus Webb', s: 'approved', initials: 'MW', color: 'sage' },
+    ],
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null, supperClub: null,
+  },
+
+  // INVITE: Potluck (with date poll)
+  {
+    id: 'evt-beta-inv-2',
+    title: 'Summer Solstice Potluck',
+    type: 'Potluck',
+    date: daysFromNow(16), time: '17:00',
+    isEnded: false, isInvitedTo: true,
+    isTBD: false,
+    datePoll: [{ date: daysFromNow(16), time: '17:00' }, { date: daysFromNow(17), time: '16:00' }],
+    loc: 'Millennium Park, Chicago',
+    addr: '201 E Randolph St, Chicago, IL 60601',
+    cap: 16, vis: 'Friends Only', dressCode: 'Casual',
+    desc: 'Celebrate the longest day of the year with an outdoor potluck. Bring something seasonal and shareable.',
+    host: 'Lena Park', hostId: 'u4', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #2EC4B6, #87BBA2)' },
+    invH: 'Bring a dish, bring yourself', invBg: '#2EC4B6',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',    s: 'pending',  initials: 'AC', color: 'indigo' },
+      { id: 'u2', n: 'Sophie Martin', s: 'approved', initials: 'SM', color: 'coral' },
+      { id: 'u6', n: 'Priya Nair',  s: 'approved', initials: 'PN', color: 'amber' },
+    ],
+    potluck: { items: [
+      { id: 'bi1', cat: 'food',   emoji: '🥗', name: 'Summer Grain Salad',    claimedBy: 'u2', claimerName: 'Sophie Martin' },
+      { id: 'bi2', cat: 'food',   emoji: '🫐', name: 'Berry Galette',         claimedBy: null, claimerName: null },
+      { id: 'bi3', cat: 'food',   emoji: '🥙', name: 'Grilled Flatbreads',    claimedBy: null, claimerName: null },
+      { id: 'bi4', cat: 'drinks', emoji: '🍹', name: 'Sparkling Lemonade',    claimedBy: 'u6', claimerName: 'Priya Nair' },
+      { id: 'bi5', cat: 'drinks', emoji: '🍷', name: 'Rosé (2 bottles)',      claimedBy: null, claimerName: null },
+      { id: 'bi6', cat: 'other',  emoji: '🧺', name: 'Blankets / Seating',   claimedBy: null, claimerName: null },
+    ]},
+    playlist: { url: 'https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO', platform: 'spotify' },
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], supperClub: null,
+  },
+
+  // INVITE: Supper Club (with host note + courses)
+  {
+    id: 'evt-beta-inv-3',
+    title: 'The Long Table Vol. I: Farm to Fork',
+    type: 'Supper Club',
+    seriesName: 'The Long Table', seriesVolume: 1,
+    date: daysFromNow(20), time: '19:00',
+    isEnded: false, isInvitedTo: true,
+    loc: 'West Loop, Chicago',
+    addr: '900 W Randolph St, Chicago, IL 60607',
+    cap: 10, vis: 'Invite Only', dressCode: 'Smart Casual',
+    desc: 'The inaugural volume of The Long Table — a quarterly supper club celebrating Midwest farms and their stories.',
+    host: 'Marcus Webb', hostId: 'u5', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #4A0E8F, #9B59B6)' },
+    invH: 'A seat at The Long Table', invBg: '#4A0E8F',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',      s: 'pending',  initials: 'AC', color: 'indigo' },
+      { id: 'u4', n: 'Lena Park',     s: 'approved', initials: 'LP', color: 'teal' },
+      { id: 'u8', n: 'Yuki Sato',     s: 'approved', initials: 'YS', color: 'indigo' },
+    ],
+    supperClub: {
+      hostNote: "This is the first volume of something I have been dreaming about for two years. Every ingredient on this table comes from within 150 miles of Chicago. I want you to taste the Midwest in a way you never have before.",
+      courses: [
+        { num: 1, name: 'Radish & Cultured Butter',    desc: 'Watermelon radish, house-churned cultured butter, flaky sea salt, rye crisps.', wine: 'Pét-Nat from Jurtschitsch, Austria' },
+        { num: 2, name: 'Sweet Corn Velouté',           desc: 'Silky corn soup, popcorn oil, smoked paprika crème, chive oil.', wine: 'Grüner Veltliner 2022' },
+        { num: 3, name: 'Roasted Beet & Chevre',        desc: 'Candy stripe beets, local chevre, pistachio crumble, micro arugula, honey.', wine: 'Gamay from Domaine Foillard' },
+        { num: 4, name: 'Braised Short Rib',            desc: 'Heritage beef short rib, celery root purée, pickled ramps, natural jus.', wine: 'Pinot Noir from Evening Land', highlight: true },
+        { num: 5, name: 'Honey & Lavender Panna Cotta', desc: 'Illinois wildflower honey, dried lavender, fresh strawberries.', wine: "Moscato d'Asti" },
+      ],
+    },
+    playlist: { url: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6', platform: 'spotify' },
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null,
+  },
+
+  // INVITE: Tasting (with TBD date)
+  {
+    id: 'evt-beta-inv-4',
+    title: 'Cognac & Chocolate Pairing Night',
+    type: 'Tasting',
+    date: null, time: null,
+    isEnded: false, isInvitedTo: true, isTBD: true,
+    loc: 'River North, Chicago',
+    addr: '430 N Michigan Ave, Chicago, IL 60611',
+    cap: 10, vis: 'Invite Only', dressCode: 'Business Casual',
+    desc: 'Four premium cognacs paired with single-origin chocolates. Guided tasting with notes provided.',
+    host: 'James Torres', hostId: 'u7', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #2d1b00, #c8860a)' },
+    invH: 'An Evening of Cognac', invBg: '#2d1b00',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',    s: 'pending',  initials: 'AC', color: 'indigo' },
+      { id: 'u3', n: 'Raj Kumar',   s: 'approved', initials: 'RK', color: 'amber' },
+      { id: 'u5', n: 'Marcus Webb', s: 'approved', initials: 'MW', color: 'sage' },
+    ],
+    tasting: { items: ['Cognac', 'Cocktails'] },
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null, supperClub: null,
+  },
+
+  // INVITE: Restaurant (with date poll)
+  {
+    id: 'evt-beta-inv-5',
+    title: 'Omakase Group Dinner at Kyōten',
+    type: 'Restaurant',
+    date: daysFromNow(30), time: '18:00',
+    isEnded: false, isInvitedTo: true,
+    datePoll: [{ date: daysFromNow(30), time: '18:00' }, { date: daysFromNow(31), time: '17:30' }],
+    loc: 'Old Town, Chicago',
+    addr: '2507 N Clark St, Chicago, IL 60614',
+    cap: 6, vis: 'Invite Only', dressCode: 'Smart Casual',
+    desc: 'Group omakase reservation. 12-course sushi experience. $180/person, reservations confirmed.',
+    host: 'Diego Reyes', hostId: 'u10', mine: false,
+    cover: { type: 'gradient', value: 'linear-gradient(135deg, #0EA5E9, #2EC4B6)' },
+    invH: 'Join us for Omakase', invBg: '#0EA5E9',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',    s: 'pending',  initials: 'AC', color: 'indigo' },
+      { id: 'u8', n: 'Yuki Sato',   s: 'approved', initials: 'YS', color: 'indigo' },
+    ],
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null, supperClub: null,
+  },
+
+  // INVITE: Other
+  {
+    id: 'evt-beta-inv-6',
+    title: 'Midnight Snack Club',
+    type: 'Other',
+    date: daysFromNow(11), time: '22:00',
+    isEnded: false, isInvitedTo: true,
+    loc: 'Pilsen, Chicago',
+    addr: '1800 S Halsted St, Chicago, IL 60608',
+    cap: 12, vis: 'Invite Only', dressCode: 'Casual',
+    desc: 'No rules. No dress code. Show up after 10pm with something delicious and unexpected. Past hits: duck fat popcorn, frozen mochi, smoked whitefish dip.',
+    host: 'Kai Mercer', hostId: 'u11', mine: false,
+    cover: { type: 'emoji', emoji: '🌙', bg: '#1a1a2e' },
+    invH: 'You know the vibe', invBg: '#1a1a2e',
+    guests: [
+      { id: 'u1', n: 'Ada Chen',      s: 'pending',  initials: 'AC', color: 'indigo' },
+      { id: 'u2', n: 'Sophie Martin', s: 'approved', initials: 'SM', color: 'coral' },
+      { id: 'u9', n: 'Elena Vasquez', s: 'approved', initials: 'EV', color: 'coral' },
+    ],
+    playlist: { url: 'https://open.spotify.com/playlist/37i9dQZF1DXbITWG1ZJKYt', platform: 'spotify' },
+    galleryEnabled: true, photoGalleryEnabled: false, photoGallery: [],
+    eventComments: [], pinnedQuotes: [], potluck: null, supperClub: null,
+  },
+
+
   {
     id: 'evt-chi-3',
     title: 'Bucktown Community Potluck',
