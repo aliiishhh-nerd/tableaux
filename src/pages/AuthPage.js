@@ -20,15 +20,16 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signup') {
-        // Create new account
         await supabaseSignUp(email, password, name);
-        // Log them in immediately after signup
         await login(email, password);
         navigate('/feed');
       } else {
-        // Regular login
-        await login(email, password);
-        navigate('/feed');
+        const ok = await login(email, password);
+        if (ok) {
+          navigate('/feed');
+        } else {
+          setError('Login failed. Please check your email and password.');
+        }
       }
     } catch (err) {
       // Handle specific error messages
@@ -75,7 +76,7 @@ export default function AuthPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            autoComplete="username"
+            autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false"
             required
             style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 12, fontSize: 14, fontFamily: 'inherit' }}
           />

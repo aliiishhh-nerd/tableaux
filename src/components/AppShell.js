@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Routes, Route, NavLink, useLocation, Link, useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import AuthPage from '../pages/AuthPage';
-import { supabase } from '../lib/supabase';
 import FeedPage from '../pages/FeedPage';
 import EventsPage from '../pages/EventsPage';
 import InvitesPage from '../pages/InvitesPage';
@@ -209,14 +208,6 @@ export default function AppShell() {
   if (!user && location.pathname.startsWith('/blog')) return <BlogPage />;
   if (!user && location.pathname.startsWith('/faq')) return <FAQPage />;
   if (!user && location.pathname.startsWith('/e/')) return <PublicEventWrapper />;
-  // /auth route — sign out existing session and show login
-  if (location.pathname === '/auth') {
-    if (user) {
-      supabase.auth.signOut();
-      return <AuthPage />;
-    }
-    return <AuthPage />;
-  }
   if (!user) return <AuthPage />;
 
   const invitePending = events.filter(
