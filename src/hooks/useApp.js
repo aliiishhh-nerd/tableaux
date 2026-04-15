@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { SEED_EVENTS, CURRENT_USER, SEED_FRIENDSHIPS } from '../data/seed';
-import { signIn as supabaseSignIn, getProfile, supabase } from '../lib/supabase';
+import { signIn as supabaseSignIn, getProfile } from '../lib/supabase';
 
 const AppCtx = createContext(null);
 
@@ -114,14 +114,12 @@ export function AppProvider({ children }) {
         return true;
     }, []);
 
-    const logout = useCallback(async () => {
-        await supabase.auth.signOut();
+    const logout = useCallback(() => {
         setUser(null);
         try {
             const stored = loadFromStorage();
             if (stored) saveToStorage({ ...stored, user: null });
         } catch {}
-        // Navigate to home page after logout
     }, []);
 
     // ── Events ───────────────────────────────────

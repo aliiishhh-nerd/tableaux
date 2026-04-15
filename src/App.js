@@ -37,7 +37,7 @@ function AuthListener() {
       }
       if (event === 'SIGNED_OUT') {
         logout();
-        navigate('/');
+        navigate('/auth');
       }
     });
 
