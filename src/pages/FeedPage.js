@@ -4,6 +4,7 @@ import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
 import EventDetailModal from '../components/EventDetailModal';
+import { FriendButton } from '../pages/ProfilePage';
 
 const CITIES = [
   { key: 'chicago', label: 'Chicago'     },
@@ -27,10 +28,11 @@ const CITY_KEYWORDS = {
 };
 
 const EVENT_TYPES = [
-  'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting',
+  'Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting',
 ];
 
 const TYPE_PILLS = {
+  'Brunch':       { bg: 'rgba(212,175,55,.85)',  label: '🥞 Brunch'        },
   'Dinner Party': { bg: 'rgba(108,93,211,.85)',  label: '🍷 Dinner Party'  },
   'Other':        { bg: 'rgba(100,100,100,.75)', label: '🍽️ Other'         },
   'Potluck':      { bg: 'rgba(46,196,182,.85)',  label: '🥘 Potluck'       },
@@ -256,6 +258,7 @@ export default function FeedPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span className="activity-time">{act.time}</span>
+                        {u && u.id !== 'u1' && <FriendButton userId={u.id} size="sm" />}
                       </div>
                     </div>
                   </div>

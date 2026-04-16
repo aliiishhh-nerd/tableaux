@@ -331,6 +331,13 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
               )}
 
               {/* RSVP with dietary note */}
+                            {/* Public RSVP */}
+              {(() => {
+                const vis = (event.vis || event.visibility || '').toLowerCase().replace(/\s/g, '');
+                const isPublicEvent = vis === 'public';
+                if (!isPublicEvent || isHost || !!myGuest || isInvited) return null;
+                return <PublicRSVPBlock event={event} addToast={addToast} rsvpEvent={rsvpEvent} user={user} />;
+              })()}
               {isInvited && myGuest?.s === 'pending' && (
                 <div style={{ marginTop: 16, padding: 16, border: '1.5px solid var(--indigo)', borderRadius: 12, background: 'var(--indigo-light)' }}>
                   <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--indigo)' }}>You are invited!</div>
@@ -784,6 +791,28 @@ function PhotoGalleryTab({ event, fileRef, uploading, onUpload, lightbox, setLig
 
       {photos.length > 0 && !photosLocked && (
         <div style={{ marginTop: 14, fontSize: 12, color: 'var(--ink3)', textAlign: 'center' }}>Tap any photo to view full size and add tags</div>
+      )}
+    </div>
+  );
+}
+function PublicRSVPBlock({ event, addToast, rsvpEvent, user }) {
+  const [state, setState] = React.useState('idle');
+  const alreadyPending = event.guests?.some(g => g.id === user?.id && g.s === 'pending');
+  const displayState = alreadyPending ? 'pending' : state;
+  function handleRequest() {
+    if (displayState === 'pending') return;
+    if (typeof rsvpEvent === 'function') rsvpEvent(event.id, 'pending');
+    setState('pending');
+    addToast('Request sent! The host will review your RSVP. 🎉', 'success');
+  }
+  return (
+    <div style={{ marginTop: 16, padding: 16, border: '1.5px solid var(--indigo)', borderRadius: 12, background: 'var(--indigo-light)' }}>
+      <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--indigo)', fontSize: 15 }}>🌍 Public event — open to join</div>
+      <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 14, lineHeight: 1.5 }}>Request to join {event.host ? event.host + 's' : 'this'} event. The host will review and confirm your spot.</div>
+      {displayState === 'pending' ? (
+        <div style={{ padding: '11px 16px', background: 'var(--teal-light)', borderRadius: 10, fontSize: 14, color: 'var(--teal)', fontWeight: 600 }}>✓ Request sent — waiting for host approval</div>
+      ) : (
+        <button className="btn btn-primary btn-full" style={{ fontSize: 15, padding: '12px 0' }} onClick={handleRequest}>Request to join</button>
       )}
     </div>
   );
