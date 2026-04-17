@@ -92,7 +92,13 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const myComment = event.eventComments?.find(c => c.userId === 'u1');
   const passportStamped = myComment?.passportStamped;
   const isConfirmed = myGuest?.s === 'approved';
-  const addrHidden = event.addrHidden && !isHost && !isConfirmed && !showFullAddr;
+  function getVis(e) {
+    const raw = (e.vis || e.visibility || '').toLowerCase().replace(/\s/g, '');
+    if (raw === 'public') return 'public';
+    if (raw === 'friendsonly') return 'friendsOnly';
+    return 'inviteOnly';
+  }
+  const addrHidden = (event.addrHidden || getVis(event) === 'public') && !isHost && !isConfirmed && !showFullAddr;
   const pendingGuests = event.guests?.filter(g => g.s === 'pending') || [];
 
   // Dietary alerts for host
@@ -234,21 +240,61 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-                {[
-                  { icon: '📅', val: fmtDate(event.date) },
-                  { icon: '🕖', val: fmtTime(event.time) },
-                  { icon: '📍', val: event.loc },
-                  { icon: '👥', val: `${event.guests?.length || 0} / ${event.cap}` },
-                  { icon: '🔒', val: event.vis },
-                  { icon: '👔', val: event.dressCode || 'No dress code' },
-                  { icon: '👤', val: event.host },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: 14 }}>{item.icon}</span>
-                    <span>{item.val}</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
+                {/* Date */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v4M11 1v4M2 7h12"/></svg>
+                  {fmtDate(event.date)}
+                </div>
+                {/* Time */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2.5 1.5"/></svg>
+                  {fmtTime(event.time)}
+                </div>
+                {/* Location — neighborhood only */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5s4.5-5 4.5-8.5c0-2.5-2-4.5-4.5-4.5z"/><circle cx="8" cy="6" r="1.5"/></svg>
+                  {event.loc}
+                </div>
+                {/* Capacity */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-3 2.2-5 5-5"/><circle cx="11.5" cy="9" r="2"/><path d="M9 14c0-2 1-3 2.5-3s2.5 1 2.5 3"/></svg>
+                  {(event.guests?.filter(g => g.s === 'approved') || []).length} / {event.cap}
+                </div>
+                {/* Visibility badge */}
+                {(() => {
+                  const vis = getVis(event);
+                  const cfg = vis === 'public'
+                    ? { bg: '#E3FBF3', color: '#085041', border: '#5DCAA5', label: 'Public' }
+                    : vis === 'friendsOnly'
+                    ? { bg: 'var(--amber-light)', color: '#633806', border: '#EF9F27', label: 'Friends Only' }
+                    : { bg: 'var(--indigo-light)', color: '#3C3489', border: 'var(--indigo-mid)', label: 'Invite Only' };
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: cfg.bg, borderRadius: 20, padding: '5px 12px', fontSize: 13, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        {vis === 'public'
+                          ? <><circle cx="8" cy="8" r="6.5"/><path d="M8 1.5c-2 2-3 4-3 6.5s1 4.5 3 6.5M8 1.5c2 2 3 4 3 6.5s-1 4.5-3 6.5M1.5 8h13"/></>
+                          : vis === 'friendsOnly'
+                          ? <><circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-3 2.2-5 5-5"/><circle cx="11.5" cy="9" r="2"/><path d="M9 14c0-2 1-3 2.5-3s2.5 1 2.5 3"/></>
+                          : <><rect x="4" y="7" width="8" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></>
+                        }
+                      </svg>
+                      {cfg.label}
+                    </div>
+                  );
+                })()}
+                {/* Host */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>
+                  {event.host}
+                </div>
+                {/* Dress code — clothing icon */}
+                {event.dressCode && event.dressCode !== 'No dress code' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 5l3-3 2 1.5c0 1-.9 1.5-2 1.5v7h8V5c-1.1 0-2-.5-2-1.5L12 2l3 3-2 1.5V14H3V6.5L1 5z"/></svg>
+                    {event.dressCode}
                   </div>
-                ))}
+                )}
               </div>
 
               {/* Experience tags */}
@@ -454,7 +500,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
           {tab === 'comments' && (
             <CommentsTab event={event} user={user} myComment={myComment} passportStamped={passportStamped}
               commentText={commentText} setCommentText={setCommentText} onSubmit={handleSubmitComment}
-              isHost={isHost}
+              isHost={isHost} addToast={addToast}
               onPin={typeof pinQuote === 'function' ? (id) => { pinQuote(event.id, id); addToast('Quote pinned! It will appear on the event overview.', 'success'); } : null} />
           )}
 
@@ -600,36 +646,114 @@ function HostToolsTab({ event, reminders, setReminders, reminderSaved, onSaveRem
   );
 }
 
-function CommentsTab({ event, user, myComment, passportStamped, commentText, setCommentText, onSubmit, isHost, onPin }) {
+function CommentsTab({ event, user, myComment, passportStamped, commentText, setCommentText, onSubmit, isHost, onPin, addToast }) {
   const comments = event.eventComments || [];
   const pinnedIds = event.pinnedQuotes || [];
+  const [reactions, setReactions] = React.useState({});
+  const [photoCount, setPhotoCount] = React.useState(0);
+  const photoRef = React.useRef();
+  const MAX_GUEST_PHOTOS = 5;
+  const PROMPT_CHIPS = [
+    'The dish that surprised me most was...',
+    'What I will remember most from tonight...',
+    'A conversation that stayed with me...',
+    'If I could bottle one moment it would be...',
+    'The pairing that changed my mind about...',
+    'I came not knowing anyone and left feeling...',
+  ];
+  const INLINE_EMOJI = ['😍','🍷','👏','🥹','✨','🔥','🫶','🌿','🥂','🍜'];
+
+  if (!event.isEnded && !isHost) {
+    return (
+      <div style={{ textAlign: 'center', padding: '32px 0' }}>
+        <div style={{ fontSize: 36, marginBottom: 10 }}>💬</div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Moments open when the event starts</div>
+        <div style={{ fontSize: 13, color: 'var(--ink2)', lineHeight: 1.6 }}>
+          Come back on {event.date ? new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : 'event day'} to share a Moment with fellow guests.
+        </div>
+      </div>
+    );
+  }
+
+  function toggleReaction(commentId, type) {
+    setReactions(prev => {
+      const key = commentId + '-' + type;
+      const defaults = { heart: { count: 2, active: false }, cheers: { count: 1, active: false } };
+      const current = prev[key] || defaults[type];
+      return { ...prev, [key]: { count: current.active ? current.count - 1 : current.count + 1, active: !current.active } };
+    });
+  }
+
+  function getReaction(commentId, type) {
+    const key = commentId + '-' + type;
+    const defaults = { heart: { count: 2, active: false }, cheers: { count: 1, active: false } };
+    return reactions[key] || defaults[type];
+  }
+
+  function addEmoji(em) { setCommentText(prev => prev + em); }
+  function applyPrompt(p) { setCommentText(p); }
+
+  function handlePhotoUpload(e) {
+    const files = Array.from(e.target.files || []);
+    if (photoCount + files.length > MAX_GUEST_PHOTOS) {
+      if (typeof addToast === 'function') addToast('Max ' + MAX_GUEST_PHOTOS + ' photos allowed', 'error');
+      return;
+    }
+    setPhotoCount(prev => prev + files.length);
+    if (typeof addToast === 'function') addToast(files.length + ' photo' + (files.length > 1 ? 's' : '') + ' added!', 'success');
+  }
 
   return (
     <div>
       {!myComment && (
-        <div style={{ background: 'linear-gradient(135deg, #1A1A2E, #2D2550)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ fontSize: 28, flexShrink: 0 }}>🗺️</div>
+        <div style={{ background: 'var(--indigo, #6c5dd3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ fontSize: 22, flexShrink: 0 }}>🎫</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, color: 'white', marginBottom: 4, fontSize: 14 }}>Complete your Dining Passport stamp</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', lineHeight: 1.5 }}>Share a moment to stamp your passport and unlock all event photos.</div>
+            <div style={{ fontWeight: 700, color: 'white', marginBottom: 2, fontSize: 14 }}>Complete your Dining Passport stamp</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', lineHeight: 1.5 }}>Share a moment to stamp your passport and unlock all event photos.</div>
           </div>
         </div>
       )}
+
       {!myComment ? (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
-            How was your {getTimeOfDay(event.time)}?
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>How was your {getTimeOfDay(event.time)}?</div>
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 5 }}>Need a nudge? Tap a prompt:</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              {PROMPT_CHIPS.map(p => (
+                <button key={p} onClick={() => applyPrompt(p)} style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, border: '1px solid var(--border)', background: 'var(--page)', color: 'var(--ink2)', cursor: 'pointer' }}>{p.length > 30 ? p.slice(0, 28) + '...' : p}</button>
+              ))}
+            </div>
           </div>
-          <textarea className="form-textarea" value={commentText} onChange={e => setCommentText(e.target.value)}
-            placeholder={`Share what made this ${getMealName(event)} special...`} style={{ minHeight: 90, marginBottom: 10 }} />
-          <button className="btn btn-primary btn-full" onClick={onSubmit} disabled={!commentText.trim()}>Share my moment & stamp passport 🗺️</button>
+          <div style={{ position: 'relative', marginBottom: 8 }}>
+            <textarea className="form-textarea" value={commentText} onChange={e => setCommentText(e.target.value)}
+              placeholder={'Share what made this ' + getMealName(event) + ' special...'} style={{ minHeight: 90, marginBottom: 0, paddingBottom: 36 }} />
+            <div style={{ position: 'absolute', bottom: 8, left: 10, display: 'flex', gap: 3 }}>
+              {INLINE_EMOJI.map(em => (
+                <button key={em} onClick={() => addEmoji(em)} style={{ background: 'none', border: 'none', fontSize: 16, cursor: 'pointer', padding: '2px 3px' }}>{em}</button>
+              ))}
+            </div>
+          </div>
+          {event.isEnded && !isHost && (
+            <div style={{ marginBottom: 10 }}>
+              <input ref={photoRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotoUpload} />
+              <button onClick={() => photoRef.current && photoRef.current.click()} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--page)', fontSize: 12, cursor: 'pointer', color: 'var(--ink2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                📷 Add photos {photoCount > 0 ? '(' + photoCount + '/' + MAX_GUEST_PHOTOS + ')' : '(up to ' + MAX_GUEST_PHOTOS + ')'}
+              </button>
+              <div style={{ fontSize: 10, color: 'var(--ink3)', marginTop: 4 }}>Max {MAX_GUEST_PHOTOS} photos · 10MB each · JPEG, PNG, HEIC</div>
+            </div>
+          )}
+          <button className="btn btn-primary btn-full" onClick={onSubmit} disabled={!commentText.trim()}>Share my moment & stamp passport 🎫</button>
         </div>
       ) : (
-        <div style={{ background: 'var(--teal-light)', borderRadius: 10, padding: '12px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ background: 'var(--teal-light)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>✓</span>
           <div><div style={{ fontSize: 13, fontWeight: 700, color: '#07A87B' }}>Passport stamped!</div><div style={{ fontSize: 12, color: 'var(--ink2)' }}>Thanks for sharing your moment.</div></div>
         </div>
       )}
+
+      {comments.length > 0 && <div style={{ height: '0.5px', background: 'var(--border)', marginBottom: 12 }} />}
 
       {comments.length === 0 ? (
         <div className="empty-state" style={{ padding: '24px 0' }}><div className="empty-icon">💬</div><div className="empty-title">No moments shared yet</div><div className="empty-sub">Be the first to share how the evening went.</div></div>
@@ -637,38 +761,38 @@ function CommentsTab({ event, user, myComment, passportStamped, commentText, set
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {comments.map((c, ci) => {
             const isPinned = pinnedIds.includes(c.id);
-            const style = isPinned ? QUOTE_STYLES[ci % QUOTE_STYLES.length] : null;
+            const qStyle = isPinned ? QUOTE_STYLES[ci % QUOTE_STYLES.length] : null;
+            const heart = getReaction(c.id, 'heart');
+            const cheers = getReaction(c.id, 'cheers');
             return (
-              <div key={c.id} style={{
-                background: style ? style.bg : 'var(--page)', borderRadius: 12, padding: '12px 14px',
-                border: style ? (style.border || 'none') : '1px solid var(--border)',
-                color: style ? style.color : 'var(--ink)',
-                position: 'relative',
-                animation: isPinned ? `fadeSlideIn 0.4s ease ${ci * 0.08}s both` : 'none',
-              }}>
-                {isPinned && (
-                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, opacity: 0.7 }}>📌 Pinned quote</div>
-                )}
+              <div key={c.id} style={{ background: qStyle ? qStyle.bg : 'var(--page)', borderRadius: 12, padding: '12px 14px', border: qStyle ? (qStyle.border || 'none') : '1px solid var(--border)', color: qStyle ? qStyle.color : 'var(--ink)', position: 'relative', animation: isPinned ? 'fadeSlideIn 0.4s ease ' + (ci * 0.08) + 's both' : 'none' }}>
+                {isPinned && <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, opacity: 0.7 }}>📌 Pinned quote</div>}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <div className={`av av-sm av-${c.color}`} style={isPinned ? { border: '2px solid rgba(255,255,255,0.3)' } : {}}>{c.initials}</div>
-                  <div>
+                  <div className={'av av-sm av-' + c.color} style={isPinned ? { border: '2px solid rgba(255,255,255,0.3)' } : {}}>{c.initials}</div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{c.userName}</div>
-                    {c.passportStamped && <div style={{ fontSize: 10, color: isPinned ? 'rgba(255,255,255,.7)' : 'var(--teal)', fontWeight: 600 }}>🗺️ Passport stamped</div>}
+                    {c.passportStamped && <div style={{ fontSize: 10, color: isPinned ? 'rgba(255,255,255,.7)' : 'var(--teal)', fontWeight: 600 }}>🎫 Passport stamped</div>}
                   </div>
                   {isHost && onPin && !isPinned && (
-                    <button onClick={() => onPin(c.id)}
-                      style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', cursor: 'pointer' }}>Pin quote</button>
+                    <button onClick={() => onPin(c.id)} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '3px 9px', fontSize: 11, fontWeight: 600, color: 'var(--ink2)', cursor: 'pointer' }}>Pin quote</button>
                   )}
                 </div>
                 {isPinned && <div style={{ fontSize: 30, opacity: 0.12, position: 'absolute', top: 6, right: 14, fontFamily: 'serif' }}>"</div>}
-                <div style={{ fontSize: 13, lineHeight: 1.6, fontStyle: isPinned ? 'italic' : 'normal' }}>{isPinned ? `"${c.text}"` : c.text}</div>
+                <div style={{ fontSize: 13, lineHeight: 1.6, fontStyle: isPinned ? 'italic' : 'normal', marginBottom: 10 }}>{isPinned ? '"' + c.text + '"' : c.text}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => toggleReaction(c.id, 'heart')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 20, fontSize: 12, border: '1px solid ' + (heart.active ? 'var(--coral)' : 'var(--border)'), background: heart.active ? 'var(--coral-light)' : 'var(--page)', color: heart.active ? 'var(--coral)' : 'var(--ink2)', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 13 }}>❤️</span> {heart.count}
+                  </button>
+                  <button onClick={() => toggleReaction(c.id, 'cheers')} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 20, fontSize: 12, border: '1px solid ' + (cheers.active ? 'var(--amber)' : 'var(--border)'), background: cheers.active ? 'var(--amber-light)' : 'var(--page)', color: cheers.active ? 'var(--amber)' : 'var(--ink2)', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 13 }}>🥂</span> {cheers.count}
+                  </button>
+                </div>
               </div>
             );
           })}
         </div>
       )}
-
-      <style>{`@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <style>{"@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }"}</style>
     </div>
   );
 }
