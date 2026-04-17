@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
-import { EmojiPresetsRow, EmojiTrigger } from './EmojiPicker';
+import { EmojiTrigger } from './EmojiPicker';
 
-const EVENT_TYPES = ['Brunch', 'Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Other'];
-const EVENT_TYPE_ICONS = { 'Brunch': '🍳', 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '👨‍🍳', 'Supper Club': '✨', 'Tasting': '🍾', 'Other': '🍽️' };
+const EVENT_TYPES = ['Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Other'];
+const EVENT_TYPE_ICONS = { 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '🍽️', 'Supper Club': '🕯️', 'Tasting': '🍾', 'Other': '🎉' };
 const VISIBILITY = ['Public', 'Friends Only', 'Invite Only'];
 const DRESS_CODES = ['No dress code', 'Smart Casual', 'Cocktail Attire', 'Black Tie', 'Themed — see description'];
 const POTLUCK_CATS = [
@@ -34,6 +34,33 @@ const DEFAULT_POTLUCK = { items: [
 const DEFAULT_SUPPER_CLUB = { hostNote: '', pairing: 'wine', courses: [
   { num: 1, name: '', desc: '', pairing: '' }, { num: 2, name: '', desc: '', pairing: '' }, { num: 3, name: '', desc: '', pairing: '' },
 ]};
+const TASTING_OPTIONS = ['Wine','Champagne','Cognac','Whiskey','Cocktails','Mocktails','Beer & Cider','Sake','Tequila'];
+
+const ANIMATION_CSS = `
+@keyframes em-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes em-sway{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+@keyframes em-bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-9px)}70%{transform:translateY(-4px)}}
+@keyframes em-wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg) scale(1.1)}75%{transform:rotate(8deg) scale(1.1)}}
+@keyframes em-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.05)}}
+@keyframes em-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes em-pop{0%,100%{transform:scale(1)}30%{transform:scale(1.3)}60%{transform:scale(.95)}}
+@keyframes em-sparkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.25) rotate(30deg)}}
+.em-pulse{animation:em-pulse 1.8s ease-in-out infinite}
+.em-sway{animation:em-sway 1.5s ease-in-out infinite}
+.em-bounce{animation:em-bounce 1.3s ease infinite}
+.em-wobble{animation:em-wobble 1.2s ease-in-out infinite}
+.em-float{animation:em-float 2.2s ease-in-out infinite}
+.em-spin{animation:em-spin 4s linear infinite}
+.em-pop{animation:em-pop 1.6s ease infinite}
+.em-sparkle{animation:em-sparkle 1.4s ease-in-out infinite}
+`;
+const EMOJI_ANIM_MAP = {
+  '🍷':'pulse','🌿':'sway','🕯️':'bounce','🍜':'wobble','🥂':'float',
+  '🌸':'sway','🍳':'spin','🎶':'sway','🫕':'wobble','🥘':'pulse',
+  '🍾':'bounce','🧆':'pop','🥩':'float','✨':'sparkle','🍋':'spin',
+  '🌶️':'wobble','🫙':'float','🍄':'bounce','🫐':'pop','🍯':'pulse',
+  '🫒':'sway','🧇':'float','🎉':'sparkle','🌙':'float',
+};
 function newId() { return 'pi-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7); }
 
 function ButtonGroup({ options, value, onChange, icons, cols }) {
@@ -230,6 +257,23 @@ export default function CreateEventModal({ event, onClose }) {
   const newItemEmoji = { food: '🍽️', drinks: '🥂', other: '🧺' };
   const isPotluck = form.type === 'Potluck';
   const isSupperClub = form.type === 'Supper Club';
+  const isTasting = form.type === 'Tasting';
+  const [step, setStep] = React.useState(1);
+  const [tastingItems, setTastingItems] = React.useState(event?.tasting?.items || []);
+  const [selectedFriends, setSelectedFriends] = React.useState([]);
+  const [emailInvites, setEmailInvites] = React.useState([]);
+  const [newEmail, setNewEmail] = React.useState('');
+  const [friendSearch, setFriendSearch] = React.useState('');
+  const { friends } = useApp();
+  const availableFriends = (friends || []).filter(f => f && f.name && f.status === 'accepted');
+  const filteredFriends = friendSearch ? availableFriends.filter(f => f.name.toLowerCase().includes(friendSearch.toLowerCase())) : availableFriends;
+  function toggleFriend(uid) { setSelectedFriends(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]); }
+  function addEmail() {
+    if (!newEmail || !newEmail.includes('@')) { addToast('Please enter a valid email', 'error'); return; }
+    if (emailInvites.includes(newEmail)) { addToast('Already added', 'error'); return; }
+    setEmailInvites(prev => [...prev, newEmail]); setNewEmail('');
+  }
+  function toggleTasting(item) { setTastingItems(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]); }
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
   function appendToField(field, emoji) { setForm(f => ({ ...f, [field]: (f[field] || '') + emoji })); }
   function setPlaylist(key, val) { setForm(f => ({ ...f, playlist: { ...f.playlist, [key]: val } })); }
@@ -242,7 +286,7 @@ export default function CreateEventModal({ event, onClose }) {
   function handleSubmit() {
     if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
     if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; }
-    const payload = { ...form, cover, potluck: isPotluck ? { items: potluckItems } : null, supperClub: isSupperClub ? scData : null, playlist: form.playlist?.url?.trim() ? form.playlist : null };
+    const payload = { ...form, cover, potluck: isPotluck ? { items: potluckItems } : null, supperClub: isSupperClub ? scData : null, tasting: isTasting ? { items: tastingItems } : null, playlist: form.playlist?.url?.trim() ? form.playlist : null, invites: [...selectedFriends.map(uid => { const f = (friends||[]).find(f=>f.userId===uid); return {userId:uid,name:f?.name||'Friend'}; }), ...emailInvites.map(e=>({email:e,name:e.split('@')[0]}))] };
     if (isEdit) { updateEvent(event.id, payload); addToast('Event updated ✓', 'success'); }
     else { createEvent(payload); addToast('Event created! 🎉', 'success'); }
     onClose();
@@ -264,7 +308,24 @@ export default function CreateEventModal({ event, onClose }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal modal-lg" style={{ maxWidth: 660 }}>
         <div className="modal-head"><h2>{isEdit ? 'Edit Event' : 'Create Event'}</h2><button className="modal-x" onClick={onClose}>✕</button></div>
+        <style>{ANIMATION_CSS}</style>
+        {/* Step indicator */}
+        <div style={{ display: 'flex', padding: '12px 24px', borderBottom: '1px solid var(--border)', gap: 0 }}>
+          {[{s:1,label:'Details'},{s:2,label:'Invite'},{s:3,label:'Publish'}].map(({s,label},i) => {
+            const active = step === s; const done = step > s;
+            return (
+              <React.Fragment key={s}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, background: done ? 'var(--teal)' : active ? 'var(--indigo)' : 'var(--border)', color: (done||active) ? 'white' : 'var(--ink3)' }}>{done ? '✓' : s}</div>
+                  <span style={{ fontSize: 12, fontWeight: active ? 600 : 400, color: active ? 'var(--ink)' : 'var(--ink3)', whiteSpace: 'nowrap' }}>{label}</span>
+                </div>
+                {i < 2 && <div style={{ flex: '0 0 20px', height: 2, background: step > s ? 'var(--teal)' : 'var(--border)', alignSelf: 'center', margin: '0 2px', borderRadius: 2 }} />}
+              </React.Fragment>
+            );
+          })}
+        </div>
         <div className="modal-body">
+        {step === 1 && <>
           <div className="form-group">
             <label className="form-label">Cover</label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -284,16 +345,30 @@ export default function CreateEventModal({ event, onClose }) {
             )}
             {coverTab === 'emoji' && (
               <div>
-                <div style={{ marginBottom: 10, fontSize: 13, color: 'var(--ink2)' }}>Select an emoji for your animated cover:</div>
-                <EmojiPresetsRow selected={cover.emoji} onSelect={em => setCover(c => ({ ...c, type: 'emoji', emoji: em, bg: c.bg || '#1A1A2E' }))} />
-                <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
-                  <label className="form-label" style={{ margin: 0, whiteSpace: 'nowrap' }}>Background:</label>
-                  {GRADIENT_COVERS.slice(0, 5).map(g => (
-                    <div key={g.label} onClick={() => setCover(c => ({ ...c, bg: g.value }))}
-                      style={{ width: 28, height: 28, borderRadius: 6, cursor: 'pointer', background: g.value, border: cover.bg === g.value ? '2px solid var(--indigo)' : '2px solid transparent' }} />
+                <div style={{ marginBottom: 8, fontSize: 13, color: 'var(--ink2)' }}>Pick a background color, then an animated icon:</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+                  {GRADIENT_COVERS.map(g => (
+                    <div key={g.label} onClick={() => setCover(c => ({ ...c, type: 'emoji', bg: g.value }))}
+                      style={{ width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', background: g.value, border: cover.bg === g.value ? '3px solid var(--indigo)' : '2px solid transparent', flexShrink: 0 }} />
                   ))}
                 </div>
-                {cover.emoji && <div style={{ marginTop: 10, width: 80, height: 80, borderRadius: 12, background: cover.bg || '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>{cover.emoji}</div>}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                  {Object.keys(EMOJI_ANIM_MAP).map(em => {
+                    const anim = EMOJI_ANIM_MAP[em];
+                    const isSelected = cover.emoji === em;
+                    return (
+                      <button key={em} onClick={() => setCover(c => ({ ...c, type: 'emoji', emoji: em, bg: c.bg || '#1A1A2E' }))}
+                        style={{ width: 44, height: 44, borderRadius: 10, fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)', border: isSelected ? '2.5px solid var(--indigo)' : '1px solid var(--border)' }}>
+                        <span className={isSelected ? 'em-' + anim : ''} style={{ display: 'inline-block' }}>{em}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {cover.emoji && (
+                  <div style={{ width: 80, height: 80, borderRadius: 12, background: cover.bg || '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
+                    <span className={'em-' + (EMOJI_ANIM_MAP[cover.emoji] || 'pulse')} style={{ display: 'inline-block' }}>{cover.emoji}</span>
+                  </div>
+                )}
               </div>
             )}
             {coverTab === 'image' && (
@@ -458,6 +533,16 @@ export default function CreateEventModal({ event, onClose }) {
               })}
             </div>
           )}
+          {isTasting && (
+            <div style={{ background: 'var(--page)', border: '1px solid var(--indigo-light)', borderRadius: 12, padding: 16, marginTop: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 10 }}>🍾 What are we tasting?</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {TASTING_OPTIONS.map(item => (
+                  <button key={item} onClick={() => toggleTasting(item)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer', border: tastingItems.includes(item) ? '1.5px solid var(--indigo)' : '1px solid var(--border)', background: tastingItems.includes(item) ? 'var(--indigo-light)' : 'transparent', color: tastingItems.includes(item) ? 'var(--indigo)' : 'var(--ink2)', fontWeight: tastingItems.includes(item) ? 600 : 400, minHeight: 36 }}>{item}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--page)', borderRadius: 10, marginTop: 8 }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>📸 Photo Gallery</div>
@@ -467,10 +552,86 @@ export default function CreateEventModal({ event, onClose }) {
               <div style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: form.galleryEnabled ? 23 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
             </div>
           </div>
+        </>}
+
+        {/* ── STEP 2: INVITES ── */}
+        {step === 2 && (
+          <div>
+            <div className="form-group">
+              <label className="form-label">Personal Message <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(Optional)</span></label>
+              <textarea className="form-textarea" value={form.personalMessage || ''} onChange={e => set('personalMessage', e.target.value)} placeholder="Looking forward to seeing you! 🍷" style={{ minHeight: 70 }} />
+            </div>
+            {availableFriends.length > 0 && (
+              <div className="form-group">
+                <label className="form-label">Invite Friends <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(Optional)</span></label>
+                <input className="form-input" value={friendSearch} onChange={e => setFriendSearch(e.target.value)} placeholder="🔍 Search friends..." style={{ marginBottom: 10 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7, maxHeight: 220, overflowY: 'auto' }}>
+                  {filteredFriends.map(f => (
+                    <label key={f.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', border: selectedFriends.includes(f.userId) ? '2px solid var(--indigo)' : '1px solid var(--border)', borderRadius: 12, cursor: 'pointer', background: selectedFriends.includes(f.userId) ? 'var(--indigo-light)' : 'var(--surface)', minHeight: 52 }} onClick={() => toggleFriend(f.userId)}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--indigo-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--indigo)', fontSize: 13, flexShrink: 0 }}>{f.initials || f.name?.[0]}</div>
+                      <div style={{ flex: 1 }}><div style={{ fontWeight: 500, fontSize: 14 }}>{f.name}</div><div style={{ fontSize: 12, color: 'var(--ink3)' }}>{f.handle || ''}</div></div>
+                      <div style={{ width: 20, height: 20, borderRadius: 4, background: selectedFriends.includes(f.userId) ? 'var(--indigo)' : 'transparent', border: '2px solid ' + (selectedFriends.includes(f.userId) ? 'var(--indigo)' : 'var(--border)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 11, flexShrink: 0 }}>{selectedFriends.includes(f.userId) ? '✓' : ''}</div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="form-group">
+              <label className="form-label">Invite by Email</label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <input className="form-input" type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEmail()} placeholder="friend@email.com" style={{ flex: 1 }} />
+                <button className="btn btn-ghost btn-sm" onClick={addEmail} style={{ flexShrink: 0 }}>+ Add</button>
+              </div>
+              {emailInvites.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                  {emailInvites.map(em => (
+                    <span key={em} style={{ padding: '6px 11px', background: 'var(--indigo-light)', border: '1px solid var(--indigo)', borderRadius: 20, fontSize: 13, display: 'flex', alignItems: 'center', gap: 7 }}>
+                      {em}<button onClick={() => setEmailInvites(prev => prev.filter(e => e !== em))} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: 'var(--indigo)', padding: 0 }}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 3: REVIEW ── */}
+        {step === 3 && (
+          <div>
+            <div style={{ background: 'var(--page)', padding: 18, borderRadius: 12, marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>{form.title}</div>
+              <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.8 }}>
+                {form.date && <div>📅 {form.date} at {form.time}</div>}
+                {form.useCrowdCheck && <div>📅 Letting guests vote on date</div>}
+                {form.loc && <div>📍 {form.loc}</div>}
+                <div>🎉 {form.type}</div>
+                {form.dressCode && form.dressCode !== 'No dress code' && <div>👔 {form.dressCode}</div>}
+                <div>{form.vis === 'Public' ? '🌍 Public' : form.vis === 'Friends Only' ? '👥 Friends Only' : '🔒 Invite Only'}</div>
+                <div>👥 Max {form.cap} guests</div>
+              </div>
+            </div>
+            {(selectedFriends.length > 0 || emailInvites.length > 0) && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>Inviting {selectedFriends.length + emailInvites.length} guest{selectedFriends.length + emailInvites.length !== 1 ? 's' : ''}</div>
+                <div style={{ fontSize: 13, color: 'var(--ink2)' }}>
+                  {selectedFriends.map(uid => (friends||[]).find(f=>f.userId===uid)?.name).filter(Boolean).join(', ')}
+                  {selectedFriends.length > 0 && emailInvites.length > 0 && ', '}
+                  {emailInvites.join(', ')}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         </div>
         <div className="modal-foot">
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
+          {step > 1 && <button className="btn btn-ghost" onClick={() => setStep(s => s - 1)}>← Back</button>}
+          {step === 1 && <button className="btn btn-ghost" onClick={onClose}>Cancel</button>}
+          {step === 2 && <button className="btn btn-ghost" onClick={() => setStep(3)}>Skip</button>}
+          {step < 3
+            ? <button className="btn btn-primary" onClick={() => { if (step === 1) { if (!form.title.trim()) { addToast('Event title is required', 'error'); return; } if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; } } setStep(s => s + 1); }}>Next →</button>
+            : <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
+          }
         </div>
       </div>
     </div>
