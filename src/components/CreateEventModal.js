@@ -251,6 +251,7 @@ export default function CreateEventModal({ event, onClose }) {
   });
   const [cover, setCover] = useState(event?.cover || { type: 'gradient', value: GRADIENT_COVERS[0].value });
   const [coverTab, setCoverTab] = useState(event?.cover?.type === 'image' ? 'image' : event?.cover?.type === 'emoji' ? 'emoji' : 'gradient');
+  const [customHex, setCustomHex] = useState('');
   const [potluckItems, setPotluckItems] = useState(event?.potluck?.items || DEFAULT_POTLUCK.items);
   const [scData, setScData] = useState(event?.supperClub || DEFAULT_SUPPER_CLUB);
   const [newItemText, setNewItemText] = useState({ food: '', drinks: '', other: '' });
@@ -336,11 +337,17 @@ export default function CreateEventModal({ event, onClose }) {
               ))}
             </div>
             {coverTab === 'gradient' && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {GRADIENT_COVERS.map(g => (
-                  <div key={g.label} title={g.label} onClick={() => setCover({ type: 'gradient', value: g.value })}
-                    style={{ width: 44, height: 44, borderRadius: 10, cursor: 'pointer', background: g.value, border: cover.value === g.value ? '3px solid var(--indigo)' : '3px solid transparent' }} />
-                ))}
+              <div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                  {GRADIENT_COVERS.filter(g => g.label && g.value && g.value.startsWith('linear-gradient')).map(g => (
+                    <div key={g.label} title={g.label} onClick={() => { setCover({ type: 'gradient', value: g.value }); setCustomHex(''); }}
+                      style={{ width: 44, height: 44, borderRadius: 10, cursor: 'pointer', background: g.value, border: cover.value === g.value && !customHex ? '3px solid var(--indigo)' : '3px solid transparent', flexShrink: 0 }} />
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 6, background: customHex ? 'linear-gradient(135deg, #111, ' + customHex + ')' : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)', border: customHex ? '3px solid var(--indigo)' : '2px solid var(--border)', flexShrink: 0 }} />
+                  <input className="form-input" value={customHex} onChange={e => { const v = e.target.value; setCustomHex(v); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setCover({ type: 'gradient', value: 'linear-gradient(135deg, #111, ' + v + ')' }); }} placeholder="Custom hex e.g. #FF6B6B" style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }} maxLength={7} />
+                </div>
               </div>
             )}
             {coverTab === 'emoji' && (

@@ -244,13 +244,15 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 {/* Date */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 1v4M11 1v4M2 7h12"/></svg>
-                  {fmtDate(event.date)}
+                  {event.isTBD ? 'Date TBD' : event.useCrowdCheck ? 'Vote pending' : (fmtDate(event.date) || 'Date TBD')}
                 </div>
                 {/* Time */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2.5 1.5"/></svg>
-                  {fmtTime(event.time)}
-                </div>
+                {!event.isTBD && !event.useCrowdCheck && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2.5 1.5"/></svg>
+                    {fmtTime(event.time) || ''}
+                  </div>
+                )}
                 {/* Location — neighborhood only */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--page)', borderRadius: 20, padding: '5px 12px', fontSize: 13, color: 'var(--ink)', border: '1px solid var(--border)' }}>
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5s4.5-5 4.5-8.5c0-2.5-2-4.5-4.5-4.5z"/><circle cx="8" cy="6" r="1.5"/></svg>
