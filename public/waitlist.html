@@ -27,15 +27,8 @@
   --border:rgba(90,70,160,0.11);--border2:rgba(90,70,160,0.2);
   --r:16px;
   /* accent color tokens — swappable by palette */
-  --ac1:#5b4de0;--ac1-light:rgba(91,77,224,0.09);--ac1-border:rgba(91,77,224,0.2);
-  --ac2:#b5627a;--ac2-light:rgba(181,98,122,0.09);--ac2-border:rgba(181,98,122,0.22);
 }
-/* Rose palette override */
-body.rose{
-  --indigo:#b5627a;--indigo2:#c97a90;--indigo-light:rgba(181,98,122,0.09);
-  --border:rgba(160,80,100,0.13);--border2:rgba(160,80,100,0.22);
-  --feat-indigo-bg:rgba(181,98,122,0.06);--feat-indigo-border:rgba(181,98,122,0.2);
-}
+
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
 
@@ -247,13 +240,7 @@ footer a:hover{text-decoration:underline}
 }
 .hero-wrap{position:relative}
 
-/* ── PALETTE TOGGLE ── */
-.palette-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;max-width:540px;margin:-8px auto 16px;padding:0 4px}
-.pal-label{font-size:11px;color:var(--ink3);letter-spacing:.5px}
-.pal-btn{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .2s;flex-shrink:0}
-.pal-btn.on{border-color:var(--ink2);transform:scale(1.15)}
-.pal-indigo{background:#5b4de0}
-.pal-rose{background:#b5627a}
+
 
 /* ── FEAT CARD ICON (SVG) ── */
 .feat-icon-svg{width:32px;height:32px;margin-bottom:14px;display:block}
@@ -287,12 +274,7 @@ footer a:hover{text-decoration:underline}
 <!-- FORM -->
 <section id="waitlist" aria-labelledby="wl-heading">
   <h2 id="wl-heading" class="sr-only">Join the waitlist</h2>
-  <div class="palette-row" aria-label="Color theme">
-  <span class="pal-label">Theme</span>
-  <button class="pal-btn pal-indigo on" onclick="setPal('indigo',this)" aria-label="Indigo theme" title="Indigo"></button>
-  <button class="pal-btn pal-rose" onclick="setPal('rose',this)" aria-label="Rose theme" title="Rose"></button>
-</div>
-<div class="form-card fade-up delay2">
+  <div class="form-card fade-up delay2">
     <div id="form-inner">
       <div style="text-align:center;margin-bottom:24px">
         <span class="free-badge">✓ Always free to join &amp; attend</span>
@@ -520,13 +502,6 @@ function handleSupport(){
   if(!a||isNaN(a)||Number(a)<1){document.getElementById('sup-amt').style.borderColor='#e24b4a';return;}
   alert('Thank you! Payment processing coming soon — we truly appreciate your support.');
 }
-/* Palette */
-function setPal(name,btn){
-  document.querySelectorAll('.pal-btn').forEach(function(b){b.classList.remove('on')});
-  btn.classList.add('on');
-  document.body.classList.toggle('rose', name==='rose');
-}
-
 /* Particle canvas */
 (function(){
   var canvas=document.getElementById('particles');
