@@ -1,3 +1,6 @@
+# Root redirect to waitlist
+/    /waitlist.html    302
+
 # Netlify SPA redirect — sends all routes to index.html for React Router
 /*    /index.html   200
 

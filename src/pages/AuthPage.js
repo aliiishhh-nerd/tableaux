@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,6 +21,17 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signup') {
+        const { data, error: signUpError } = await supabaseSignUp(email, password, name || email.split('@')[0]);
+        if (signUpError) throw signUpError;
+        if (data.user && !data.session) {
+          setSuccess('Account created! Check your email to confirm, then sign in.');
+          setMode('login');
+          setLoading(false);
+          return;
+        }
+        // Auto-confirmed — fall through to login
+      }
+      if (mode === 'signup_done') {
         await supabaseSignUp(email, password, name);
         await login(email, password);
         navigate('/feed');
@@ -91,6 +103,7 @@ export default function AuthPage() {
             style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 16, fontSize: 14, fontFamily: 'inherit' }}
           />
           
+          {success && <div style={{ color: "var(--teal)", fontSize: 13, marginBottom: 10, textAlign: "center", padding: "10px 14px", background: "var(--teal-light,#e6faf8)", borderRadius: 8 }}>{success}</div>}
           {error && (
             <div style={{ padding: '8px 12px', background: 'rgba(220,38,38,0.1)', color: '#dc2626', borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
               {error}

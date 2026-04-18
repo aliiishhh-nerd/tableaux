@@ -479,7 +479,7 @@ footer a:hover{text-decoration:underline}
 </main>
 
 <footer role="contentinfo">
-  <p>&copy; 2026 TableFolk &nbsp;&middot;&nbsp;
+  <p>&copy; 2026 TableFolk &nbsp;·&nbsp; <a href="/privacy.html" style="color:inherit;opacity:.7;text-decoration:none;">Privacy</a> &nbsp;·&nbsp; <a href="/terms.html" style="color:inherit;opacity:.7;text-decoration:none;">Terms</a> &nbsp;&middot;&nbsp;
   <a href="mailto:hello@tablefolk.club">hello@tablefolk.club</a> &nbsp;&middot;&nbsp;
   <a href="#">Privacy</a> &nbsp;&middot;&nbsp;
   <a href="#">Terms</a></p>
@@ -500,7 +500,7 @@ function setAmt(amt,btn){
 function handleSupport(){
   var a=document.getElementById('sup-amt').value;
   if(!a||isNaN(a)||Number(a)<1){document.getElementById('sup-amt').style.borderColor='#e24b4a';return;}
-  alert('Thank you! Payment processing coming soon — we truly appreciate your support.');
+  window.open('https://buymeacoffee.com/tablefolk', '_blank');
 }
 /* Particle canvas */
 (function(){
