@@ -21,9 +21,8 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signup') {
-        const { data, error: signUpError } = await supabaseSignUp(email, password, name || email.split('@')[0]);
-        if (signUpError) throw signUpError;
-        if (data.user && !data.session) {
+        const signUpData = await supabaseSignUp(email, password, name || email.split('@')[0]);
+        if (signUpData.user && !signUpData.session) {
           setSuccess('Account created! Check your email to confirm, then sign in.');
           setMode('login');
           setLoading(false);
@@ -31,8 +30,7 @@ export default function AuthPage() {
         }
         // Auto-confirmed — fall through to login
       }
-      if (mode === 'signup_done') {
-        await supabaseSignUp(email, password, name);
+      if (mode === '_unused') {
         await login(email, password);
         navigate('/feed');
       } else {
