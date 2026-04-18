@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
 import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { AppProvider, useApp } from './hooks/useApp';
 import AppShell from './components/AppShell';
@@ -52,11 +53,13 @@ function AuthListener() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppProvider>
-        <AuthListener />
-        <AppShell />
-      </AppProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppProvider>
+          <AuthListener />
+          <AppShell />
+        </AppProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

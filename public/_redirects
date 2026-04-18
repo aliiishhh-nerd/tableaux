@@ -1,0 +1,9 @@
+# Netlify SPA redirect — sends all routes to index.html for React Router
+/*    /index.html   200
+
+# Serve public HTML pages directly
+/waitlist.html    /waitlist.html    200
+/privacy.html     /privacy.html     200
+/terms.html       /terms.html       200
+/confirmation-email.html  /confirmation-email.html  200
+/og-image.html    /og-image.html    200

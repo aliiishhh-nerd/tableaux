@@ -548,6 +548,11 @@ function handleSubmit(){
   if(!ok)return;
   if(spotMap[city]){var el=document.getElementById(spotMap[city]);if(el){var n=parseInt(el.textContent);if(n>0)el.textContent=n-1;}}
   var role=iHost&&iDine?'host and dine':iHost?'host':'dine';
+  fetch('https://jrwugzljctnvcodvlvqf.supabase.co/rest/v1/waitlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd3VnemxqY3RudmNvZHZsdnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDUwOTEsImV4cCI6MjA5MDUyMTA5MX0.H-tyCrSDKmAe_sp-wsMP2jiiGPajA9J4Z-bPH2SrdYQ', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ email: email, city: city, intent: iHost&&iDine?'both':iHost?'host':'dine' })
+  }).catch(function(){});
   document.getElementById('form-inner').style.display='none';
   var s=document.getElementById('success-state');s.style.display='block';
   document.getElementById('suc-msg').textContent="You're on the "+cityMap[city]+" waitlist. We'll reach out as soon as TableFolk opens near you. Until then — set a beautiful table.";
