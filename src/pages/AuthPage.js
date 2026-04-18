@@ -142,11 +142,7 @@ export default function AuthPage() {
           )}
         </div>
 
-        {mode === 'login' && (
-          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--ink3)', marginTop: 16, padding: '8px 12px', background: 'var(--canvas)', borderRadius: 6 }}>
-            Demo: ada@tablefolk.com / TableFolkDemo1!
-          </div>
-        )}
+
       </div>
     </div>
   );
