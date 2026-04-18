@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-// Tableaux Service Worker — Workbox via CRA
+// TableFolk Service Worker — Workbox via CRA
 // Place this file at: src/service-worker.js
 // CRA will compile it with Workbox injections automatically
 
@@ -32,7 +32,7 @@ registerRoute(
     url.origin === 'https://fonts.googleapis.com' ||
     url.origin === 'https://fonts.gstatic.com',
   new CacheFirst({
-    cacheName: 'tableaux-fonts',
+    cacheName: 'tablefolk-fonts',
     plugins: [
       new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 }),
     ],
@@ -48,7 +48,7 @@ registerRoute(
      url.pathname.endsWith('.svg') ||
      url.pathname.endsWith('.ico')),
   new StaleWhileRevalidate({
-    cacheName: 'tableaux-static-v1',
+    cacheName: 'tablefolk-static-v1',
     plugins: [
       new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 }),
     ],
@@ -60,9 +60,9 @@ registerRoute(
 registerRoute(
   ({ url }) =>
     url.pathname.startsWith('/api/') ||
-    url.hostname.includes('tableaux'),
+    url.hostname.includes('tablefolk'),
   new NetworkFirst({
-    cacheName: 'tableaux-api-v1',
+    cacheName: 'tablefolk-api-v1',
     networkTimeoutSeconds: 5,
     plugins: [
       new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 }),
@@ -79,7 +79,7 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data.json();
   } catch {
-    data = { title: 'Tableaux', body: event.data.text() };
+    data = { title: 'TableFolk', body: event.data.text() };
   }
 
   const options = {
@@ -94,7 +94,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Tableaux', options)
+    self.registration.showNotification(data.title || 'TableFolk', options)
   );
 });
 

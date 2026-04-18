@@ -1,6 +1,6 @@
 {
-  "short_name": "Tableaux",
-  "name": "Tableaux — Social Dining",
+  "short_name": "TableFolk",
+  "name": "TableFolk — Social Dining",
   "description": "Host and discover intimate dining experiences with friends.",
   "start_url": ".",
   "display": "standalone",
@@ -114,7 +114,7 @@
       "sizes": "1280x800",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Tableaux on desktop"
+      "label": "TableFolk on desktop"
     }
   ]
 }

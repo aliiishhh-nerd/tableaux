@@ -1,5 +1,5 @@
 // src/lib/analytics.js
-// PostHog analytics integration for Tableaux
+// PostHog analytics integration for TableFolk
 // Install: npm install posthog-js
 // Add REACT_APP_POSTHOG_KEY to Netlify env vars
 

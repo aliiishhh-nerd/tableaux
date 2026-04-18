@@ -58,14 +58,14 @@ function getSteps(city, timeOfDay) {
   return [
     {
       icon: '🏠',
-      title: `${timeGreeting}! Welcome to Tableaux`,
+      title: `${timeGreeting}! Welcome to TableFolk`,
       body: `Discover intimate dining experiences ${locationStr} — supper clubs, potlucks, dinner parties, brunches, and more. Your next great meal is waiting.`,
       cta: 'Let\'s go',
     },
     {
       icon: '🗓️',
       title: 'Host your own table',
-      body: 'Create an event in minutes. Set your guest list, menu style, and cover art. Tableaux handles the invites and RSVPs.',
+      body: 'Create an event in minutes. Set your guest list, menu style, and cover art. TableFolk handles the invites and RSVPs.',
       cta: 'Got it',
     },
     {

@@ -68,7 +68,7 @@ const QUOTE_STYLES = [
 ];
 
 export default function EventDetailModal({ event, onClose, onEdit }) {
-  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote } = useApp();
+  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote, approveRSVP, declineRSVP, reviveRSVP } = useApp();
   const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
@@ -510,7 +510,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
           {tab === 'host-tools' && isHost && (
             <HostToolsTab event={event} reminders={reminders} setReminders={setReminders}
               reminderSaved={reminderSaved} onSaveReminders={handleSaveReminders}
-              nudgeSent={nudgeSent} onNudge={handleNudge} onCopyLink={handleCopyLink} onShare={handleShare} addToast={addToast} />
+              nudgeSent={nudgeSent} onNudge={handleNudge} onCopyLink={handleCopyLink} onShare={handleShare} addToast={addToast} approveRSVP={approveRSVP} declineRSVP={declineRSVP} reviveRSVP={reviveRSVP} />
           )}
         </div>
 
@@ -568,82 +568,77 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
 
 // ── Sub-components (same structure, updated) ──
 
-function HostToolsTab({ event, reminders, setReminders, reminderSaved, onSaveReminders, nudgeSent, onNudge, onCopyLink, onShare, addToast }) {
-  const pendingGuests = event.guests?.filter(g => g.s === 'pending') || [];
-  const approvedGuests = event.guests?.filter(g => g.s === 'approved') || [];
-  const publicUrl = `${window.location.origin}/e/${event.id}`;
+function HostToolsTab({ event, reminders, setReminders, reminderSaved, onSaveReminders, nudgeSent, onNudge, onCopyLink, onShare, addToast, approveRSVP, declineRSVP, reviveRSVP }) {
+  const pendingGuests  = (event.guests || []).filter(g => g.s === 'pending');
+  const approvedGuests = (event.guests || []).filter(g => g.s === 'approved');
+  const declinedGuests = (event.guests || []).filter(g => g.s === 'declined');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
-        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>👋</span> Pending RSVPs
-          {pendingGuests.length > 0 && <span style={{ background: 'var(--amber)', color: 'white', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{pendingGuests.length}</span>}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>Send a friendly nudge to guests who haven't responded yet.</div>
-        {pendingGuests.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--teal)', fontWeight: 600 }}>✓ All guests have responded</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pendingGuests.map((g, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                <div className={`av av-sm av-${g.color || 'indigo'}`}>{g.initials || g.n?.[0]}</div>
-                <div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 13 }}>{g.n}</div><div style={{ fontSize: 11, color: 'var(--ink3)' }}>Invited · no response</div></div>
-                {nudgeSent[g.id] ? <span style={{ fontSize: 12, color: 'var(--teal)', fontWeight: 600 }}>✓ Nudged</span>
-                  : <button className="btn btn-ghost btn-sm" onClick={() => onNudge(g.id, g.n)} style={{ fontSize: 12 }}>👋 Nudge</button>}
-              </div>
-            ))}
-            <button className="btn btn-primary btn-sm" style={{ marginTop: 4 }}
-              onClick={() => { pendingGuests.forEach(g => { if (!nudgeSent[g.id]) onNudge(g.id, g.n); }); }}>👋 Nudge all</button>
+    <div>
+      {pendingGuests.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>New requests</span>
+            <span style={{ background: 'var(--indigo)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20 }}>{pendingGuests.length}</span>
           </div>
-        )}
+          {pendingGuests.map(g => (
+            <div key={g.id} style={{ background: 'var(--indigo-light)', border: '1px solid var(--indigo)', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div className={'av av-sm av-' + (g.color || 'indigo')}>{g.initials || (g.n || '?')[0]}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{g.n || g.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink3)' }}>Requested to join</div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20, background: 'var(--amber-light)', color: '#633806', border: '0.5px solid var(--amber)' }}>Requested</span>
+              </div>
+              <div style={{ display: 'flex', gap: 7 }}>
+                <button className="btn btn-primary" style={{ flex: 1, fontSize: 12, padding: '7px 0', minHeight: 36 }} onClick={() => approveRSVP && approveRSVP(event.id, g.id, g.n || g.name)}>Approve</button>
+                <button className="btn" style={{ flex: 1, fontSize: 12, padding: '7px 0', minHeight: 36, background: '#FFEDED', color: 'var(--coral)', border: '1px solid #FFEDED' }} onClick={() => declineRSVP && declineRSVP(event.id, g.id, g.n || g.name)}>Decline</button>
+              </div>
+            </div>
+          ))}
+          <div style={{ height: '0.5px', background: 'var(--border)', margin: '14px 0' }} />
+        </div>
+      )}
+
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Approved &middot; {approvedGuests.length}</div>
+        {approvedGuests.length === 0
+          ? <div style={{ fontSize: 13, color: 'var(--ink3)' }}>No confirmed guests yet</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {approvedGuests.map(g => (
+                <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className={'av av-sm av-' + (g.color || 'indigo')}>{g.initials || (g.n || '?')[0]}</div>
+                  <div style={{ flex: 1, fontSize: 13 }}>{g.n || g.name}</div>
+                  <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20, background: 'var(--teal-light)', color: 'var(--teal)', border: '0.5px solid var(--teal)' }}>Going</span>
+                </div>
+              ))}
+            </div>
+        }
       </div>
 
-      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
-        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>🔔 Guest Reminder Schedule</div>
-        <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>Auto-send reminders to {approvedGuests.length} confirmed guests.</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-          {REMINDER_OPTIONS.map(r => (
-            <div key={r.key} onClick={() => setReminders(prev => ({ ...prev, [r.key]: !prev[r.key] }))}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: reminders[r.key] ? 'var(--indigo-light)' : 'var(--surface)', borderRadius: 10, border: `1.5px solid ${reminders[r.key] ? 'var(--indigo-mid)' : 'var(--border)'}`, cursor: 'pointer' }}>
-              <span style={{ fontSize: 18 }}>{r.icon}</span>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 600, color: reminders[r.key] ? 'var(--indigo)' : 'var(--ink)' }}>{r.label}</div><div style={{ fontSize: 11, color: 'var(--ink3)' }}>{r.desc}</div></div>
-              <div style={{ width: 20, height: 20, borderRadius: 5, background: reminders[r.key] ? 'var(--indigo)' : 'transparent', border: `2px solid ${reminders[r.key] ? 'var(--indigo)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12 }}>{reminders[r.key] ? '✓' : ''}</div>
+      {declinedGuests.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ height: '0.5px', background: 'var(--border)', marginBottom: 14 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Declined requests</span>
+            <span style={{ fontSize: 11, color: 'var(--ink3)' }}>(host can accept later)</span>
+          </div>
+          {declinedGuests.map(g => (
+            <div key={g.id} style={{ background: 'var(--page)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div className="av av-sm" style={{ background: 'var(--border)', color: 'var(--ink3)' }}>{g.initials || (g.n || '?')[0]}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500 }}>{g.n || g.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink3)' }}>Declined &middot; cannot request again</div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20, background: '#FFEDED', color: 'var(--coral)', border: '0.5px solid #FFEDED' }}>Declined</span>
+              </div>
+              <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px', minHeight: 34 }} onClick={() => reviveRSVP && reviveRSVP(event.id, g.id, g.n || g.name)}>Accept after all</button>
             </div>
           ))}
         </div>
-        <button className={`btn btn-sm ${reminderSaved ? 'btn-ghost' : 'btn-primary'}`} style={{ width: '100%' }} onClick={onSaveReminders}>{reminderSaved ? '✓ Saved' : 'Save schedule'}</button>
-      </div>
-
-      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
-        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>🔗 Share Event</div>
-        <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>Address stays hidden until you accept their RSVP.</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 12px', background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)', marginBottom: 10 }}>
-          <span style={{ fontSize: 12, color: 'var(--ink2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{publicUrl}</span>
-          <button className="btn btn-ghost btn-sm" style={{ flexShrink: 0, fontSize: 12 }} onClick={onCopyLink}>Copy</button>
-        </div>
-        <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={onShare}>📨 Share Event Link</button>
-      </div>
-
-      <div style={{ background: 'var(--page)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
-        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>📊 Guest Summary</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {[
-            { label: 'Going', val: approvedGuests.length, color: 'var(--teal)', bg: 'var(--teal-light)' },
-            { label: 'Pending', val: pendingGuests.length, color: '#B87A00', bg: 'var(--amber-light)' },
-            { label: 'Declined', val: event.guests?.filter(g => g.s === 'declined').length || 0, color: '#D94545', bg: 'var(--coral-light)' },
-          ].map((stat, i) => (
-            <div key={i} style={{ background: stat.bg, borderRadius: 10, padding: '12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: stat.color }}>{stat.val}</div>
-              <div style={{ fontSize: 11, color: stat.color, fontWeight: 600, marginTop: 2 }}>{stat.label}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--ink3)', marginBottom: 4 }}><span>Capacity</span><span>{approvedGuests.length} / {event.cap}</span></div>
-          <div className="progress-bar" style={{ height: 8 }}><div className="progress-fill" style={{ width: `${Math.min(100, (approvedGuests.length / event.cap) * 100)}%` }} /></div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

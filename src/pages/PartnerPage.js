@@ -94,7 +94,7 @@ export default function PartnerPage() {
           </div>
           <h1 className="partner-hero-title">Reach diners who actually care about food</h1>
           <p className="partner-hero-sub">
-            Tableaux connects brands with Chicago's most engaged culinary community — at the table, not on a screen.
+            TableFolk connects brands with Chicago's most engaged culinary community — at the table, not on a screen.
           </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-gold" onClick={() => setContactOpen(true)}>

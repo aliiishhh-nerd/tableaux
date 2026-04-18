@@ -25,7 +25,7 @@ export default function EmptyStatePage({ onCreateEvent, onBrowse }) {
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🍽️</div>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: 'white', marginBottom: 10, letterSpacing: '-0.4px', lineHeight: 1.2 }}>
-            Welcome to Tableaux
+            Welcome to TableFolk
           </h1>
           <p style={{ fontSize: 15, color: 'rgba(255,255,255,.7)', lineHeight: 1.6, maxWidth: 420, margin: '0 auto 24px' }}>
             Discover intimate dining experiences around you, or host your own table. Every great meal starts with an invitation.

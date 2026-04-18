@@ -23,12 +23,12 @@ export default function BlogPage() {
     if (reading) {
       const slug = reading.slug || reading.id;
       window.history.replaceState({}, '', `/blog?post=${slug}`);
-      document.title = `${reading.title} — Fork & Story by Tableaux`;
+      document.title = `${reading.title} — Fork & Story by TableFolk`;
     } else {
       window.history.replaceState({}, '', '/blog');
-      document.title = 'Fork & Story — Tableaux';
+      document.title = 'Fork & Story — TableFolk';
     }
-    return () => { document.title = 'Tableaux — Social Dining'; };
+    return () => { document.title = 'TableFolk — Social Dining'; };
   }, [reading]);
 
   const featured = BLOG_POSTS.find(p => p.featured);
@@ -105,7 +105,7 @@ function SignupWidget() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 200 }}>
         <span style={{ fontSize: 24 }}>🍽️</span>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>Join Tableaux</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>Join TableFolk</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)' }}>Discover dining experiences & connect with food lovers</div>
         </div>
       </div>
@@ -227,7 +227,7 @@ function ContributorCTA() {
         Are you a host, chef, or food writer with a story to tell? We publish pieces on supper club culture, recipes, natural wine, and the art of hosting. Pitch us.
       </p>
       <a
-        href="mailto:editorial@tableaux.app?subject=Fork %26 Story Contributor Pitch"
+        href="mailto:editorial@tablefolk.app?subject=Fork %26 Story Contributor Pitch"
         className="btn btn-primary"
         style={{ display: 'inline-block', padding: '10px 24px', fontSize: 14, textDecoration: 'none', background: 'var(--indigo)', borderRadius: 8 }}
       >
@@ -305,9 +305,9 @@ function BlogPost({ post, onBack }) {
         <p style={{ marginBottom: 20 }}>
           This is the kind of hospitality that algorithms can't replicate. It's deeply personal, often imperfect, and almost always more memorable than a three-Michelin-star experience where every variable has been engineered to within an inch of its life.
         </p>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, marginTop: 28 }}>What we're building at Tableaux</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, marginTop: 28 }}>What we're building at TableFolk</h2>
         <p style={{ marginBottom: 20 }}>
-          Tableaux was built precisely for this moment. We believe the most exciting food experiences happening right now aren't in restaurant dining rooms — they're in living rooms, backyard gardens, borrowed commercial kitchens, and rooftop terraces.
+          TableFolk was built precisely for this moment. We believe the most exciting food experiences happening right now aren't in restaurant dining rooms — they're in living rooms, backyard gardens, borrowed commercial kitchens, and rooftop terraces.
         </p>
         <div style={{ background: 'var(--indigo-light)', borderLeft: '4px solid var(--indigo)', padding: '16px 20px', borderRadius: '0 10px 10px 0', marginBottom: 20, fontStyle: 'italic', fontSize: 15, color: 'var(--ink)' }}>
           "The best dinner parties feel inevitable in retrospect — like the host knew exactly what the room needed, even before the guests arrived."

@@ -34,7 +34,7 @@ export default function AuthPage() {
     } catch (err) {
       // Handle specific error messages
       if (err.message?.includes('Email not confirmed')) {
-        setError('Welcome to Tableaux! We sent a confirmation link to ' + email + '. Please check your inbox and click the link to activate your account.');
+        setError('Welcome to TableFolk! We sent a confirmation link to ' + email + '. Please check your inbox and click the link to activate your account.');
       } else if (err.message?.includes('Invalid login credentials')) {
         setError('Invalid email or password. Please try again.');
       } else if (err.message?.includes('User already registered')) {
@@ -53,7 +53,7 @@ export default function AuthPage() {
         
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
-            {mode === 'login' ? 'Welcome back' : 'Join Tableaux'}
+            {mode === 'login' ? 'Welcome back' : 'Join TableFolk'}
           </div>
           <div style={{ fontSize: 14, color: 'var(--ink2)' }}>
             {mode === 'login' ? 'Sign in to your account' : 'Create your account to get started'}
@@ -144,7 +144,7 @@ export default function AuthPage() {
 
         {mode === 'login' && (
           <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--ink3)', marginTop: 16, padding: '8px 12px', background: 'var(--canvas)', borderRadius: 6 }}>
-            Demo: ada@tableaux.com / TableauxDemo1!
+            Demo: ada@tablefolk.com / TableFolkDemo1!
           </div>
         )}
       </div>

@@ -76,7 +76,7 @@ export default function FeedPage() {
   const [showCitySearch, setShowCitySearch] = useState(false);
   const [eventSearch, setEventSearch] = useState('');
   const [dismissedBanners, setDismissedBanners] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]'); }
+    try { return JSON.parse(sessionStorage.getItem('tablefolk-dismissed-banners') || '[]'); }
     catch { return []; }
   });
   const [showBanners, setShowBanners] = useState(false);
@@ -86,7 +86,7 @@ export default function FeedPage() {
   const resolvedCity = city === 'auto' ? profileCity : city;
 
   useEffect(() => {
-    sessionStorage.setItem('tableaux-dismissed-banners', JSON.stringify(dismissedBanners));
+    sessionStorage.setItem('tablefolk-dismissed-banners', JSON.stringify(dismissedBanners));
   }, [dismissedBanners]);
 
   useEffect(() => {
@@ -282,7 +282,7 @@ export default function FeedPage() {
                 onClick={() => {
                   const url = window.location.origin + '/feed';
                   if (navigator.share) {
-                    navigator.share({ title: 'Join me on Tableaux', text: 'Discover intimate dining experiences near you.', url });
+                    navigator.share({ title: 'Join me on TableFolk', text: 'Discover intimate dining experiences near you.', url });
                   } else {
                     navigator.clipboard?.writeText(url).catch(() => {});
                     window.alert('Invite link copied to clipboard!');

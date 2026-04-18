@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 
 const FAQ_ITEMS = [
   {
-    q: 'What is Tableaux?',
-    a: 'Tableaux is a social dining platform that connects food lovers through intimate, hosted dining experiences — supper clubs, potlucks, dinner parties, brunches, restaurant outings, and more. Think of it as a place to host, discover, and RSVP to meals with friends, loved ones, and community members you haven\'t met yet.',
+    q: 'What is TableFolk?',
+    a: 'TableFolk is a social dining platform that connects food lovers through intimate, hosted dining experiences — supper clubs, potlucks, dinner parties, brunches, restaurant outings, and more. Think of it as a place to host, discover, and RSVP to meals with friends, loved ones, and community members you haven\'t met yet.',
   },
   {
-    q: 'Is Tableaux free?',
+    q: 'Is TableFolk free?',
     a: 'Yes! Creating an account, browsing events, and RSVPing is completely free. Hosts can optionally set a contribution or ticket price for their events, which guests pay directly. We plan to offer premium features for power hosts in the future.',
   },
   {
@@ -19,11 +19,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What\'s a supper club?',
-    a: 'A supper club is a multi-course meal hosted by a passionate home chef, usually in their home or a private venue. They\'re typically ticketed, intimate (6–12 guests), and themed around a cuisine or concept. Tableaux makes it easy to discover and host them.',
+    a: 'A supper club is a multi-course meal hosted by a passionate home chef, usually in their home or a private venue. They\'re typically ticketed, intimate (6–12 guests), and themed around a cuisine or concept. TableFolk makes it easy to discover and host them.',
   },
   {
-    q: 'Can I use Tableaux for private events?',
-    a: 'Absolutely. Set your event visibility to "Friends-only" and only people you\'ve connected with on Tableaux can see it. You can also use "Request-only" to let anyone discover the event but require your approval before they join.',
+    q: 'Can I use TableFolk for private events?',
+    a: 'Absolutely. Set your event visibility to "Friends-only" and only people you\'ve connected with on TableFolk can see it. You can also use "Request-only" to let anyone discover the event but require your approval before they join.',
   },
   {
     q: 'How does the potluck feature work?',
@@ -34,12 +34,12 @@ const FAQ_ITEMS = [
     a: 'No. For private venues, the full address is only revealed to confirmed guests. Pending and non-guests see the neighborhood only. You control what\'s shared.',
   },
   {
-    q: 'What cities is Tableaux available in?',
-    a: 'Tableaux works anywhere! Events are community-created, so it\'s available wherever people want to host and attend. We have growing communities in several cities and are expanding all the time.',
+    q: 'What cities is TableFolk available in?',
+    a: 'TableFolk works anywhere! Events are community-created, so it\'s available wherever people want to host and attend. We have growing communities in several cities and are expanding all the time.',
   },
   {
-    q: 'How do I contact the Tableaux team?',
-    a: 'Email us at hello@tableaux.app — we read everything and respond quickly. We\'d love to hear your ideas, feedback, or partnership inquiries.',
+    q: 'How do I contact the TableFolk team?',
+    a: 'Email us at hello@tablefolk.app — we read everything and respond quickly. We\'d love to hear your ideas, feedback, or partnership inquiries.',
   },
 ];
 
@@ -54,7 +54,7 @@ export default function FAQPage() {
           Frequently Asked Questions
         </h1>
         <p style={{ fontSize: 15, color: 'var(--ink2)' }}>
-          Everything you need to know about Tableaux.
+          Everything you need to know about TableFolk.
         </p>
       </div>
 

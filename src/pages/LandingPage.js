@@ -17,8 +17,8 @@ const HOW_IT_WORKS = [
 ];
 
 const TESTIMONIALS = [
-  { quote: "I've met more interesting people at Tableaux gatherings than at any networking event.", name: 'Priya S.',  role: 'Guest',   color: 'indigo' },
-  { quote: "Hosting on Tableaux turned my dinner parties into a real community. The tools just work.",  name: 'Marcus T.', role: 'Host',    color: 'teal'   },
+  { quote: "I've met more interesting people at TableFolk gatherings than at any networking event.", name: 'Priya S.',  role: 'Guest',   color: 'indigo' },
+  { quote: "Hosting on TableFolk turned my dinner parties into a real community. The tools just work.",  name: 'Marcus T.', role: 'Host',    color: 'teal'   },
   { quote: "Our brand reached 300 engaged food lovers in one month. Nothing else comes close.",         name: 'Elena V.',  role: 'Partner', color: 'amber' },
 ];
 
@@ -82,7 +82,7 @@ export default function LandingPage() {
           <span style={{ color: 'var(--indigo)' }}>shared</span>
         </h1>
         <p style={{ fontSize: 18, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 36, maxWidth: 540, margin: '0 auto 36px' }}>
-          Tableaux brings people together around food — with friends, loved ones, and community members you haven't met yet. Host and discover supper clubs, potlucks, brunches, and more.
+          TableFolk brings people together around food — with friends, loved ones, and community members you haven't met yet. Host and discover supper clubs, potlucks, brunches, and more.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
           <Link to="/feed" className="btn btn-primary" style={{ fontSize: 16, padding: '13px 28px' }}>Explore events →</Link>
@@ -190,11 +190,11 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid var(--border)', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ fontSize: 12, color: 'var(--ink3)' }}>© {new Date().getFullYear()} Tableaux</div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)' }}>© {new Date().getFullYear()} TableFolk</div>
         <div style={{ display: 'flex', gap: 20 }}>
           <Link to="/blog" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Fork & Story</Link>
           <Link to="/faq"  style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>FAQ</Link>
-          <a href="mailto:hello@tableaux.app" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
+          <a href="mailto:hello@tablefolk.app" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
         </div>
       </footer>
     </div>

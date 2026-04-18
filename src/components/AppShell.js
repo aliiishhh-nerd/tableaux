@@ -37,7 +37,7 @@ function PublicEventPage() {
         <div style={{ fontSize: 14, color: 'var(--ink2)', textAlign: 'center' }}>
           This event may have ended or the link may be incorrect.
         </div>
-        <button className="btn btn-primary" onClick={() => navigate('/')}>Back to Tableaux</button>
+        <button className="btn btn-primary" onClick={() => navigate('/')}>Back to TableFolk</button>
       </div>
     );
   }
@@ -177,14 +177,14 @@ function PublicEventPage() {
           <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
           <div style={{ fontWeight: 800, fontSize: 18, color: 'white', marginBottom: 6 }}>Want to join?</div>
           <div style={{ fontSize: 14, color: 'rgba(255,255,255,.65)', marginBottom: 20, lineHeight: 1.5 }}>
-            Create a free Tableaux account to RSVP, see the full address, and connect with your host.
+            Create a free TableFolk account to RSVP, see the full address, and connect with your host.
           </div>
           <button
             className="btn btn-primary"
             style={{ width: '100%', fontSize: 15, padding: '14px', borderRadius: 12 }}
             onClick={() => navigate('/auth')}
           >
-            Join Tableaux to RSVP
+            Join TableFolk to RSVP
           </button>
           <div style={{ marginTop: 12, fontSize: 13, color: 'rgba(255,255,255,.4)' }}>
             Already have an account? <span style={{ color: 'rgba(255,255,255,.8)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/auth')}>Sign in</span>
@@ -195,8 +195,56 @@ function PublicEventPage() {
   );
 }
 
+
+function NotifBell({ notifications, unreadCount, markAllNotifsRead, markNotifRead }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef();
+  React.useEffect(() => {
+    function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button onClick={() => { setOpen(o => !o); if (!open) markAllNotifsRead(); }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
+        aria-label={'Notifications' + (unreadCount > 0 ? ', ' + unreadCount + ' unread' : '')}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        {unreadCount > 0 && (
+          <span style={{ position: 'absolute', top: 0, right: 0, width: 16, height: 16, borderRadius: '50%', background: 'var(--coral, #FF6B6B)', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid var(--white, #fff)' }}>
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', right: 0, top: 38, width: 300, background: 'var(--white, #fff)', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.14)', border: '1px solid var(--border, #e5e7eb)', zIndex: 9999, overflow: 'hidden' }}>
+          <div style={{ padding: '11px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 14 }}>Notifications</div>
+          {(!notifications || notifications.length === 0) ? (
+            <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: 'var(--ink3)' }}>No notifications yet</div>
+          ) : (
+            <div style={{ maxHeight: 320, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              {notifications.slice(0, 20).map(n => (
+                <div key={n.id} onClick={() => markNotifRead(n.id)}
+                  style={{ padding: '11px 16px', borderBottom: '1px solid var(--border)', background: n.read ? 'transparent' : 'var(--indigo-light, #f0eeff)', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, lineHeight: 1.5 }}>{n.message}</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{new Date(n.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
+                  </div>
+                  {!n.read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--indigo)', flexShrink: 0, marginTop: 4 }} />}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function AppShell() {
-  const { user, events, toasts } = useApp();
+  const { user, events, toasts, notifications, markNotifRead, markAllNotifsRead } = useApp();
+  const unreadCount = (notifications || []).filter(n => !n.read).length;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const location = useLocation();
@@ -292,6 +340,7 @@ export default function AppShell() {
             <Link to="/invites" className="icon-btn always-show" title="Invitations" style={{ position: 'relative' }}>
               ✉️{invitePending > 0 && <span className="notif-dot" />}
             </Link>
+            <NotifBell notifications={notifications || []} unreadCount={unreadCount} markAllNotifsRead={markAllNotifsRead} markNotifRead={markNotifRead} />
             <Link to="/profile" className="topnav-avatar-link" title="My Profile">
               <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
             </Link>
@@ -320,12 +369,12 @@ export default function AppShell() {
           alignItems: 'center',
         }}>
           <div style={{ fontSize: 12, color: 'var(--ink3)' }}>
-            © {new Date().getFullYear()} Tableaux. All rights reserved.
+            © {new Date().getFullYear()} TableFolk. All rights reserved.
           </div>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             <Link to="/blog" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Fork & Story</Link>
             <Link to="/faq"  style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Help & FAQ</Link>
-            <a href="mailto:hello@tableaux.app" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
+            <a href="mailto:hello@tablefolk.app" style={{ fontSize: 12, color: 'var(--ink3)', textDecoration: 'none' }}>Contact</a>
           </div>
         </footer>
       </div>
@@ -391,7 +440,7 @@ function getPageInfo(path) {
   if (path.startsWith('/events'))  return { title: 'My Events',    sub: null };
   if (path.startsWith('/invites')) return { title: 'Invitations',  sub: null };
   if (path.startsWith('/profile')) return { title: 'My Profile',   sub: null };
-  if (path.startsWith('/blog'))    return { title: 'Fork & Story', sub: 'Stories & Recipes from Tableaux' };
+  if (path.startsWith('/blog'))    return { title: 'Fork & Story', sub: 'Stories & Recipes from TableFolk' };
   if (path.startsWith('/faq'))     return { title: 'Help & FAQ',   sub: 'Everything you need to know' };
   if (path.startsWith('/e/'))      return { title: 'Event Preview', sub: null };
   return { title: 'Explore', sub: 'Intimate dining near you' };

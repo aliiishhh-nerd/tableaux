@@ -4,7 +4,7 @@ import { signIn as supabaseSignIn, getProfile } from '../lib/supabase';
 
 const AppCtx = createContext(null);
 
-const STORAGE_KEY = 'tableaux_state_v1';
+const STORAGE_KEY = 'tablefolk_state_v1';
 
 function loadFromStorage() {
     try {
@@ -42,6 +42,7 @@ export function AppProvider({ children }) {
     });
 
     const [toasts, setToasts] = useState([]);
+    const [notifications, setNotifications] = useState([]);
 
     const [following, setFollowing] = useState(() => {
         const stored = loadFromStorage();
@@ -148,6 +149,28 @@ export function AppProvider({ children }) {
     const deleteEvent = useCallback((id) => {
         setEvents(e => e.filter(ev => ev.id !== id));
     }, []);
+
+    function makeNotif(type, message, eventId) {
+        return { id: 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), type, message, eventId, read: false, createdAt: new Date().toISOString() };
+    }
+    function addNotification(notif) { setNotifications(prev => [notif, ...prev.slice(0, 49)]); }
+    function markNotifRead(notifId) { setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n)); }
+    function markAllNotifsRead() { setNotifications(prev => prev.map(n => ({ ...n, read: true }))); }
+
+    function approveRSVP(eventId, guestId, guestName) {
+        setEvents(prev => prev.map(ev => ev.id !== eventId ? ev : { ...ev, guests: (ev.guests || []).map(g => g.id === guestId ? { ...g, s: 'approved' } : g) }));
+        addNotification(makeNotif('rsvp_approved', guestName + ' approved for your event', eventId));
+        addToast(guestName + ' approved — they have been notified 🎉', 'success');
+    }
+    function declineRSVP(eventId, guestId, guestName) {
+        setEvents(prev => prev.map(ev => ev.id !== eventId ? ev : { ...ev, guests: (ev.guests || []).map(g => g.id === guestId ? { ...g, s: 'declined' } : g) }));
+        addToast(guestName + ' declined', 'info');
+    }
+    function reviveRSVP(eventId, guestId, guestName) {
+        setEvents(prev => prev.map(ev => ev.id !== eventId ? ev : { ...ev, guests: (ev.guests || []).map(g => g.id === guestId ? { ...g, s: 'approved' } : g) }));
+        addNotification(makeNotif('rsvp_approved', guestName + ' accepted after all', eventId));
+        addToast(guestName + ' accepted — they have been notified 🎉', 'success');
+    }
 
     const rsvpEvent = useCallback((eventId, status, dietaryNote) => {
         setEvents(e => e.map(ev => {
@@ -302,6 +325,8 @@ export function AppProvider({ children }) {
             // Follow host
             followedHosts, followHost, unfollowHost, isFollowingHost,
             toasts, addToast,
+            notifications, markNotifRead, markAllNotifsRead,
+            approveRSVP, declineRSVP, reviveRSVP,
         }}>
             {children}
         </AppCtx.Provider>

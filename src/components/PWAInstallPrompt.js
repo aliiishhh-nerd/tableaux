@@ -37,7 +37,7 @@ export default function PWAInstallPrompt() {
     if (isInStandaloneMode()) return;
 
     // Check if user already dismissed this session
-    const wasDismissed = sessionStorage.getItem('tableaux-pwa-dismissed');
+    const wasDismissed = sessionStorage.getItem('tablefolk-pwa-dismissed');
     if (wasDismissed) return;
 
     // iOS — show manual instructions after a short delay
@@ -65,7 +65,7 @@ export default function PWAInstallPrompt() {
     if (!installPrompt) return;
     installPrompt.prompt();
     const { outcome } = await installPrompt.userChoice;
-    console.log('[Tableaux PWA] Install outcome:', outcome);
+    console.log('[TableFolk PWA] Install outcome:', outcome);
     setInstallPrompt(null);
     setShowAndroid(false);
   };
@@ -74,7 +74,7 @@ export default function PWAInstallPrompt() {
     setShowIOSHint(false);
     setShowAndroid(false);
     setDismissed(true);
-    sessionStorage.setItem('tableaux-pwa-dismissed', 'true');
+    sessionStorage.setItem('tablefolk-pwa-dismissed', 'true');
   };
 
   const handleEnablePush = async () => {
@@ -82,7 +82,7 @@ export default function PWAInstallPrompt() {
       await subscribeToPush();
       setPushStatus('granted');
     } catch (err) {
-      console.warn('[Tableaux Push]', err.message);
+      console.warn('[TableFolk Push]', err.message);
       setPushStatus(Notification.permission);
     }
   };
@@ -102,7 +102,7 @@ export default function PWAInstallPrompt() {
           <div style={styles.bannerContent}>
             <span style={styles.bannerIcon}>🍽️</span>
             <div style={styles.bannerText}>
-              <strong style={styles.bannerTitle}>Add Tableaux to Home Screen</strong>
+              <strong style={styles.bannerTitle}>Add TableFolk to Home Screen</strong>
               <span style={styles.bannerSub}>Get the full app experience</span>
             </div>
           </div>
@@ -123,7 +123,7 @@ export default function PWAInstallPrompt() {
           <div style={styles.iosCard}>
             <button style={styles.iosClose} onClick={handleDismiss}>✕</button>
             <div style={styles.iosIcon}>🍽️</div>
-            <h3 style={styles.iosTitle}>Add Tableaux to Your Home Screen</h3>
+            <h3 style={styles.iosTitle}>Add TableFolk to Your Home Screen</h3>
             <p style={styles.iosSub}>Get the full app experience — no App Store needed.</p>
             <ol style={styles.iosList}>
               <li style={styles.iosStep}>

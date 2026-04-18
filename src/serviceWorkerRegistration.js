@@ -1,4 +1,4 @@
-// PWA Service Worker Registration for Tableaux
+// PWA Service Worker Registration for TableFolk
 // CRA's built-in Workbox integration
 
 const isLocalhost = Boolean(
@@ -18,7 +18,7 @@ export function register(config) {
       if (isLocalhost) {
         checkValidServiceWorker(swUrl, config);
         navigator.serviceWorker.ready.then(() => {
-          console.log('[Tableaux PWA] Running with cached service worker (localhost).');
+          console.log('[TableFolk PWA] Running with cached service worker (localhost).');
         });
       } else {
         registerValidSW(swUrl, config);
@@ -38,10 +38,10 @@ function registerValidSW(swUrl, config) {
         installingWorker.onstatechange = () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              console.log('[Tableaux PWA] New content available — will refresh on next load.');
+              console.log('[TableFolk PWA] New content available — will refresh on next load.');
               if (config && config.onUpdate) config.onUpdate(registration);
             } else {
-              console.log('[Tableaux PWA] Content cached for offline use.');
+              console.log('[TableFolk PWA] Content cached for offline use.');
               if (config && config.onSuccess) config.onSuccess(registration);
             }
           }
@@ -49,7 +49,7 @@ function registerValidSW(swUrl, config) {
       };
     })
     .catch((error) => {
-      console.error('[Tableaux PWA] Service worker registration failed:', error);
+      console.error('[TableFolk PWA] Service worker registration failed:', error);
     });
 }
 
@@ -66,7 +66,7 @@ function checkValidServiceWorker(swUrl, config) {
       }
     })
     .catch(() => {
-      console.log('[Tableaux PWA] No internet connection. App running in offline mode.');
+      console.log('[TableFolk PWA] No internet connection. App running in offline mode.');
     });
 }
 

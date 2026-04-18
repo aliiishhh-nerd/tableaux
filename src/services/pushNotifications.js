@@ -1,5 +1,5 @@
 // src/services/pushNotifications.js
-// Tableaux Push Notification Service
+// TableFolk Push Notification Service
 //
 // SETUP REQUIRED:
 // 1. Generate VAPID keys: npx web-push generate-vapid-keys
@@ -33,7 +33,7 @@ export async function subscribeToPush() {
   }
 
   if (!VAPID_PUBLIC_KEY) {
-    console.warn('[Tableaux Push] REACT_APP_VAPID_PUBLIC_KEY not set. Push notifications disabled.');
+    console.warn('[TableFolk Push] REACT_APP_VAPID_PUBLIC_KEY not set. Push notifications disabled.');
     throw new Error('Push notifications are not configured yet.');
   }
 
@@ -57,7 +57,7 @@ export async function subscribeToPush() {
     });
   }
 
-  console.log('[Tableaux Push] Subscribed:', subscription);
+  console.log('[TableFolk Push] Subscribed:', subscription);
 
   // TODO: Send subscription to your backend to store it
   // await saveSubscriptionToBackend(subscription);
@@ -74,7 +74,7 @@ export async function unsubscribeFromPush() {
 
   if (subscription) {
     const result = await subscription.unsubscribe();
-    console.log('[Tableaux Push] Unsubscribed:', result);
+    console.log('[TableFolk Push] Unsubscribed:', result);
 
     // TODO: Remove subscription from your backend
     // await removeSubscriptionFromBackend(subscription);
@@ -92,7 +92,7 @@ export async function getPushSubscription() {
   return registration.pushManager.getSubscription();
 }
 
-// ─── Notification Types for Tableaux ──────────────────────────────────────────
+// ─── Notification Types for TableFolk ──────────────────────────────────────────
 // These map to the push payload format your backend should send
 
 export const NOTIFICATION_TYPES = {
