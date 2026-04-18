@@ -813,8 +813,8 @@ export const SEED_EVENTS = [
   
   {
     id: 'evt-nyc-1',
-    title: 'Brooklyn Bagel Brunch & Schmear Bar',
-    type: 'Brunch',
+    title: 'Brooklyn Bagel Morning & Schmear Bar',
+    type: 'Other',
     date: daysFromNow(8), time: '11:00',
     loc: 'Williamsburg, Brooklyn, NY',
     addr: '234 Bedford Ave, Brooklyn, NY 11249',
@@ -889,7 +889,7 @@ export const SEED_EVENTS = [
   {
     id: 'evt-mia-1',
     title: 'Cuban Cafecito & Pastelitos Morning',
-    type: 'Brunch',
+    type: 'Other',
     date: daysFromNow(4), time: '10:00',
     loc: 'Wynwood, Miami, FL',
     addr: '2301 NW 2nd Ave, Miami, FL 33127',
@@ -981,7 +981,7 @@ export const SEED_EVENTS = [
   {
     id: 'evt-den-2',
     title: 'Green Chile Brunch & Bloody Mary Bar',
-    type: 'Brunch',
+    type: 'Other',
     date: daysFromNow(9), time: '11:30',
     loc: 'Highland, Denver, CO',
     addr: '3500 W 32nd Ave, Denver, CO 80211',
@@ -1016,7 +1016,7 @@ export const SEED_EVENTS = [
   {
     id: 'evt-nash-2',
     title: 'Biscuits & Gravy Breakfast Club',
-    type: 'Brunch',
+    type: 'Other',
     date: daysFromNow(5), time: '09:00',
     loc: 'The Gulch, Nashville, TN',
     addr: '900 Division St, Nashville, TN 37203',

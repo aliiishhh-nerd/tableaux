@@ -274,8 +274,15 @@ export default function AppShell() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <Link to="/feed" className="logo-mark" onClick={() => setSidebarOpen(false)}>
-            <div className="logo-icon">🍽️</div>
-            <div className="logo-text">Table<span>aux</span></div>
+            <div className="logo-icon">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect width="28" height="28" rx="8" fill="#5b4de0"/>
+                <circle cx="14" cy="11" r="4" stroke="white" strokeWidth="1.6" fill="none"/>
+                <path d="M7 22c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
+                <path d="M10 11.5c0 0 1-3 4-3s4 3 4 3" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.5" fill="none"/>
+              </svg>
+            </div>
+            <div className="logo-text">Table<span>Folk</span></div>
           </Link>
         </div>
 

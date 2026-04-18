@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're on the TableFolk waitlist</title>
+<style>
+  body{margin:0;padding:0;background:#f5f0e8;font-family:'Georgia',serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:580px;margin:0 auto;padding:40px 20px}
+  .card{background:#faf8f4;border-radius:16px;overflow:hidden;border:1px solid rgba(90,70,160,0.12)}
+  .header{background:#1a1425;padding:40px 40px 32px;text-align:center}
+  .logo{font-family:Georgia,serif;font-size:26px;font-weight:700;color:#faf8f4;letter-spacing:-.5px;text-decoration:none}
+  .logo-accent{color:#7c6fef;font-style:italic}
+  .header-sub{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:8px}
+  .divider-line{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);margin:20px 0 0}
+  .body{padding:44px 40px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#5b4de0;margin-bottom:18px}
+  .heading{font-size:32px;font-weight:400;line-height:1.2;color:#1a1425;margin-bottom:20px;letter-spacing:-.5px}
+  .heading em{font-style:italic;color:#5b4de0}
+  .body-text{font-size:15px;line-height:1.8;color:#4a4260;margin-bottom:20px;font-family:'Helvetica Neue',Arial,sans-serif}
+  .city-badge{
+    display:inline-block;background:#f0eeff;border:1px solid rgba(91,77,224,.25);
+    color:#3c3489;padding:6px 16px;border-radius:20px;
+    font-size:13px;font-weight:700;font-family:'Helvetica Neue',Arial,sans-serif;
+    letter-spacing:.3px;margin-bottom:28px;
+  }
+  .divider{height:1px;background:rgba(90,70,160,0.1);margin:28px 0}
+  .what-next{background:#f5f0e8;border-radius:12px;padding:24px;margin-bottom:28px}
+  .wn-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8b7ea8;margin-bottom:16px;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wn-item{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+  .wn-num{
+    width:26px;height:26px;border-radius:50%;flex-shrink:0;
+    background:#5b4de0;color:white;
+    font-size:12px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    margin-top:1px;
+  }
+  .wn-text{font-size:14px;line-height:1.6;color:#4a4260;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wn-text strong{color:#1a1425;font-weight:600}
+  .quote-block{
+    border-left:3px solid #5b4de0;padding:16px 20px;
+    background:#f0eeff;border-radius:0 10px 10px 0;margin-bottom:28px;
+  }
+  .quote-text{font-size:15px;font-style:italic;color:#3c3489;line-height:1.7;margin-bottom:6px}
+  .quote-attr{font-size:12px;color:#8b7ea8;font-family:'Helvetica Neue',Arial,sans-serif}
+  .cta-wrap{text-align:center;margin:32px 0 24px}
+  .cta-btn{
+    display:inline-block;background:#5b4de0;color:#ffffff;
+    text-decoration:none;padding:14px 36px;border-radius:12px;
+    font-size:15px;font-weight:600;letter-spacing:.2px;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+  }
+  .cta-sub{font-size:12px;color:#8b7ea8;text-align:center;margin-top:10px;font-family:'Helvetica Neue',Arial,sans-serif}
+  .footer{padding:28px 40px;border-top:1px solid rgba(90,70,160,0.1);text-align:center}
+  .footer-logo{font-family:Georgia,serif;font-size:18px;color:#1a1425;margin-bottom:10px}
+  .footer-logo span{color:#5b4de0;font-style:italic}
+  .footer-text{font-size:12px;color:#8b7ea8;line-height:1.6;font-family:'Helvetica Neue',Arial,sans-serif}
+  .footer-text a{color:#5b4de0;text-decoration:none}
+  @media(max-width:480px){
+    .body{padding:32px 24px}
+    .header{padding:32px 24px}
+    .footer{padding:24px}
+    .heading{font-size:26px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <div class="header">
+      <div class="logo">Table<span class="logo-accent">Folk</span></div>
+      <div class="header-sub">Your seat is reserved</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="body">
+      <div class="eyebrow">Welcome to the table</div>
+      <h1 class="heading">You're on the<br><em>TableFolk</em> waitlist</h1>
+
+      <p class="body-text">
+        We're so glad you're here. You've just reserved your spot in the city closest to you — and we'll be in touch the moment TableFolk opens in your area.
+      </p>
+
+      <div class="city-badge">📍 {{CITY}}</div>
+
+      <p class="body-text">
+        TableFolk is being built for people like you — food lovers who believe that the best conversations happen around a table, that a meal shared with near-strangers can feel like coming home, and that the dining experience deserves better than an algorithm.
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="what-next">
+        <div class="wn-title">What happens next</div>
+        <div class="wn-item">
+          <div class="wn-num">1</div>
+          <div class="wn-text"><strong>We open city by city.</strong> We're building slowly and intentionally — each city opens once we have enough members to create a real community around the table.</div>
+        </div>
+        <div class="wn-item">
+          <div class="wn-num">2</div>
+          <div class="wn-text"><strong>You'll be first.</strong> Waitlist members get early access before we open publicly. You'll receive a personal invitation with everything you need to get started.</div>
+        </div>
+        <div class="wn-item">
+          <div class="wn-num">3</div>
+          <div class="wn-text"><strong>Host or attend — or both.</strong> From intimate dinner parties to curated supper clubs, tastings, and potlucks — TableFolk is built for every kind of food lover.</div>
+        </div>
+      </div>
+
+      <div class="quote-block">
+        <div class="quote-text">"The best dinner parties aren't about the food — they're about the people who show up for it. TableFolk is how you find those people."</div>
+        <div class="quote-attr">— The TableFolk Team</div>
+      </div>
+
+      <p class="body-text">
+        In the meantime, if you have questions, ideas, or just want to say hello — we'd love to hear from you. We're a small, independent team and we read every email.
+      </p>
+
+      <div class="cta-wrap">
+        <a href="https://tablefolk.club" class="cta-btn">Visit tablefolk.club</a>
+        <div class="cta-sub">Share with a friend who loves a good dinner party</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-logo">Table<span>Folk</span></div>
+      <div class="footer-text">
+        Sent to {{EMAIL}} &nbsp;&middot;&nbsp;
+        <a href="mailto:hello@tablefolk.club">hello@tablefolk.club</a><br>
+        <a href="#">Unsubscribe</a> &nbsp;&middot;&nbsp;
+        <a href="https://tablefolk.club">tablefolk.club</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

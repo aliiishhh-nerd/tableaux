@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { SEED_EVENTS, CURRENT_USER, SEED_FRIENDSHIPS } from '../data/seed';
-import { signIn as supabaseSignIn, getProfile } from '../lib/supabase';
+import {
+  signIn as supabaseSignIn, getProfile,
+  createEvent as sbCreateEvent,
+  getHostEvents,
+  createRsvp, getGuestRsvps,
+  updateProfile as sbUpdateProfile,
+} from '../lib/supabase';
 
 const AppCtx = createContext(null);
 
@@ -66,6 +72,53 @@ export function AppProvider({ children }) {
         return stored?.followedHosts || [];
     });
 
+    // Load real events from Supabase when user logs in
+    useEffect(() => {
+        if (!user?.id || user.id.startsWith('u')) return;
+        (async () => {
+            try {
+                const [hosted, attending] = await Promise.all([
+                    getHostEvents(user.id),
+                    getGuestRsvps(user.id),
+                ]);
+                if (hosted?.length || attending?.length) {
+                    const hostedNorm = (hosted || []).map(ev => ({
+                        ...ev,
+                        id: ev.id,
+                        mine: true,
+                        title: ev.title,
+                        type: ev.type,
+                        date: ev.date ? ev.date.split('T')[0] : null,
+                        time: ev.time || '',
+                        loc: ev.location || '',
+                        addr: ev.address || '',
+                        addrHidden: ev.addr_hidden ?? true,
+                        cap: ev.capacity || 10,
+                        vis: ev.visibility || 'inviteOnly',
+                        desc: ev.description || '',
+                        dressCode: ev.dress_code || '',
+                        cover: { type: ev.cover_type || 'gradient', value: ev.cover_value || '', emoji: ev.cover_emoji || null },
+                        host: user.name,
+                        hostId: user.id,
+                        guests: [],
+                        photoGallery: [],
+                        eventComments: [],
+                        pinnedQuotes: [],
+                        isEnded: false,
+                    }));
+                    setEvents(prev => {
+                        const seedOnly = prev.filter(e => e.id.startsWith('evt-') && !e.id.startsWith('evt-user-'));
+                        const ids = new Set(hostedNorm.map(e => e.id));
+                        return [...hostedNorm, ...seedOnly.filter(e => !ids.has(e.id))];
+                    });
+                }
+            } catch (err) {
+                console.warn('Failed to load Supabase events, using seed:', err.message);
+            }
+        })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id]);
+
     // Persist all state
     useEffect(() => {
         saveToStorage({ user, events, following, friends, followedHosts });
@@ -124,7 +177,7 @@ export function AppProvider({ children }) {
     }, []);
 
     // ── Events ───────────────────────────────────
-    const createEvent = useCallback((evt) => {
+    const createEvent = useCallback(async (evt) => {
         const newEvt = {
             ...evt,
             id: 'evt-user-' + Date.now(),
@@ -139,6 +192,32 @@ export function AppProvider({ children }) {
             experienceTags: evt.experienceTags || [],
         };
         setEvents(e => [newEvt, ...e]);
+        // persist to Supabase if real user
+        if (user?.id && !user.id.startsWith('u')) {
+            try {
+                await sbCreateEvent({
+                    title: evt.title,
+                    type: evt.type,
+                    date: evt.date || null,
+                    time: evt.time || null,
+                    location: evt.loc || evt.location || '',
+                    address: evt.addr || '',
+                    addr_hidden: evt.addrHidden ?? true,
+                    capacity: evt.cap || 10,
+                    visibility: evt.vis || 'inviteOnly',
+                    description: evt.desc || '',
+                    dress_code: evt.dressCode || '',
+                    cover_type: evt.cover?.type || 'gradient',
+                    cover_value: evt.cover?.value || '',
+                    cover_emoji: evt.cover?.emoji || null,
+                    host_id: user.id,
+                    status: 'published',
+                    city: user.city || '',
+                });
+            } catch (err) {
+                console.warn('Supabase createEvent failed, using local:', err.message);
+            }
+        }
         return newEvt;
     }, [user]);
 
@@ -172,15 +251,25 @@ export function AppProvider({ children }) {
         addToast(guestName + ' accepted — they have been notified 🎉', 'success');
     }
 
-    const rsvpEvent = useCallback((eventId, status, dietaryNote) => {
+    const rsvpEvent = useCallback(async (eventId, status, dietaryNote) => {
         setEvents(e => e.map(ev => {
             if (ev.id !== eventId) return ev;
-            const guests = ev.guests.map(g =>
-                g.id === 'u1' ? { ...g, s: status, dietaryNote: dietaryNote || g.dietaryNote || '' } : g
-            );
-            return { ...ev, guests };
+            const userId = user?.id || 'u1';
+            const existing = (ev.guests || []).find(g => g.id === userId);
+            const updatedGuests = existing
+                ? ev.guests.map(g => g.id === userId ? { ...g, s: status, dietaryNote: dietaryNote || g.dietaryNote || '' } : g)
+                : [...(ev.guests || []), { id: userId, n: user?.name || 'You', s: status, initials: user?.initials || 'U', color: user?.color || 'indigo' }];
+            return { ...ev, guests: updatedGuests };
         }));
-    }, []);
+        // persist to Supabase if real user and real event
+        if (user?.id && !user.id.startsWith('u') && !eventId.startsWith('evt-')) {
+            try {
+                await createRsvp(eventId, user.id, dietaryNote || '');
+            } catch (err) {
+                console.warn('Supabase rsvp failed, using local:', err.message);
+            }
+        }
+    }, [user]);
 
     const claimPotluckItem = useCallback((eventId, itemId) => {
         setEvents(e => e.map(ev => {
@@ -252,9 +341,23 @@ export function AppProvider({ children }) {
     }, []);
 
     // ── Profile ──────────────────────────────────
-    const updateProfile = useCallback((patch) => {
+    const updateProfile = useCallback(async (patch) => {
         setUser(u => ({ ...u, ...patch }));
-    }, []);
+        if (user?.id && !user.id.startsWith('u')) {
+            try {
+                await sbUpdateProfile(user.id, {
+                    full_name: patch.name || undefined,
+                    bio: patch.bio || undefined,
+                    avatar_url: patch.avatar || undefined,
+                    city: patch.city || undefined,
+                    website: patch.website || undefined,
+                    dietary_restrictions: patch.dietaryRestrictions || undefined,
+                });
+            } catch (err) {
+                console.warn('Supabase updateProfile failed, using local:', err.message);
+            }
+        }
+    }, [user]);
 
     // ── Friend System ────────────────────────────
     const sendFriendRequest = useCallback((userId) => {
