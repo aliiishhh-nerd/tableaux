@@ -419,20 +419,8 @@ export default function ProfilePage() {
               >
                 <span style={{ fontSize: 16 }}>G</span> Connect with Google
               </button>
-              <button
-                className="btn btn-ghost"
-                style={{ justifyContent: 'flex-start', gap: 10, fontSize: 13 }}
-                onClick={async () => {
-                  const { error } = await supabase.auth.signInWithOAuth({ provider: 'facebook', options: { redirectTo: window.location.origin + '/profile' } });
-                  if (error) addToast('Could not connect Facebook — enable in Supabase dashboard', 'error');
-                }}
-              >
-                <span style={{ fontSize: 16 }}>f</span> Connect with Facebook
-              </button>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 10 }}>
-              Instagram sign-in is not available via OAuth — link your handle in your profile instead.
-            </div>
+              <div style={{ fontSize: 11, color: "var(--ink3)", marginTop: 8 }}>Instagram and Facebook login coming soon.</div>
+          </div>
           </div>
 
           {/* Danger zone — delete account */}
