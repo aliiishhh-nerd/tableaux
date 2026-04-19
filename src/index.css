@@ -800,6 +800,7 @@ body {
   .feed-layout { grid-template-columns: 1fr; gap: 16px; }
   .feed-grid   { grid-template-columns: 1fr; gap: 12px; }
   .stat-cards  { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card:nth-child(4):nth-last-child(1) { grid-column: 1 / -1; }
   .stat-card   { padding: 12px; }
   .stat-val    { font-size: 22px; }
 

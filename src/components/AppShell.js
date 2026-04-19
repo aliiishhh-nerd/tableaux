@@ -18,6 +18,12 @@ const NAV = [
   { to: '/invites', icon: '✉️', label: 'Invitations'  },
   { to: '/blog',    icon: '📝', label: 'Fork & Story' },
 ];
+const NAV_MOBILE = [
+  { to: '/feed',    icon: '🏠', label: 'Explore'      },
+  { to: '/events',  icon: '🗓️', label: 'My Events'    },
+  { to: '/invites', icon: '✉️', label: 'Invitations'  },
+  { to: '/blog',    icon: '📝', label: 'Stories'      },
+];
 
 // Public event preview page — no login required
 function PublicEventPage() {
@@ -247,6 +253,11 @@ export default function AppShell() {
   const unreadCount = (notifications || []).filter(n => !n.read).length;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
+  React.useEffect(() => {
+    const handler = () => setCreatingEvent(true);
+    window.addEventListener('tablefolk:createEvent', handler);
+    return () => window.removeEventListener('tablefolk:createEvent', handler);
+  }, []);
   const location = useLocation();
 
   // Public routes — no login required
@@ -404,7 +415,7 @@ export default function AppShell() {
       </button>
 
       <nav className="mobile-nav">
-        {NAV.map(n => (
+        {NAV_MOBILE.map(n => (
           <NavLink
             key={n.to}
             to={n.to}
@@ -419,6 +430,14 @@ export default function AppShell() {
             {n.label}
           </NavLink>
         ))}
+        <button
+          className="mobile-nav-btn"
+          onClick={() => setCreatingEvent(true)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          <span className="mobile-nav-icon" style={{ fontSize: 22 }}>＋</span>
+          Host
+        </button>
         <Link to="/profile" className="mobile-nav-btn">
           <div className={`av av-sm av-${user.color || 'indigo'}`} style={{ width: 26, height: 26, fontSize: 9 }}>{user.initials}</div>
           Me

@@ -203,6 +203,7 @@ export const SEED_EVENTS = [
   {
     id: 'evt-chi-1',
     title: 'An Evening of Provencal Cuisine',
+    isDemo: true,
     type: 'Dinner Party',
     date: daysFromNow(19), time: '19:30',
     isEnded: false,
@@ -251,6 +252,7 @@ export const SEED_EVENTS = [
   {
     id: 'evt-chi-new-1',
     title: 'Omakase at Home: Japanese Tasting Menu',
+    isDemo: true,
     type: 'Supper Club',
     date: daysFromNow(14), time: '19:00',
     isEnded: false,

@@ -22,6 +22,10 @@ function AuthListener() {
         } catch (e) {
           // Session restore failed — user stays logged out
         }
+        // If already logged in and on /auth, redirect to feed
+        if (window.location.pathname === '/auth') {
+          navigate('/feed');
+        }
       }
     });
 
