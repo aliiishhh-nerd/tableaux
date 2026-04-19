@@ -28,10 +28,11 @@ const CITY_KEYWORDS = {
 };
 
 const EVENT_TYPES = [
-  'Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Other',
+  'Brunch', 'Dinner Party', 'Other', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting',
 ];
 
 const TYPE_PILLS = {
+  'Brunch':       { bg: 'rgba(212,175,55,.85)',  label: '🥞 Brunch'        },
   'Dinner Party': { bg: 'rgba(108,93,211,.85)',  label: '🍷 Dinner Party'  },
   'Other':        { bg: 'rgba(100,100,100,.75)', label: '🍽️ Other'         },
   'Potluck':      { bg: 'rgba(46,196,182,.85)',  label: '🥘 Potluck'       },
@@ -76,7 +77,7 @@ export default function FeedPage() {
   const [showCitySearch, setShowCitySearch] = useState(false);
   const [eventSearch, setEventSearch] = useState('');
   const [dismissedBanners, setDismissedBanners] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('tablefolk-dismissed-banners') || '[]'); }
+    try { return JSON.parse(sessionStorage.getItem('tableaux-dismissed-banners') || '[]'); }
     catch { return []; }
   });
   const [showBanners, setShowBanners] = useState(false);
@@ -86,7 +87,7 @@ export default function FeedPage() {
   const resolvedCity = city === 'auto' ? profileCity : city;
 
   useEffect(() => {
-    sessionStorage.setItem('tablefolk-dismissed-banners', JSON.stringify(dismissedBanners));
+    sessionStorage.setItem('tableaux-dismissed-banners', JSON.stringify(dismissedBanners));
   }, [dismissedBanners]);
 
   useEffect(() => {
@@ -141,9 +142,6 @@ export default function FeedPage() {
     ? `📍 Near Me · ${CITY_NAMES[profileCity] || 'Chicago'}`
     : '📍 Near Me';
 
-  const userHasHostedEvents = events.some(e => e.mine);
-  const showNewUserBanner = !userHasHostedEvents;
-
   return (
     <main className="page-content">
       <div className="feed-stat-cards" style={{ marginBottom: 20 }}>
@@ -168,37 +166,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {showNewUserBanner && (
-        <div style={{
-          background: 'linear-gradient(135deg, #f0eeff, #faf8f4)',
-          border: '1.5px solid rgba(91,77,224,.2)',
-          borderRadius: 14,
-          padding: '16px 20px',
-          marginBottom: 20,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          flexWrap: 'wrap'
-        }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1425', marginBottom: 3 }}>
-              👋 Welcome to TableFolk
-            </div>
-            <div style={{ fontSize: 12, color: '#8b7ea8', lineHeight: 1.5 }}>
-              The events below are examples showing what TableFolk dinners look like.
-              Be the first to host a real event in your city.
-            </div>
-          </div>
-          <button
-            className="btn btn-primary"
-            style={{ fontSize: 13, padding: '9px 18px', whiteSpace: 'nowrap', flexShrink: 0 }}
-            onClick={() => { window.dispatchEvent(new CustomEvent('tablefolk:createEvent')); }}
-          >
-            🍽️ Host your first event
-          </button>
-        </div>
-      )}
       <div className="feed-layout">
         <div>
           {/* City filter row */}
@@ -316,7 +283,7 @@ export default function FeedPage() {
                 onClick={() => {
                   const url = window.location.origin + '/feed';
                   if (navigator.share) {
-                    navigator.share({ title: 'Join me on TableFolk', text: 'Discover intimate dining experiences near you.', url });
+                    navigator.share({ title: 'Join me on Tableaux', text: 'Discover intimate dining experiences near you.', url });
                   } else {
                     navigator.clipboard?.writeText(url).catch(() => {});
                     window.alert('Invite link copied to clipboard!');

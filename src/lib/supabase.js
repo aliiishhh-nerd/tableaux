@@ -101,13 +101,3 @@ export const signIn = async (email, password) => {
                                                                                               if (error) throw error;
                                                                                                 return data;
                                                                                                 };
-
-export const addToWaitlist = async (email, city, intent) => {
-  const { data, error } = await supabase
-    .from('waitlist')
-    .insert({ email, city, intent })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-};
