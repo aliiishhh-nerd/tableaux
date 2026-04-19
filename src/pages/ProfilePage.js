@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
 import { USERS } from '../data/seed';
+import { supabase } from '../lib/supabase';
 
 const SOCIAL_PLATFORMS = [
   { key: 'instagram', label: 'Instagram',   icon: '📸', prefix: 'instagram.com/', cls: 'social-btn-ig' },
@@ -40,20 +41,15 @@ function EventThumb({ evt, size = 48 }) {
   );
 }
 
-// ── Friend action button — shows Add / Pending / Friends with appropriate actions ──
 function FriendButton({ userId, size = 'sm' }) {
   const { getFriendStatus, sendFriendRequest, removeFriend, acceptFriendRequest, addToast } = useApp();
   const status = getFriendStatus(userId);
 
-  if (userId === 'u1') return null; // Don't show for self
+  if (userId === 'u1') return null;
 
   if (status === 'accepted') {
     return (
-      <button
-        className={`btn btn-ghost btn-${size}`}
-        onClick={(e) => { e.stopPropagation(); removeFriend(userId); addToast('Friend removed', ''); }}
-        style={{ fontSize: 12 }}
-      >
+      <button className={`btn btn-ghost btn-${size}`} onClick={(e) => { e.stopPropagation(); removeFriend(userId); addToast('Friend removed', ''); }} style={{ fontSize: 12 }}>
         ✓ Friends
       </button>
     );
@@ -62,30 +58,14 @@ function FriendButton({ userId, size = 'sm' }) {
   if (status === 'pending') {
     return (
       <div style={{ display: 'flex', gap: 4 }}>
-        <button
-          className={`btn btn-primary btn-${size}`}
-          onClick={(e) => { e.stopPropagation(); acceptFriendRequest(userId); addToast('Friend request accepted! 🎉', 'success'); }}
-          style={{ fontSize: 12 }}
-        >
-          ✓ Accept
-        </button>
-        <button
-          className={`btn btn-ghost btn-${size}`}
-          onClick={(e) => { e.stopPropagation(); removeFriend(userId); addToast('Request removed', ''); }}
-          style={{ fontSize: 12 }}
-        >
-          ✕
-        </button>
+        <button className={`btn btn-primary btn-${size}`} onClick={(e) => { e.stopPropagation(); acceptFriendRequest(userId); addToast('Friend request accepted! 🎉', 'success'); }} style={{ fontSize: 12 }}>✓ Accept</button>
+        <button className={`btn btn-ghost btn-${size}`} onClick={(e) => { e.stopPropagation(); removeFriend(userId); addToast('Request removed', ''); }} style={{ fontSize: 12 }}>✕</button>
       </div>
     );
   }
 
   return (
-    <button
-      className={`btn btn-primary btn-${size}`}
-      onClick={(e) => { e.stopPropagation(); sendFriendRequest(userId); addToast('Friend request sent! 👋', 'success'); }}
-      style={{ fontSize: 12 }}
-    >
+    <button className={`btn btn-primary btn-${size}`} onClick={(e) => { e.stopPropagation(); sendFriendRequest(userId); addToast('Friend request sent! 👋', 'success'); }} style={{ fontSize: 12 }}>
       + Add Friend
     </button>
   );
@@ -101,10 +81,76 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
 
+  // Photo upload
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoRef = useRef(null);
+
+  // Email update
+  const [emailDraft, setEmailDraft] = useState('');
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  // Delete account
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
   if (!user) return null;
 
   const hostedEvents = events.filter(e => e.mine);
   const passportEvents = events.filter(e => (e.isEnded || e.isPast) && e.mine).slice(0, 8);
+
+  // ── Photo upload ──
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { addToast('Photo must be under 10MB', 'error'); return; }
+    setUploadingPhoto(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        updateProfile({ avatar: ev.target.result });
+        addToast('Photo updated ✓', 'success');
+        setUploadingPhoto(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      addToast('Upload failed — try again', 'error');
+      setUploadingPhoto(false);
+    }
+  }
+
+  // ── Email update ──
+  async function handleEmailUpdate() {
+    if (!emailDraft || !emailDraft.includes('@')) { setEmailStatus('error'); return; }
+    setEmailLoading(true);
+    setEmailStatus(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: emailDraft });
+      if (error) throw error;
+      setEmailStatus('sent');
+      addToast('Confirmation sent to new email ✓', 'success');
+    } catch {
+      setEmailStatus('error');
+      addToast('Could not update email — try again', 'error');
+    } finally {
+      setEmailLoading(false);
+    }
+  }
+
+  // ── Delete account ──
+  async function handleDeleteAccount() {
+    if (deleteConfirmText !== 'DELETE') return;
+    setDeleting(true);
+    try {
+      await supabase.auth.signOut();
+      logout();
+      addToast('Account deleted', '');
+    } catch {
+      addToast('Could not delete account — contact support', 'error');
+      setDeleting(false);
+    }
+  }
 
   function startEdit() {
     setDraft({
@@ -133,26 +179,36 @@ export default function ProfilePage() {
   function toggleDietary(item) {
     setDraft(d => {
       const has = d.dietaryRestrictions.includes(item);
-      return {
-        ...d,
-        dietaryRestrictions: has
-          ? d.dietaryRestrictions.filter(x => x !== item)
-          : [...d.dietaryRestrictions, item],
-      };
+      return { ...d, dietaryRestrictions: has ? d.dietaryRestrictions.filter(x => x !== item) : [...d.dietaryRestrictions, item] };
     });
   }
 
   const activeSocials = SOCIAL_PLATFORMS.filter(p => user.socials?.[p.key]);
 
-  if (viewingUser) {
-    return <FriendProfile user={viewingUser} onBack={() => setViewingUser(null)} />;
-  }
+  if (viewingUser) return <FriendProfile user={viewingUser} onBack={() => setViewingUser(null)} />;
 
   return (
     <main className="page-content">
       <div className="profile-hero">
         <div className="profile-hero-inner">
-          <div className={'av av-xl av-' + (user.color || 'indigo')}>{user.initials}</div>
+          {/* Avatar with photo upload overlay */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
+            ) : (
+              <div className={'av av-xl av-' + (user.color || 'indigo')}>{user.initials}</div>
+            )}
+            <button
+              onClick={() => photoRef.current?.click()}
+              disabled={uploadingPhoto}
+              style={{ position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: '50%', background: 'var(--indigo)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12 }}
+              title="Change photo"
+            >
+              {uploadingPhoto ? '⏳' : '📷'}
+            </button>
+            <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/heic,image/webp" style={{ display: 'none' }} onChange={handlePhotoUpload} />
+          </div>
+
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="profile-name">{user.name}</div>
             <div className="profile-handle">{user.handle || '@' + user.name.toLowerCase().replace(/\s/g, '')}</div>
@@ -169,23 +225,12 @@ export default function ProfilePage() {
               <div><div className="profile-stat-val">{passportEvents.length}</div><div className="profile-stat-label">Passport</div></div>
             </div>
 
-            {/* Foodie Facts */}
             {(user.favoriteFood || user.favoriteRestaurant || (user.dietaryRestrictions && user.dietaryRestrictions.length > 0)) && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                {user.favoriteFood && (
-                  <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--amber-light)', color: '#B87A00', border: '1px solid #F0D78C' }}>
-                    🍜 {user.favoriteFood}
-                  </span>
-                )}
-                {user.favoriteRestaurant && (
-                  <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--teal-light)', color: '#07A87B', border: '1px solid #A7E8D2' }}>
-                    🏮 {user.favoriteRestaurant}
-                  </span>
-                )}
+                {user.favoriteFood && <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--amber-light)', color: '#B87A00', border: '1px solid #F0D78C' }}>🍜 {user.favoriteFood}</span>}
+                {user.favoriteRestaurant && <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--teal-light)', color: '#07A87B', border: '1px solid #A7E8D2' }}>🏮 {user.favoriteRestaurant}</span>}
                 {(user.dietaryRestrictions || []).map(d => (
-                  <span key={d} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--coral-light)', color: '#D94545', border: '1px solid #F5B8B8' }}>
-                    ⚠️ {d}
-                  </span>
+                  <span key={d} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--coral-light)', color: '#D94545', border: '1px solid #F5B8B8' }}>⚠️ {d}</span>
                 ))}
               </div>
             )}
@@ -241,9 +286,7 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
             {passportEvents.map((evt, i) => (
               <div key={i} style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', cursor: 'pointer' }} onClick={() => setSelectedEvent(evt)}>
-                <div style={{ height: 72, overflow: 'hidden' }}>
-                  <EventThumb evt={evt} size={72} />
-                </div>
+                <div style={{ height: 72, overflow: 'hidden' }}><EventThumb evt={evt} size={72} /></div>
                 <div style={{ padding: '8px 10px' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.3, marginBottom: 2 }}>{evt.title}</div>
                   <div style={{ fontSize: 10, color: 'var(--ink3)' }}>{fmtDate(evt.date)}</div>
@@ -257,7 +300,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Friends tab — with add/pending/accepted actions */}
       {tab === 'friends' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {USERS.filter(u => u.id !== 'u1').map(friend => (
@@ -276,30 +318,48 @@ export default function ProfilePage() {
 
       {tab === 'settings' && (
         <div style={{ maxWidth: 480 }}>
-          <div className="card card-pad">
+
+          {/* Profile photo */}
+          <div className="card card-pad" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Profile Photo</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
+              ) : (
+                <div className={'av av-xl av-' + (user.color || 'indigo')} style={{ width: 64, height: 64, fontSize: 22 }}>{user.initials}</div>
+              )}
+              <div>
+                <button className="btn btn-ghost btn-sm" onClick={() => photoRef.current?.click()} disabled={uploadingPhoto}>
+                  {uploadingPhoto ? 'Uploading...' : '📷 Upload photo'}
+                </button>
+                <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 4 }}>JPEG, PNG, or HEIC · max 10MB</div>
+                {user.avatar && (
+                  <button className="btn btn-ghost btn-sm" style={{ color: 'var(--coral)', marginTop: 6, fontSize: 11 }} onClick={() => { updateProfile({ avatar: null }); addToast('Photo removed', ''); }}>
+                    Remove photo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Profile info */}
+          <div className="card card-pad" style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Profile Information</div>
             <div className="form-group"><label className="form-label">Display Name</label><input className="form-input" value={user.name} readOnly onClick={startEdit} placeholder="Your name" /></div>
             <div className="form-group"><label className="form-label">Handle</label><input className="form-input" value={user.handle || ''} readOnly placeholder="@yourhandle" /></div>
             <div className="form-group"><label className="form-label">Bio</label><textarea className="form-textarea" value={user.bio || ''} readOnly placeholder="Your food story..." style={{ minHeight: 70 }} /></div>
             <div className="form-group"><label className="form-label">🔗 Website</label><input className="form-input" value={user.website || ''} readOnly placeholder="https://yourwebsite.com" onClick={startEdit} /></div>
-
-            {/* Foodie facts display */}
             <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>🍜 Foodie Facts</div>
             <div className="form-group"><label className="form-label">Favorite Food</label><input className="form-input" value={user.favoriteFood || ''} readOnly placeholder="e.g. Sichuan Dan Dan Noodles" onClick={startEdit} /></div>
             <div className="form-group"><label className="form-label">Favorite Restaurant</label><input className="form-input" value={user.favoriteRestaurant || ''} readOnly placeholder="e.g. Alinea, Chicago" onClick={startEdit} /></div>
             <div className="form-group">
               <label className="form-label">Dietary Restrictions</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {(user.dietaryRestrictions || []).length > 0 ? (
-                  user.dietaryRestrictions.map(d => (
-                    <span key={d} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--coral-light)', color: '#D94545' }}>⚠️ {d}</span>
-                  ))
-                ) : (
-                  <span style={{ fontSize: 12, color: 'var(--ink3)' }}>None set</span>
-                )}
+                {(user.dietaryRestrictions || []).length > 0 ? user.dietaryRestrictions.map(d => (
+                  <span key={d} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: 'var(--coral-light)', color: '#D94545' }}>⚠️ {d}</span>
+                )) : <span style={{ fontSize: 12, color: 'var(--ink3)' }}>None set</span>}
               </div>
             </div>
-
             <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>🔗 Social Accounts</div>
             {SOCIAL_PLATFORMS.map(p => (
               <div key={p.key} className="form-group">
@@ -312,6 +372,106 @@ export default function ProfilePage() {
             ))}
             <button className="btn btn-primary" style={{ marginTop: 8 }} onClick={startEdit}>✏️ Edit Profile</button>
           </div>
+
+          {/* Email update */}
+          <div className="card card-pad" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Email Address</div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)', marginBottom: 14 }}>
+              Current: <strong>{user.email || 'not set'}</strong>. A confirmation link will be sent to your new address.
+            </div>
+            <div className="form-group">
+              <label className="form-label">New email address</label>
+              <input
+                className="form-input"
+                type="email"
+                value={emailDraft}
+                onChange={e => { setEmailDraft(e.target.value); setEmailStatus(null); }}
+                placeholder="new@email.com"
+              />
+            </div>
+            {emailStatus === 'sent' && (
+              <div style={{ fontSize: 12, color: 'var(--teal)', background: 'var(--teal-light)', padding: '8px 12px', borderRadius: 8, marginBottom: 10 }}>
+                ✓ Confirmation email sent — check your inbox to confirm the change.
+              </div>
+            )}
+            {emailStatus === 'error' && (
+              <div style={{ fontSize: 12, color: 'var(--coral)', background: 'var(--coral-light)', padding: '8px 12px', borderRadius: 8, marginBottom: 10 }}>
+                Could not update email. Check the address and try again.
+              </div>
+            )}
+            <button className="btn btn-primary btn-sm" onClick={handleEmailUpdate} disabled={emailLoading || !emailDraft}>
+              {emailLoading ? 'Sending...' : 'Update email'}
+            </button>
+          </div>
+
+          {/* Connected accounts */}
+          <div className="card card-pad" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Connected Accounts</div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)', marginBottom: 14 }}>Sign in faster by connecting a social account.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                className="btn btn-ghost"
+                style={{ justifyContent: 'flex-start', gap: 10, fontSize: 13 }}
+                onClick={async () => {
+                  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/profile' } });
+                  if (error) addToast('Could not connect Google', 'error');
+                }}
+              >
+                <span style={{ fontSize: 16 }}>G</span> Connect with Google
+              </button>
+              <button
+                className="btn btn-ghost"
+                style={{ justifyContent: 'flex-start', gap: 10, fontSize: 13 }}
+                onClick={async () => {
+                  const { error } = await supabase.auth.signInWithOAuth({ provider: 'facebook', options: { redirectTo: window.location.origin + '/profile' } });
+                  if (error) addToast('Could not connect Facebook — enable in Supabase dashboard', 'error');
+                }}
+              >
+                <span style={{ fontSize: 16 }}>f</span> Connect with Facebook
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 10 }}>
+              Instagram sign-in is not available via OAuth — link your handle in your profile instead.
+            </div>
+          </div>
+
+          {/* Danger zone — delete account */}
+          <div className="card card-pad" style={{ border: '1px solid #F5B8B8', marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#D94545', marginBottom: 4 }}>Delete Account</div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)', marginBottom: 14, lineHeight: 1.6 }}>
+              Permanently deletes your account, profile, and all hosted events. This cannot be undone.
+            </div>
+            {!showDeleteConfirm ? (
+              <button className="btn btn-ghost btn-sm" style={{ color: '#D94545', borderColor: '#F5B8B8' }} onClick={() => setShowDeleteConfirm(true)}>
+                Delete my account
+              </button>
+            ) : (
+              <div>
+                <div style={{ fontSize: 12, color: 'var(--ink)', marginBottom: 8 }}>
+                  Type <strong>DELETE</strong> to confirm:
+                </div>
+                <input
+                  className="form-input"
+                  value={deleteConfirmText}
+                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  style={{ marginBottom: 10, borderColor: '#F5B8B8' }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}>Cancel</button>
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#D94545', color: 'white', border: 'none' }}
+                    disabled={deleteConfirmText !== 'DELETE' || deleting}
+                    onClick={handleDeleteAccount}
+                  >
+                    {deleting ? 'Deleting...' : 'Permanently delete'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 
@@ -321,12 +481,23 @@ export default function ProfilePage() {
           <div className="modal">
             <div className="modal-head"><h2>Edit Profile</h2><button className="modal-x" onClick={() => setEditing(false)}>✕</button></div>
             <div className="modal-body">
+              {/* Photo upload in edit modal */}
+              <div className="form-group">
+                <label className="form-label">Profile Photo</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {user.avatar
+                    ? <img src={user.avatar} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                    : <div className={'av av-md av-' + (user.color || 'indigo')}>{user.initials}</div>
+                  }
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => photoRef.current?.click()} disabled={uploadingPhoto}>
+                    {uploadingPhoto ? 'Uploading...' : '📷 Change photo'}
+                  </button>
+                </div>
+              </div>
               <div className="form-group"><label className="form-label">Display Name</label><input className="form-input" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">Handle</label><input className="form-input" value={draft.handle} onChange={e => setDraft(d => ({ ...d, handle: e.target.value }))} placeholder="@yourhandle" /></div>
               <div className="form-group"><label className="form-label">Bio</label><textarea className="form-textarea" value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">🔗 Website</label><input className="form-input" value={draft.website} onChange={e => setDraft(d => ({ ...d, website: e.target.value }))} placeholder="https://yourwebsite.com" /></div>
-
-              {/* Foodie facts */}
               <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>🍜 Foodie Facts</div>
               <div className="form-group"><label className="form-label">Favorite Food</label><input className="form-input" value={draft.favoriteFood} onChange={e => setDraft(d => ({ ...d, favoriteFood: e.target.value }))} placeholder="e.g. Sichuan Dan Dan Noodles" /></div>
               <div className="form-group"><label className="form-label">Favorite Restaurant</label><input className="form-input" value={draft.favoriteRestaurant} onChange={e => setDraft(d => ({ ...d, favoriteRestaurant: e.target.value }))} placeholder="e.g. Alinea, Chicago" /></div>
@@ -336,26 +507,13 @@ export default function ProfilePage() {
                   {DIETARY_OPTIONS.map(opt => {
                     const active = draft.dietaryRestrictions.includes(opt);
                     return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => toggleDietary(opt)}
-                        style={{
-                          fontSize: 12, padding: '5px 12px', borderRadius: 20, cursor: 'pointer',
-                          border: `1.5px solid ${active ? 'var(--coral)' : 'var(--border)'}`,
-                          background: active ? 'var(--coral-light)' : 'var(--page)',
-                          color: active ? '#D94545' : 'var(--ink2)',
-                          fontWeight: active ? 600 : 400,
-                          transition: 'all 0.15s',
-                        }}
-                      >
+                      <button key={opt} type="button" onClick={() => toggleDietary(opt)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, cursor: 'pointer', border: `1.5px solid ${active ? 'var(--coral)' : 'var(--border)'}`, background: active ? 'var(--coral-light)' : 'var(--page)', color: active ? '#D94545' : 'var(--ink2)', fontWeight: active ? 600 : 400, transition: 'all 0.15s' }}>
                         {active ? '✓ ' : ''}{opt}
                       </button>
                     );
                   })}
                 </div>
               </div>
-
               <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>🔗 Social Accounts</div>
               {SOCIAL_PLATFORMS.map(p => (
                 <div key={p.key} className="form-group">
@@ -412,17 +570,13 @@ function FriendProfile({ user: friendUser, onBack }) {
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
           <FriendButton userId={friendUser.id} />
         </div>
       </div>
-
-      {/* Events they're hosting */}
       {hostedByThem.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>
-            Upcoming events by {friendUser.name}
-          </div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>Upcoming events by {friendUser.name}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {hostedByThem.filter(e => !e.isEnded && !e.isPast).map(evt => (
               <div key={evt.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'white', borderRadius: 10, border: '1px solid var(--border)' }}>

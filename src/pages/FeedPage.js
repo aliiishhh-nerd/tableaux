@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
-import { getWaitlistCount } from '../lib/supabase';
 import EventDetailModal from '../components/EventDetailModal';
 import { FriendButton } from '../pages/ProfilePage';
 
@@ -48,7 +47,6 @@ const EXPERIENCE_TAG_ICONS = {
 };
 
 // City waitlist capacity before events unlock
-const CITY_WAITLIST_GOAL = 200;
 
 function getCityFromProfile(user) {
   if (!user) return 'chicago';
@@ -84,17 +82,16 @@ export default function FeedPage() {
     catch { return []; }
   });
   const [showBanners, setShowBanners] = useState(false);
-  const [waitlistCount, setWaitlistCount] = useState(null);
+  
+  const [hideExamples, setHideExamples] = useState(() => {
+    try { return localStorage.getItem('tablefolk-hide-examples') === 'true'; }
+    catch { return false; }
+  });
   const citySearchRef = useRef(null);
 
   const profileCity = getCityFromProfile(user);
   const resolvedCity = city === 'auto' ? profileCity : city;
 
-  // Fetch real waitlist count from Supabase on mount
-  useEffect(() => {
-    const cityLabel = CITY_NAMES[resolvedCity] || 'Chicago';
-    getWaitlistCount(cityLabel).then(count => setWaitlistCount(count));
-  }, [resolvedCity]);
 
   useEffect(() => {
     sessionStorage.setItem('tablefolk-dismissed-banners', JSON.stringify(dismissedBanners));
@@ -158,11 +155,7 @@ export default function FeedPage() {
   const showExampleSection = exampleUpcoming.length > 0;
   const showExampleBanner = showExampleSection; // always show; host CTA gated separately below
 
-  // Waitlist display values
   const cityLabel = CITY_NAMES[resolvedCity] || 'Chicago';
-  const displayCount = waitlistCount !== null ? waitlistCount : 0;
-  const progressPct = Math.min(100, Math.round((displayCount / CITY_WAITLIST_GOAL) * 100));
-  const remaining = Math.max(0, CITY_WAITLIST_GOAL - displayCount);
 
   return (
     <main className="page-content">
@@ -188,83 +181,7 @@ export default function FeedPage() {
         </div>
       )}
 
-      {showExampleBanner && (
-        <div style={{
-          background: 'linear-gradient(135deg, #f0eeff, #faf8f4)',
-          border: '1.5px solid rgba(91,77,224,.2)',
-          borderRadius: 14,
-          padding: '16px 20px',
-          marginBottom: 16,
-        }}>
-          {/* Header row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1425', marginBottom: 3 }}>
-                ✦ What a TableFolk evening looks like
-              </div>
-              <div style={{ fontSize: 12, color: '#8b7ea8', lineHeight: 1.5 }}>
-                {userHasHostedEvents
-                  ? "Example events showing what's possible — tap any to explore."
-                  : `These are example events — tap any to explore. Be the first to host in ${cityLabel}.`}
-              </div>
-            </div>
-            {!userHasHostedEvents && (
-              <button
-                className="btn btn-primary"
-                style={{ fontSize: 13, padding: '9px 18px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                onClick={() => { window.dispatchEvent(new CustomEvent('tablefolk:createEvent')); }}
-              >
-                🍽️ Create first event
-              </button>
-            )}
-          </div>
 
-          {/* Waitlist progress bar */}
-          <div style={{
-            background: 'rgba(255,255,255,0.6)',
-            borderRadius: 10,
-            padding: '10px 14px',
-            border: '0.5px solid rgba(91,77,224,.15)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ fontSize: 11, color: '#8b7ea8', fontWeight: 500 }}>{cityLabel} waitlist</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#534AB7' }}>
-                {displayCount} / {CITY_WAITLIST_GOAL}
-              </span>
-            </div>
-            <div style={{ height: 4, background: 'rgba(91,77,224,.15)', borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
-              <div style={{
-                height: '100%',
-                width: `${progressPct}%`,
-                background: 'linear-gradient(90deg, #7F77DD, #534AB7)',
-                borderRadius: 2,
-                transition: 'width 0.6s ease',
-              }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: '#8b7ea8' }}>
-                {remaining > 0
-                  ? `${remaining} more members unlock real events`
-                  : 'Ready to launch — host the first event!'}
-              </span>
-              <button
-                style={{ fontSize: 11, color: '#534AB7', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                onClick={() => {
-                  const url = window.location.origin + '/feed';
-                  if (navigator.share) {
-                    navigator.share({ title: 'Join me on TableFolk', text: `Help unlock TableFolk in ${cityLabel}. Only ${remaining} more members needed.`, url });
-                  } else {
-                    navigator.clipboard?.writeText(url).catch(() => {});
-                    window.alert('Invite link copied!');
-                  }
-                }}
-              >
-                Invite friends →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="feed-layout">
         <div>
@@ -306,17 +223,67 @@ export default function FeedPage() {
               style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 20, padding: '8px 16px', fontSize: 13, outline: 'none', background: 'var(--surface)', color: 'var(--ink)' }} />
           </div>
 
-          {/* Example events section — shown when no real events exist */}
-          {showExampleBanner && exampleUpcoming.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
-                Examples · tap to explore
+          {/* Example events — distinct section, always shown, dismissable */}
+          {showExampleBanner && !hideExamples && exampleUpcoming.length > 0 && (
+            <div style={{
+              marginBottom: 24,
+              padding: '16px',
+              background: 'linear-gradient(135deg, #f0eeff, #faf8f4)',
+              border: '1.5px solid rgba(91,77,224,.18)',
+              borderRadius: 14,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1425', marginBottom: 2 }}>
+                    ✦ What a TableFolk evening looks like
+                  </div>
+                  <div style={{ fontSize: 12, color: '#8b7ea8', lineHeight: 1.5 }}>
+                    {userHasHostedEvents
+                      ? "Example events — tap any to explore the full experience."
+                      : `Tap any example to explore. Be the first to host in ${cityLabel}.`}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                  {!userHasHostedEvents && (
+                    <button
+                      className="btn btn-primary"
+                      style={{ fontSize: 12, padding: '7px 14px', whiteSpace: 'nowrap' }}
+                      onClick={() => { window.dispatchEvent(new CustomEvent('tablefolk:createEvent')); }}
+                    >
+                      🍽️ Host first event
+                    </button>
+                  )}
+                  <button
+                    style={{ fontSize: 11, color: '#8b7ea8', background: 'none', border: '0.5px solid rgba(91,77,224,.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    onClick={() => {
+                      setHideExamples(true);
+                      try { localStorage.setItem('tablefolk-hide-examples', 'true'); } catch {}
+                    }}
+                  >
+                    Hide examples
+                  </button>
+                </div>
               </div>
               <div className="feed-grid">
                 {exampleUpcoming.map(evt => (
                   <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} isFollowingHost={false} isExample />
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Restore examples link — shown after user hides them */}
+          {showExampleBanner && hideExamples && (
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                style={{ fontSize: 11, color: '#8b7ea8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                onClick={() => {
+                  setHideExamples(false);
+                  try { localStorage.removeItem('tablefolk-hide-examples'); } catch {}
+                }}
+              >
+                Show example events
+              </button>
             </div>
           )}
 
