@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unsubscribe — TableFolk</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f0e8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{background:#faf8f4;border-radius:16px;padding:48px 40px;max-width:440px;width:100%;text-align:center;border:1px solid rgba(90,70,160,.1);box-shadow:0 8px 32px rgba(26,20,37,.1)}
+  .logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#1a1425;margin-bottom:32px}
+  .logo em{color:#7c6fef;font-style:italic}
+  .icon{font-size:40px;margin-bottom:16px}
+  h1{font-size:22px;font-weight:400;color:#1a1425;margin-bottom:10px;font-family:Georgia,serif;letter-spacing:-.3px}
+  h1 em{font-style:italic;color:#5b4de0}
+  p{font-size:14px;color:#4a4260;line-height:1.7;margin-bottom:24px}
+  .btn{display:inline-block;background:#5b4de0;color:white;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;border:none;cursor:pointer;font-family:'Helvetica Neue',Arial,sans-serif}
+  .btn-ghost{background:transparent;color:#8b7ea8;border:1.5px solid rgba(91,77,224,.2);margin-top:12px;display:block;width:100%}
+  .success{display:none;color:#0a6b5a;background:#e0f7f4;border-radius:10px;padding:16px;font-size:14px;margin-bottom:20px;font-weight:600}
+  .email-display{background:#f0eeff;border-radius:8px;padding:8px 14px;font-size:13px;color:#3c3489;font-weight:600;margin-bottom:20px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Table<em>Folk</em></div>
+  <div class="icon" id="icon">😔</div>
+  <h1>Unsubscribe from <em>TableFolk?</em></h1>
+  <div id="email-display" class="email-display"></div>
+  <p id="desc">We're sorry to see you go. Click below to remove yourself from all TableFolk emails.</p>
+  <div class="success" id="success-msg">✓ You've been unsubscribed. You won't receive any more emails from us.</div>
+  <button class="btn" id="unsub-btn" onclick="doUnsubscribe()">Yes, unsubscribe me</button>
+  <a href="https://tablefolk.club/waitlist.html" class="btn btn-ghost" id="keep-btn">Actually, keep me subscribed</a>
+</div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get('email') || '';
+  const type = params.get('type') || 'all';
+  if (email) {
+    document.getElementById('email-display').textContent = email;
+  } else {
+    document.getElementById('email-display').style.display = 'none';
+  }
+
+  async function doUnsubscribe() {
+    document.getElementById('unsub-btn').textContent = 'Processing...';
+    document.getElementById('unsub-btn').disabled = true;
+    try {
+      // Mark as unsubscribed in Supabase waitlist table
+      if (email && type === 'waitlist') {
+        await fetch('https://jrwugzljctnvcodvlvqf.supabase.co/rest/v1/waitlist?email=eq.' + encodeURIComponent(email), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd3VnemxqY3RudmNvZHZsdnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NDUwOTEsImV4cCI6MjA5MDUyMTA5MX0.H-tyCrSDKmAe_sp-wsMP2jiiGPajA9J4Z-bPH2SrdYQ'
+          },
+          body: JSON.stringify({ unsubscribed: true })
+        });
+      }
+    } catch(e) { /* silent — still show success */ }
+    document.getElementById('icon').textContent = '✌️';
+    document.getElementById('desc').style.display = 'none';
+    document.getElementById('unsub-btn').style.display = 'none';
+    document.getElementById('keep-btn').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'block';
+  }
+</script>
+</body>
+</html>

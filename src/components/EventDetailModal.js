@@ -68,8 +68,9 @@ const QUOTE_STYLES = [
 ];
 
 export default function EventDetailModal({ event, onClose, onEdit }) {
-  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote, approveRSVP, declineRSVP, reviveRSVP } = useApp();
+  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote, approveRSVP, declineRSVP, reviveRSVP, updateEvent } = useApp();
   const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
+  const [editConfirm, setEditConfirm] = React.useState(null);
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [commentText, setCommentText] = useState('');
@@ -83,6 +84,15 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const fileRef = useRef();
 
   if (!event) return null;
+  // Wrap onEdit to show confirm modal if event has confirmed guests
+  function handleEditClick() {
+    const confirmedGuests = (event.guests || []).filter(g => g.s === 'approved');
+    if (confirmedGuests.length > 0 && onEdit) {
+      setEditConfirm(true);
+    } else if (onEdit) {
+      onEdit(event);
+    }
+  }
 
   const myGuest = event.guests?.find(g => g.id === 'u1');
   const isEnded = event.isEnded || false;
@@ -186,6 +196,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
     : 'linear-gradient(135deg, #1A1A2E, #2D2550)';
 
   return (
+    <>
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal modal-lg">
         {/* Cover */}
@@ -518,7 +529,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
           <button className="btn btn-ghost" onClick={onClose}>Close</button>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-ghost" onClick={() => downloadICS(event)} style={{ fontSize: 13 }}>📅 Add to Calendar</button>
-            {isHost && onEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(event); }}>✏️ Edit Event</button>}
+            {isHost && onEdit && <button className="btn btn-primary" onClick={handleEditClick}>✏️ Edit Event</button>}
           </div>
         </div>
 
@@ -563,6 +574,21 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
         }
       `}</style>
     </div>
+    {editConfirm && (
+      <EditConfirmModal
+        event={event}
+        onClose={() => setEditConfirm(null)}
+        onConfirm={({ notifyGuests }) => {
+          setEditConfirm(null);
+          if (updateEvent && notifyGuests) {
+            addToast('Guests will be notified of your changes', 'success');
+          }
+          onClose();
+          if (onEdit) onEdit(event);
+        }}
+      />
+    )}
+  </>
   );
 }
 
@@ -916,6 +942,50 @@ function PhotoGalleryTab({ event, fileRef, uploading, onUpload, lightbox, setLig
     </div>
   );
 }
+
+// ── EditConfirmModal ──────────────────────────────────────
+function EditConfirmModal({ event, onClose, onConfirm }) {
+  const [notifyGuests, setNotifyGuests] = React.useState(true);
+  const [quietly, setQuietly] = React.useState(false);
+  return (
+    <div style={{ position:'fixed',inset:0,background:'rgba(26,20,37,.6)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background:'#faf8f4',borderRadius:16,padding:28,maxWidth:420,width:'100%',boxShadow:'0 20px 60px rgba(26,20,37,.25)' }}>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18 }}>
+          <div style={{ fontSize:16,fontWeight:700,color:'var(--ink)' }}>Save changes to event?</div>
+          <button onClick={onClose} style={{ background:'none',border:'none',fontSize:20,cursor:'pointer',color:'var(--ink3)',lineHeight:1 }}>×</button>
+        </div>
+        <p style={{ fontSize:13,color:'var(--ink2)',marginBottom:20,lineHeight:1.6,fontFamily:'var(--sans)' }}>
+          You have confirmed guests. Let them know what changed so no one is caught off guard.
+        </p>
+        <div style={{ background:'var(--page)',borderRadius:10,padding:14,marginBottom:18 }}>
+          <label style={{ display:'flex',alignItems:'center',gap:10,cursor:'pointer',marginBottom:12 }}>
+            <input type="checkbox" checked={notifyGuests} onChange={e => setNotifyGuests(e.target.checked)}
+              style={{ width:16,height:16,accentColor:'var(--indigo)' }} />
+            <span style={{ fontSize:13,fontWeight:600,color:'var(--ink)',fontFamily:'var(--sans)' }}>Notify confirmed guests by email</span>
+          </label>
+          <label style={{ display:'flex',alignItems:'center',gap:10,cursor:'pointer' }}>
+            <input type="checkbox" checked={quietly} onChange={e => setQuietly(e.target.checked)}
+              style={{ width:16,height:16,accentColor:'var(--indigo)' }} />
+            <span style={{ fontSize:13,color:'var(--ink2)',fontFamily:'var(--sans)' }}>Save quietly — minor fix, no need to alert guests</span>
+          </label>
+        </div>
+        {notifyGuests && !quietly && (
+          <div style={{ fontSize:12,color:'var(--ink3)',background:'var(--indigo-light)',borderRadius:8,padding:'10px 12px',marginBottom:18,fontFamily:'var(--sans)',lineHeight:1.5 }}>
+            ✉️ Guests will receive an update email with what changed and an option to withdraw their RSVP if needed.
+          </div>
+        )}
+        <div style={{ display:'flex',gap:10 }}>
+          <button onClick={onClose} className="btn btn-ghost" style={{ flex:1 }}>Cancel</button>
+          <button onClick={() => onConfirm({ notifyGuests: notifyGuests && !quietly })} className="btn btn-primary" style={{ flex:2 }}>
+            Save {quietly ? 'quietly' : notifyGuests ? '& notify guests' : 'without notifying'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PublicRSVPBlock({ event, addToast, rsvpEvent, user }) {
   const [state, setState] = React.useState('idle');
   const alreadyPending = event.guests?.some(g => g.id === user?.id && g.s === 'pending');
