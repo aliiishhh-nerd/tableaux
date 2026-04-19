@@ -393,7 +393,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                             {/* Public RSVP */}
               {(() => {
                 const vis = (event.vis || event.visibility || '').toLowerCase().replace(/\s/g, '');
-                const isPublicEvent = vis === 'public';
+                const isPublicEvent = vis === 'public' && !event.isExample;
                 if (!isPublicEvent || isHost || !!myGuest || isInvited) return null;
                 return <PublicRSVPBlock event={event} addToast={addToast} rsvpEvent={rsvpEvent} user={user} />;
               })()}
