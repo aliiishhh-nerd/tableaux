@@ -155,7 +155,8 @@ export default function FeedPage() {
     : '📍 Near Me';
 
   const userHasHostedEvents = events.some(e => e.mine && !e.isExample);
-  const showExampleBanner = !userHasHostedEvents && exampleUpcoming.length > 0;
+  const showExampleSection = exampleUpcoming.length > 0;
+  const showExampleBanner = showExampleSection; // always show; host CTA gated separately below
 
   // Waitlist display values
   const cityLabel = CITY_NAMES[resolvedCity] || 'Chicago';
@@ -202,16 +203,20 @@ export default function FeedPage() {
                 ✦ What a TableFolk evening looks like
               </div>
               <div style={{ fontSize: 12, color: '#8b7ea8', lineHeight: 1.5 }}>
-                These are example events — tap any to explore. Be the first to host a real event in {cityLabel}.
+                {userHasHostedEvents
+                  ? "Example events showing what's possible — tap any to explore."
+                  : `These are example events — tap any to explore. Be the first to host in ${cityLabel}.`}
               </div>
             </div>
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: 13, padding: '9px 18px', whiteSpace: 'nowrap', flexShrink: 0 }}
-              onClick={() => { window.dispatchEvent(new CustomEvent('tablefolk:createEvent')); }}
-            >
-              🍽️ Create first event
-            </button>
+            {!userHasHostedEvents && (
+              <button
+                className="btn btn-primary"
+                style={{ fontSize: 13, padding: '9px 18px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                onClick={() => { window.dispatchEvent(new CustomEvent('tablefolk:createEvent')); }}
+              >
+                🍽️ Create first event
+              </button>
+            )}
           </div>
 
           {/* Waitlist progress bar */}
@@ -346,8 +351,8 @@ export default function FeedPage() {
             );
           })()}
 
-          {/* Host CTA — sticky at bottom of feed when showing examples */}
-          {showExampleBanner && (
+          {/* Host CTA — only for new users without real events */}
+          {showExampleBanner && !userHasHostedEvents && (
             <div style={{
               marginTop: 20,
               padding: '14px 16px',
