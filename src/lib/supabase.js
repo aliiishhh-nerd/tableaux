@@ -34,8 +34,22 @@ export const getProfile = async (userId) => {
   return data;
 };
 
+// Maps app field names to Supabase column names
 export const updateProfile = async (userId, updates) => {
-  const { data, error } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
+  const mapped = {};
+  if (updates.name !== undefined)                 mapped.full_name = updates.name;
+  if (updates.full_name !== undefined)             mapped.full_name = updates.full_name;
+  if (updates.avatar !== undefined)               mapped.avatar_url = updates.avatar;
+  if (updates.avatar_url !== undefined)           mapped.avatar_url = updates.avatar_url;
+  if (updates.bio !== undefined)                  mapped.bio = updates.bio;
+  if (updates.city !== undefined)                 mapped.city = updates.city;
+  if (updates.website !== undefined)              mapped.website = updates.website;
+  if (updates.handle !== undefined)               mapped.handle = updates.handle;
+  if (updates.favoriteFood !== undefined)         mapped.favorite_food = updates.favoriteFood;
+  if (updates.favoriteRestaurant !== undefined)   mapped.favorite_restaurant = updates.favoriteRestaurant;
+  if (updates.dietaryRestrictions !== undefined)  mapped.dietary_restrictions = updates.dietaryRestrictions;
+  if (Object.keys(mapped).length === 0) return null;
+  const { data, error } = await supabase.from('profiles').update(mapped).eq('id', userId).select().single();
   if (error) throw error;
   return data;
 };
@@ -44,14 +58,13 @@ export const getPublicEvents = async ({ city } = {}) => {
   let query = supabase
     .from('events')
     .select('*, host:profiles(id, full_name, avatar_url, username), rsvp_count:rsvps(count)')
-    .eq('is_public', true)
     .eq('status', 'published')
-    .gte('date', new Date().toISOString())
+    .gte('date', new Date().toISOString().split('T')[0])
     .order('date', { ascending: true });
   if (city) query = query.eq('city', city);
   const { data, error } = await query;
   if (error) throw error;
-  return data;
+  return data || [];
 };
 
 export const getEventById = async (eventId) => {
@@ -67,11 +80,11 @@ export const getEventById = async (eventId) => {
 export const getHostEvents = async (hostId) => {
   const { data, error } = await supabase
     .from('events')
-    .select('*, rsvps(count)')
+    .select('*, rsvps(*, guest:profiles(id, full_name, avatar_url))')
     .eq('host_id', hostId)
     .order('date', { ascending: false });
   if (error) throw error;
-  return data;
+  return data || [];
 };
 
 export const createEvent = async (eventData) => {
@@ -81,7 +94,10 @@ export const createEvent = async (eventData) => {
 };
 
 export const createRsvp = async (eventId, guestId, message = '') => {
-  const { data, error } = await supabase.from('rsvps').insert({ event_id: eventId, guest_id: guestId, message }).select().single();
+  const { data, error } = await supabase
+    .from('rsvps')
+    .upsert({ event_id: eventId, guest_id: guestId, message, status: 'pending' }, { onConflict: 'event_id,guest_id' })
+    .select().single();
   if (error) throw error;
   return data;
 };
@@ -95,11 +111,11 @@ export const updateRsvpStatus = async (rsvpId, status) => {
 export const getGuestRsvps = async (guestId) => {
   const { data, error } = await supabase
     .from('rsvps')
-    .select('*, event:events(*)')
+    .select('*, event:events(*, host:profiles(id, full_name, avatar_url))')
     .eq('guest_id', guestId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data;
+  return data || [];
 };
 
 export const getPotluckItems = async (eventId) => {
@@ -115,8 +131,7 @@ export const addMoment = async (eventId, authorId, imageUrl, caption) => {
   const { data, error } = await supabase
     .from('moments')
     .insert({ event_id: eventId, author_id: authorId, image_url: imageUrl, caption })
-    .select()
-    .single();
+    .select().single();
   if (error) throw error;
   return data;
 };
@@ -131,18 +146,54 @@ export const getPassportStamps = async (userId) => {
   return data;
 };
 
-export const addToWaitlist = async (email, city, intent) => {
+// ── Friendships ──────────────────────────────────────────────────────────────
+
+export const getFriendships = async (userId) => {
   const { data, error } = await supabase
-    .from('waitlist')
-    .insert({ email, city, intent })
-    .select()
-    .single();
+    .from('friendships')
+    .select('*, friend:profiles!friendships_friend_id_fkey(id, full_name, avatar_url, username, bio, city)')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return data || [];
+};
+
+export const sendFriendRequestDb = async (userId, friendId) => {
+  const { data, error } = await supabase
+    .from('friendships')
+    .upsert({ user_id: userId, friend_id: friendId, status: 'pending' }, { onConflict: 'user_id,friend_id' })
+    .select().single();
   if (error) throw error;
   return data;
 };
 
-// Returns the number of waitlist signups for a given city (case-insensitive match).
-// Falls back to 0 on any error so the UI never breaks.
+export const acceptFriendRequestDb = async (userId, friendId) => {
+  // Accept in both directions
+  await supabase.from('friendships')
+    .update({ status: 'accepted' })
+    .eq('user_id', friendId).eq('friend_id', userId);
+  const { data, error } = await supabase.from('friendships')
+    .upsert({ user_id: userId, friend_id: friendId, status: 'accepted' }, { onConflict: 'user_id,friend_id' })
+    .select().single();
+  if (error) throw error;
+  return data;
+};
+
+export const removeFriendDb = async (userId, friendId) => {
+  await supabase.from('friendships').delete().eq('user_id', userId).eq('friend_id', friendId);
+  await supabase.from('friendships').delete().eq('user_id', friendId).eq('friend_id', userId);
+};
+
+// ── Waitlist ─────────────────────────────────────────────────────────────────
+
+export const addToWaitlist = async (email, city, intent) => {
+  const { data, error } = await supabase
+    .from('waitlist')
+    .insert({ email, city, intent })
+    .select().single();
+  if (error) throw error;
+  return data;
+};
+
 export const getWaitlistCount = async (city = 'Chicago') => {
   try {
     const { count, error } = await supabase
