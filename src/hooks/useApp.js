@@ -6,6 +6,7 @@ import {
   getHostEvents,
   getPublicEvents,
   createRsvp, getGuestRsvps,
+  addMoment as sbAddMoment,
   updateProfile as sbUpdateProfile,
   getFriendships, sendFriendRequestDb, acceptFriendRequestDb, removeFriendDb,
 } from '../lib/supabase';
@@ -372,9 +373,17 @@ export function AppProvider({ children }) {
     }));
   }, []);
 
-  const addComment = useCallback((eventId, comment) => {
+  const addComment = useCallback(async (eventId, comment) => {
     setEvents(e => e.map(ev => ev.id !== eventId ? ev : { ...ev, eventComments: [...(ev.eventComments || []), comment] }));
-  }, []);
+    const isRealUser = user && user.id && !user.id.startsWith('u');
+    if (isRealUser) {
+      try {
+        await sbAddMoment(eventId, user.id, null, comment.text || comment);
+      } catch (err) {
+        console.warn('Supabase addMoment failed:', err.message);
+      }
+    }
+  }, [user]);
 
   const pinQuote = useCallback((eventId, commentId) => {
     setEvents(e => e.map(ev => {
@@ -466,8 +475,8 @@ export function AppProvider({ children }) {
       inviteGuests,
       followedHosts, followHost, unfollowHost, isFollowingHost,
       toasts, addToast,
-      notifications, markNotifRead, markAllNotifsRead,
-      approveRSVP, declineRSVP, reviveRSVP,
+      notifications, markNotifRead, markAllNotifsRead, addNotification,
+      approveRSVP, declineRSVP, reviveRSVP, setEvents,
     }}>
       {children}
     </AppCtx.Provider>

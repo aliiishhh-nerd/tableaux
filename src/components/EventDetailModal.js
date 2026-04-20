@@ -77,7 +77,6 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const [reminders, setReminders] = useState({ '2d': false, '24h': true, 'dof': false });
   const [reminderSaved, setReminderSaved] = useState(false);
   const [nudgeSent, setNudgeSent] = useState({});
-  const [showFullAddr] = useState(false);
   const [dietaryNote, setDietaryNote] = useState('');
   const [taggingPhoto, setTaggingPhoto] = useState(null);
   const [tagInput, setTagInput] = useState('');
@@ -94,7 +93,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
     }
   }
 
-  const myGuest = event.guests?.find(g => g.id === 'u1');
+  const myGuest = event.guests?.find(g => g.id === (user?.id || 'u1'));
   const isEnded = event.isEnded || false;
   const isHost  = event.mine;
   const isInvited = event.isInvitedTo;
@@ -102,6 +101,8 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const myComment = event.eventComments?.find(c => c.userId === 'u1');
   const passportStamped = myComment?.passportStamped;
   const isConfirmed = myGuest?.s === 'approved';
+  const isConfirmedGuest = isConfirmed;
+  const showFullAddr = !event.addrHidden || isHost || isConfirmedGuest || event.type === 'Restaurant';
   function getVis(e) {
     const raw = (e.vis || e.visibility || '').toLowerCase().replace(/\s/g, '');
     if (raw === 'public') return 'public';
