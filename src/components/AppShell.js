@@ -8,6 +8,8 @@ import InvitesPage from '../pages/InvitesPage';
 import ProfilePage from '../pages/ProfilePage';
 import BlogPage from '../pages/BlogPage';
 import FAQPage from '../pages/FAQPage';
+import TermsPage from '../pages/TermsPage';
+import PrivacyPage from '../pages/PrivacyPage';
 import LandingPage from '../pages/LandingPage';
 import EmptyStatePage from '../pages/EmptyStatePage';
 import CreateEventModal from './CreateEventModal';
@@ -266,6 +268,8 @@ export default function AppShell() {
   }
   if (!user && location.pathname.startsWith('/blog')) return <BlogPage />;
   if (!user && location.pathname.startsWith('/faq')) return <FAQPage />;
+  if (!user && location.pathname.startsWith('/terms')) return <TermsPage />;
+  if (!user && location.pathname.startsWith('/privacy')) return <PrivacyPage />;
   if (!user && location.pathname.startsWith('/e/')) return <PublicEventWrapper />;
   if (!user) return <AuthPage />;
 
@@ -373,6 +377,8 @@ export default function AppShell() {
           <Route path="/profile"    element={<ProfilePage />} />
           <Route path="/blog"       element={<BlogPage />} />
           <Route path="/faq"        element={<FAQPage />} />
+          <Route path="/terms"       element={<TermsPage />} />
+          <Route path="/privacy"     element={<PrivacyPage />} />
           <Route path="/e/:id"      element={<PublicEventPage />} />
         </Routes>
 
