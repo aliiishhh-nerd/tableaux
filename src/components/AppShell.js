@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, NavLink, useLocation, Link, useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
+import { useRealtime } from '../hooks/useRealtime';
 import AuthPage from '../pages/AuthPage';
 import FeedPage from '../pages/FeedPage';
 import EventsPage from '../pages/EventsPage';
@@ -251,7 +252,8 @@ function NotifBell({ notifications, unreadCount, markAllNotifsRead, markNotifRea
 
 
 export default function AppShell() {
-  const { user, events, toasts, notifications, markNotifRead, markAllNotifsRead } = useApp();
+  const { user, events, setEvents, toasts, notifications, markNotifRead, markAllNotifsRead, addToast, addNotification } = useApp();
+  useRealtime({ user, addToast, addNotification, setEvents });
   const unreadCount = (notifications || []).filter(n => !n.read).length;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
