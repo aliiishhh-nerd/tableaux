@@ -38,14 +38,10 @@ export function AppProvider({ children }) {
 
     const [events, setEvents] = useState(() => {
         const stored = loadFromStorage();
-        if (!stored?.events) return SEED_EVENTS;
-        const userCreated = stored.events.filter(e => e.id.startsWith('evt-') && !SEED_EVENTS.find(s => s.id === e.id));
-        const seedWithUpdates = SEED_EVENTS.map(seed => {
-            const stored_evt = stored.events.find(s => s.id === seed.id);
-            return stored_evt || seed;
-        });
-        return [...userCreated, ...seedWithUpdates];
+        if (stored?.events && stored.events.length > 0) return stored.events;
+        return SEED_EVENTS;
     });
+    const [eventsLoaded, setEventsLoaded] = useState(false);
 
     const [toasts, setToasts] = useState([]);
     const [notifications, setNotifications] = useState([]);
@@ -177,6 +173,39 @@ export function AppProvider({ children }) {
     }, []);
 
     // ── Events ───────────────────────────────────
+
+    // Load real events from Supabase once user is authenticated
+    useEffect(() => {
+        if (!user || eventsLoaded) return;
+        const loadEvents = async () => {
+            try {
+                const [hosted, rsvpd] = await Promise.all([
+                    getHostEvents(user.id).catch(() => []),
+                    getGuestRsvps(user.id).catch(() => []),
+                ]);
+                const supabaseEvents = [
+                    ...(hosted || []).map(e => ({ ...e, mine: true, id: e.id })),
+                    ...(rsvpd || []).map(r => ({ ...r.event, isInvitedTo: true, id: r.event?.id })).filter(e => e.id),
+                ];
+                if (supabaseEvents.length > 0) {
+                    // Merge: keep example/seed events, add real Supabase events
+                    const seedExamples = SEED_EVENTS.filter(e => e.isExample);
+                    const merged = [
+                        ...supabaseEvents,
+                        ...seedExamples,
+                        ...SEED_EVENTS.filter(e => !e.isExample && !e.mine),
+                    ];
+                    setEvents(merged);
+                }
+                setEventsLoaded(true);
+            } catch (err) {
+                console.warn('Could not load events from Supabase:', err.message);
+                setEventsLoaded(true);
+            }
+        };
+        loadEvents();
+    }, [user, eventsLoaded]);
+
     const createEvent = useCallback(async (evt) => {
         const newEvt = {
             ...evt,
