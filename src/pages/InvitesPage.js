@@ -4,12 +4,12 @@ import { fmtDate, fmtTime } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
 
 export default function InvitesPage() {
-  const { events, rsvpEvent, addToast } = useApp();
+  const { events, rsvpEvent, addToast, user } = useApp();
   const [selected, setSelected] = useState(null);
   const [tab, setTab] = useState('pending');
 
   const invites = events.filter(e => e.isInvitedTo);
-  const myGuest = (e) => e.guests?.find(g => g.id === 'u1');
+  const myGuest = (e) => e.guests?.find(g => g.id === (user?.id || 'u1'));
 
   const pending  = invites.filter(e => myGuest(e)?.s === 'pending');
   const accepted = invites.filter(e => myGuest(e)?.s === 'approved');
@@ -52,6 +52,7 @@ export default function InvitesPage() {
             event={evt}
             myStatus={myGuest(evt)?.s}
             onView={() => setSelected(evt)}
+            userId={user?.id || 'u1'}
             onAccept={() => { rsvpEvent(evt.id, 'approved'); addToast("You're going! 🎉", 'success'); }}
             onDecline={() => { rsvpEvent(evt.id, 'declined'); addToast('RSVP declined', ''); }}
           />
@@ -65,7 +66,7 @@ export default function InvitesPage() {
   );
 }
 
-function InviteCard({ event, myStatus, onView, onAccept, onDecline }) {
+function InviteCard({ event, myStatus, onView, onAccept, onDecline, userId }) {
   const cover = event.cover || {};
   const hasImg = cover.type === 'image' || event.img;
   const bgStyle = !hasImg
@@ -74,7 +75,7 @@ function InviteCard({ event, myStatus, onView, onAccept, onDecline }) {
 
   const approvedCount = event.guests?.filter(g => g.s === 'approved').length || 0;
   const isPotluck = !!event.potluck;
-  const myPotluckItems = event.potluck?.items?.filter(it => it.claimedBy === 'u1') || [];
+  const myPotluckItems = event.potluck?.items?.filter(it => it.claimedBy === userId) || [];
 
   return (
     <div className="invite-card">

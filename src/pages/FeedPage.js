@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
-import { FRIENDS_ACTIVITY, USERS } from '../data/seed';
+
 import EventDetailModal from '../components/EventDetailModal';
-import { FriendButton } from '../pages/ProfilePage';
+
 
 const CITIES = [
   { key: 'chicago', label: 'Chicago'     },
@@ -348,32 +348,32 @@ export default function FeedPage() {
               <div className="sec-title">Friends Activity</div>
             </div>
             <div style={{ padding: '4px 14px', flex: 1 }}>
-              {FRIENDS_ACTIVITY.map(act => {
-                const u = USERS.find(x => x.id === act.userId);
-                return (
-                  <div key={act.id} className="activity-item">
-                    <div style={{ position: 'relative' }}>
-                      <div className={`av av-sm av-${u?.color || 'indigo'} av-link`}>
-                        {u ? u.initials : act.userName[0]}
-                      </div>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div className="activity-text">
-                        <strong>{act.userName}</strong> {act.action}{' '}
-                        <strong style={{ cursor: 'pointer' }} onClick={() => {
-                          const ev = events.find(e => e.id === act.targetId);
-                          if (ev) setSelected(ev);
-                        }}>{act.target}</strong>
-                        {' '}{act.emoji}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span className="activity-time">{act.time}</span>
-                        {u && u.id !== 'u1' && <FriendButton userId={u.id} size="sm" />}
-                      </div>
-                    </div>
+              {(() => {
+                const friendIds = (friends || []).filter(f => f.status === 'accepted').map(f => f.userId);
+                const acts = [];
+                events.filter(e => !e.isExample).forEach(ev => {
+                  if (ev.hostId && friendIds.includes(ev.hostId) && !ev.mine) {
+                    acts.push({ id: ev.id+'-h', initials: (ev.host||'?').split(' ').map(w=>w[0]).join('').slice(0,2), color:'indigo', name: ev.host, action:'is hosting', target: ev.title, targetId: ev.id });
+                  }
+                  (ev.guests||[]).filter(g => friendIds.includes(g.id) && g.s==='approved').forEach(g => {
+                    acts.push({ id: ev.id+'-'+g.id, initials: g.initials||g.n?.[0]||'?', color: g.color||'indigo', name: g.n, action:'is going to', target: ev.title, targetId: ev.id });
+                  });
+                });
+                if (acts.length === 0) return (
+                  <div style={{ padding:'20px 0', textAlign:'center', color:'var(--ink3)', fontSize:12, lineHeight:1.6 }}>
+                    <div style={{ fontSize:24, marginBottom:8 }}>👥</div>
+                    Add friends to see their dining activity here.
                   </div>
                 );
-              })}
+                return acts.slice(0,8).map(act => (
+                  <div key={act.id} className="activity-item">
+                    <div className={`av av-sm av-${act.color}`}>{act.initials}</div>
+                    <div style={{ flex:1 }}>
+                      <div className="activity-text"><strong>{act.name}</strong> {act.action} <strong style={{cursor:'pointer'}} onClick={() => { const ev=events.find(e=>e.id===act.targetId); if(ev) setSelected(ev); }}>{act.target}</strong></div>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
             <div className="invite-friend-cta">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>

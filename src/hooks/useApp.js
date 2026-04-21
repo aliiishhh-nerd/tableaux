@@ -152,7 +152,7 @@ export function AppProvider({ children }) {
           ...exampleSeedEvents,
         ];
 
-        setEvents(merged.length > exampleSeedEvents.length ? merged : [...merged, ...SEED_EVENTS.filter(e => !e.isExample)]);
+        setEvents(merged);
 
         // Load friendships
         if (friendshipsData.status === 'fulfilled' && friendshipsData.value.length > 0) {
@@ -229,8 +229,8 @@ export function AppProvider({ children }) {
     // Clear persisted state so next login starts fresh
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     // Reset to seed events for logged-out state
-    setEvents(SEED_EVENTS);
-    setFriends(SEED_FRIENDSHIPS);
+    setEvents(SEED_EVENTS.filter(e => e.isExample));
+    setFriends([]);
   }, []);
 
   // ── Events ────────────────────────────────────────────────────────────────
@@ -330,7 +330,7 @@ export function AppProvider({ children }) {
       const updatedGuests = existing
         ? ev.guests.map(g => g.id === userId ? { ...g, s: status, dietaryNote: dietaryNote || g.dietaryNote || '' } : g)
         : [...(ev.guests || []), { id: userId, n: user?.name || 'You', s: status, initials: user?.initials || 'U', color: 'indigo', dietaryNote: dietaryNote || '' }];
-      return { ...ev, guests: updatedGuests };
+      return { ...ev, guests: updatedGuests, isInvitedTo: status !== 'declined' ? true : ev.isInvitedTo };
     }));
     if (user?.id && !user.id.startsWith('u')) {
       try {

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
-import { USERS } from '../data/seed';
+
 import { supabase } from '../lib/supabase';
 
 const SOCIAL_PLATFORMS = [
@@ -256,7 +256,7 @@ export default function ProfilePage() {
         <button className={'tab-btn ' + (tab === 'events' ? 'active' : '')} onClick={() => setTab('events')}>🗓️ Events ({hostedEvents.length})</button>
         <button className={'tab-btn ' + (tab === 'passport' ? 'active' : '')} onClick={() => setTab('passport')}>🌍 Passport</button>
         <button className={'tab-btn ' + (tab === 'friends' ? 'active' : '')} onClick={() => setTab('friends')}>👥 Friends ({friends.filter(f => f.status === 'accepted').length})</button>
-        <button className={'tab-btn ' + (tab === 'settings' ? 'active' : '')} onClick={() => setTab('settings')}>⚙️ Settings</button>
+        <button className={'tab-btn ' + (tab === 'settings' ? 'active' : '')} onClick={() => setTab('settings')}>⚙️ Settings & Profile</button>
       </div>
 
       {tab === 'events' && (
@@ -302,15 +302,15 @@ export default function ProfilePage() {
 
       {tab === 'friends' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {USERS.filter(u => u.id !== 'u1').map(friend => (
-            <div key={friend.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'white', borderRadius: 12, border: '1px solid var(--border)', boxShadow: 'var(--shadow)', cursor: 'pointer' }} onClick={() => setViewingUser(friend)}>
-              <div className={'av av-md av-' + friend.color}>{friend.initials}</div>
+          {friends.filter(f => f.status === 'accepted').length === 0 ? (
+            <div className="empty-state"><div className="empty-icon">👥</div><div className="empty-title">No friends yet</div><div className="empty-sub">Connect with people you meet at events.</div></div>
+          ) : friends.filter(f => f.status === 'accepted').map(friend => (
+            <div key={friend.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'white', borderRadius: 12, border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
+              <div className="av av-md av-indigo">{(friend.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{friend.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--ink2)' }}>{friend.handle}</div>
-                {friend.bio && <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{friend.bio}</div>}
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{friend.name || 'TableFolk Member'}</div>
               </div>
-              <FriendButton userId={friend.id} />
+              <FriendButton userId={friend.userId} />
             </div>
           ))}
         </div>
