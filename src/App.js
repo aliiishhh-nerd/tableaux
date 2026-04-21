@@ -10,33 +10,42 @@ function AuthListener() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // On mount: check for an existing session without going through onAuthStateChange
-    // This avoids the Supabase lock deadlock caused by calling getProfile() inside the listener
     let mounted = true;
+    // Guard against concurrent login() calls — the form and the listener can both fire
+    let loggingIn = false;
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
+      if (!mounted || loggingIn) return;
       if (session?.user) {
+        // Only auto-restore if NOT on the auth page — if user is on /auth they want to sign in fresh
+        if (window.location.pathname === '/auth') {
+          // Clear stale session so the form login works cleanly
+          await supabase.auth.signOut();
+          return;
+        }
+        loggingIn = true;
         try {
           await login(session.user.email, null, session);
         } catch (e) {
           // Session restore failed — user stays logged out
-        }
-        // If already logged in and on /auth, redirect to feed
-        if (window.location.pathname === '/auth') {
-          navigate('/feed');
+        } finally {
+          loggingIn = false;
         }
       }
     });
 
-    // Listen only for NEW sign-in events (not INITIAL_SESSION which causes the lock)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       if (event === 'SIGNED_IN' && session?.user) {
+        // Skip if already handling a login to prevent double-call deadlock
+        if (loggingIn) return;
+        loggingIn = true;
         try {
           await login(session.user.email, null, session);
         } catch (e) {
           // silent
+        } finally {
+          loggingIn = false;
         }
         navigate('/feed');
       }
