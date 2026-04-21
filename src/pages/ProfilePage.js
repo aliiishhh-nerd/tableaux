@@ -247,7 +247,6 @@ export default function ProfilePage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-          <button className="btn btn-ghost btn-sm" onClick={startEdit}>✏️ Edit Profile</button>
           <button className="btn btn-ghost btn-sm" onClick={logout} style={{ color: 'var(--coral)' }}>Sign Out</button>
         </div>
       </div>
