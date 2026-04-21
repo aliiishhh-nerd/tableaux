@@ -15,6 +15,12 @@ const AppCtx = createContext(null);
 
 const STORAGE_KEY = 'tablefolk_state_v1';
 
+// A "real" user is one authenticated through Supabase — their id is a UUID,
+// not a seed id like 'u1'..'u12'. Every seed/demo path is gated on this.
+function isRealUser(u) {
+  return !!(u && u.id && typeof u.id === 'string' && !u.id.startsWith('u'));
+}
+
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -42,6 +48,9 @@ function normalizeSupabaseEvent(ev, currentUser) {
     color: 'indigo',
     dietaryNote: r.message || '',
   }));
+  // Accept either `visibility` (string) or `is_public` (boolean) from the DB
+  let vis = ev.visibility;
+  if (!vis) vis = ev.is_public ? 'Public' : 'inviteOnly';
   return {
     id: ev.id,
     title: ev.title || '',
@@ -52,7 +61,7 @@ function normalizeSupabaseEvent(ev, currentUser) {
     addr: ev.address || ev.addr || '',
     addrHidden: ev.addr_hidden ?? true,
     cap: ev.capacity || 10,
-    vis: ev.visibility || 'inviteOnly',
+    vis,
     desc: ev.description || '',
     dressCode: ev.dress_code || '',
     cover: {
@@ -83,9 +92,15 @@ export function AppProvider({ children }) {
     return stored?.user || null;
   });
 
-  // Start with seed events — replaced by Supabase data after login
+  // Events initial state:
+  //  - Real logged-in user in storage: keep their persisted events (DB load will refresh), fall back to examples only
+  //  - Seed/demo user or anonymous: use stored events or full seed set (includes examples)
   const [events, setEvents] = useState(() => {
     const stored = loadFromStorage();
+    if (isRealUser(stored?.user)) {
+      if (stored?.events && stored.events.length > 0) return stored.events;
+      return SEED_EVENTS.filter(e => e.isExample);
+    }
     if (stored?.events && stored.events.length > 0) return stored.events;
     return SEED_EVENTS;
   });
@@ -98,8 +113,14 @@ export function AppProvider({ children }) {
     return stored?.following || [];
   });
 
+  // Friends initial state:
+  //  - Real logged-in user: DO NOT inject SEED_FRIENDSHIPS. Start with whatever's persisted for THIS user, else empty. DB load will populate.
+  //  - Seed/demo user or anonymous: seed friendships for demo realism.
   const [friends, setFriends] = useState(() => {
     const stored = loadFromStorage();
+    if (isRealUser(stored?.user)) {
+      return stored?.friends || [];
+    }
     if (!stored?.friends) return SEED_FRIENDSHIPS;
     const storedIds = stored.friends.map(f => f.userId);
     const seedNotInStored = SEED_FRIENDSHIPS.filter(sf => !storedIds.includes(sf.userId));
@@ -111,19 +132,30 @@ export function AppProvider({ children }) {
     return stored?.followedHosts || [];
   });
 
+  const addToast = useCallback((msg, type = '') => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, type }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
+  }, []);
+
   // ── Load all data from Supabase when user logs in ─────────────────────────
   useEffect(() => {
-    if (!user?.id || user.id.startsWith('u')) return; // skip seed users
+    if (!isRealUser(user)) return;
 
     const loadAllData = async () => {
       try {
-        // Load hosted events, guest RSVPs, public feed events, and friendships in parallel
         const [hosted, rsvpd, publicEvts, friendshipsData] = await Promise.allSettled([
           getHostEvents(user.id),
           getGuestRsvps(user.id),
           getPublicEvents({ city: user.city || 'Chicago' }),
           getFriendships(user.id),
         ]);
+
+        // Log each result so we can diagnose cross-account visibility
+        console.log('[Supabase load] hosted:', hosted.status, hosted.status === 'fulfilled' ? (hosted.value?.length || 0) + ' events' : hosted.reason?.message);
+        console.log('[Supabase load] rsvps:', rsvpd.status, rsvpd.status === 'fulfilled' ? (rsvpd.value?.length || 0) + ' rsvps' : rsvpd.reason?.message);
+        console.log('[Supabase load] public:', publicEvts.status, publicEvts.status === 'fulfilled' ? (publicEvts.value?.length || 0) + ' public events' : publicEvts.reason?.message);
+        console.log('[Supabase load] friends:', friendshipsData.status, friendshipsData.status === 'fulfilled' ? (friendshipsData.value?.length || 0) + ' friendships' : friendshipsData.reason?.message);
 
         const hostedEvents = (hosted.status === 'fulfilled' ? hosted.value : [])
           .map(ev => ({ ...normalizeSupabaseEvent(ev, user), mine: true }));
@@ -136,10 +168,8 @@ export function AppProvider({ children }) {
           .map(ev => normalizeSupabaseEvent(ev, user))
           .filter(ev => ev.hostId !== user.id); // exclude own events (already in hosted)
 
-        // Keep example seed events, discard non-example seed events
         const exampleSeedEvents = SEED_EVENTS.filter(e => e.isExample);
 
-        // Deduplicate by id — real events take priority
         const uniquePublic = publicEvents.filter(e =>
           !hostedEvents.find(h => h.id === e.id) &&
           !attendingEvents.find(a => a.id === e.id)
@@ -154,19 +184,25 @@ export function AppProvider({ children }) {
 
         setEvents(merged);
 
-        // Load friendships
-        if (friendshipsData.status === 'fulfilled' && friendshipsData.value.length > 0) {
-          const dbFriends = friendshipsData.value.map(f => ({
+        // Friends: ALWAYS replace with DB result for real users, even if empty.
+        // This is what clears the seed friends for a fresh account.
+        if (friendshipsData.status === 'fulfilled') {
+          const dbFriends = (friendshipsData.value || []).map(f => ({
             userId: f.friend_id,
             status: f.status,
             name: f.friend?.full_name || '',
             acceptedAt: f.created_at,
           }));
           setFriends(dbFriends);
+        } else {
+          // Don't leave stale seed friends on error — start clean.
+          setFriends([]);
+          console.warn('[Supabase load] friendships error — cleared to empty:', friendshipsData.reason?.message);
         }
 
       } catch (err) {
-        console.warn('Supabase data load failed, using local:', err.message);
+        console.error('[Supabase load] top-level error:', err);
+        addToast('Data load failed — some info may be stale', 'error');
       }
     };
 
@@ -178,12 +214,6 @@ export function AppProvider({ children }) {
   useEffect(() => {
     saveToStorage({ user, events, following, friends, followedHosts });
   }, [user, events, following, friends, followedHosts]);
-
-  const addToast = useCallback((msg, type = '') => {
-    const id = Date.now();
-    setToasts(t => [...t, { id, msg, type }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
-  }, []);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const login = useCallback(async (email, password, session) => {
@@ -215,6 +245,11 @@ export function AppProvider({ children }) {
       dietaryRestrictions: profile.dietary_restrictions || [],
       color: 'indigo',
     };
+    // On login as a real user, clear any leftover seed friends immediately.
+    // The DB load effect will populate the real friends (even if empty) right after.
+    if (isRealUser(newUser)) {
+      setFriends([]);
+    }
     setUser(newUser);
     return true;
   }, []);
@@ -226,9 +261,7 @@ export function AppProvider({ children }) {
 
   const logout = useCallback(() => {
     setUser(null);
-    // Clear persisted state so next login starts fresh
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
-    // Reset to seed events for logged-out state
     setEvents(SEED_EVENTS.filter(e => e.isExample));
     setFriends([]);
   }, []);
@@ -236,6 +269,11 @@ export function AppProvider({ children }) {
   // ── Events ────────────────────────────────────────────────────────────────
   const createEvent = useCallback(async (evt) => {
     const localId = 'evt-user-' + Date.now();
+    // Defensively derive the public flag. Accept multiple possible inputs so
+    // the UI layer doesn't need to know the exact DB column.
+    const visStr = evt.vis || 'inviteOnly';
+    const isPublic = visStr === 'Public' || evt.isPublic === true || evt.is_public === true;
+
     const newEvt = {
       ...evt,
       id: localId,
@@ -252,37 +290,49 @@ export function AppProvider({ children }) {
     };
     setEvents(e => [newEvt, ...e]);
 
-    if (user?.id && !user.id.startsWith('u')) {
+    if (isRealUser(user)) {
+      const payload = {
+        title: evt.title,
+        type: evt.type,
+        date: evt.date || null,
+        time: evt.time || null,
+        location: evt.loc || evt.location || '',
+        address: evt.addr || '',
+        addr_hidden: evt.addrHidden ?? true,
+        capacity: evt.cap || 10,
+        // Send BOTH. Whichever column the DB has will take; the other is
+        // harmless (extra keys on insert get ignored if not a column).
+        visibility: visStr,
+        is_public: isPublic,
+        description: evt.desc || '',
+        dress_code: evt.dressCode || '',
+        cover_type: evt.cover?.type || 'gradient',
+        cover_value: evt.cover?.value || '',
+        cover_emoji: evt.cover?.emoji || null,
+        host_id: user.id,
+        status: 'published',
+        city: user.city || 'Chicago',
+      };
+      console.log('[createEvent] sending to Supabase:', payload);
       try {
-        const created = await sbCreateEvent({
-          title: evt.title,
-          type: evt.type,
-          date: evt.date || null,
-          time: evt.time || null,
-          location: evt.loc || evt.location || '',
-          address: evt.addr || '',
-          addr_hidden: evt.addrHidden ?? true,
-          capacity: evt.cap || 10,
-          visibility: evt.vis || 'inviteOnly',
-          description: evt.desc || '',
-          dress_code: evt.dressCode || '',
-          cover_type: evt.cover?.type || 'gradient',
-          cover_value: evt.cover?.value || '',
-          cover_emoji: evt.cover?.emoji || null,
-          host_id: user.id,
-          status: 'published',
-          city: user.city || 'Chicago',
-        });
-        // Replace local ID with real Supabase ID
+        const created = await sbCreateEvent(payload);
+        console.log('[createEvent] Supabase response:', created);
         if (created?.id) {
           setEvents(e => e.map(ev => ev.id === localId ? { ...ev, id: created.id } : ev));
+          addToast('Event saved ✓', 'success');
+        } else {
+          console.error('[createEvent] Supabase returned no id:', created);
+          addToast('Event saved locally — database did not confirm the write', 'error');
         }
       } catch (err) {
-        console.warn('Supabase createEvent failed, using local:', err.message);
+        // SURFACE the error. Do not swallow silently.
+        console.error('[createEvent] Supabase error:', err);
+        const msg = err?.message || err?.error_description || 'Unknown Supabase error';
+        addToast('Database save failed: ' + msg, 'error');
       }
     }
     return newEvt;
-  }, [user]);
+  }, [user, addToast]);
 
   const updateEvent = useCallback((id, patch) => {
     setEvents(e => e.map(ev => ev.id === id ? { ...ev, ...patch } : ev));
@@ -332,7 +382,7 @@ export function AppProvider({ children }) {
         : [...(ev.guests || []), { id: userId, n: user?.name || 'You', s: status, initials: user?.initials || 'U', color: 'indigo', dietaryNote: dietaryNote || '' }];
       return { ...ev, guests: updatedGuests, isInvitedTo: status !== 'declined' ? true : ev.isInvitedTo };
     }));
-    if (user?.id && !user.id.startsWith('u')) {
+    if (isRealUser(user)) {
       try {
         await createRsvp(eventId, user.id, dietaryNote || '');
       } catch (err) {
@@ -375,8 +425,7 @@ export function AppProvider({ children }) {
 
   const addComment = useCallback(async (eventId, comment) => {
     setEvents(e => e.map(ev => ev.id !== eventId ? ev : { ...ev, eventComments: [...(ev.eventComments || []), comment] }));
-    const isRealUser = user && user.id && !user.id.startsWith('u');
-    if (isRealUser) {
+    if (isRealUser(user)) {
       try {
         await sbAddMoment(eventId, user.id, null, comment.text || comment);
       } catch (err) {
@@ -396,7 +445,7 @@ export function AppProvider({ children }) {
   // ── Profile ───────────────────────────────────────────────────────────────
   const updateProfile = useCallback(async (patch) => {
     setUser(u => ({ ...u, ...patch }));
-    if (user?.id && !user.id.startsWith('u')) {
+    if (isRealUser(user)) {
       try {
         await sbUpdateProfile(user.id, patch);
       } catch (err) {
@@ -411,21 +460,21 @@ export function AppProvider({ children }) {
       if (f.find(fr => fr.userId === userId)) return f;
       return [...f, { userId, status: 'pending', sentAt: new Date().toISOString() }];
     });
-    if (user?.id && !user.id.startsWith('u')) {
+    if (isRealUser(user)) {
       try { await sendFriendRequestDb(user.id, userId); } catch (err) { console.warn('Friend request failed:', err.message); }
     }
   }, [user]);
 
   const acceptFriendRequest = useCallback(async (userId) => {
     setFriends(f => f.map(fr => fr.userId === userId ? { ...fr, status: 'accepted' } : fr));
-    if (user?.id && !user.id.startsWith('u')) {
+    if (isRealUser(user)) {
       try { await acceptFriendRequestDb(user.id, userId); } catch (err) { console.warn('Accept friend failed:', err.message); }
     }
   }, [user]);
 
   const removeFriend = useCallback(async (userId) => {
     setFriends(f => f.filter(fr => fr.userId !== userId));
-    if (user?.id && !user.id.startsWith('u')) {
+    if (isRealUser(user)) {
       try { await removeFriendDb(user.id, userId); } catch (err) { console.warn('Remove friend failed:', err.message); }
     }
   }, [user]);
