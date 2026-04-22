@@ -5,7 +5,7 @@ import {
   createEvent as sbCreateEvent,
   getHostEvents,
   getPublicEvents,
-  createRsvp, getGuestRsvps,
+  createRsvp, getGuestRsvps, updateRsvpStatus,
   addMoment as sbAddMoment,
   updateProfile as sbUpdateProfile,
   getFriendships, sendFriendRequestDb, acceptFriendRequestDb, removeFriendDb,
@@ -15,8 +15,6 @@ const AppCtx = createContext(null);
 
 const STORAGE_KEY = 'tablefolk_state_v1';
 
-// A "real" user is one authenticated through Supabase — their id is a UUID,
-// not a seed id like 'u1'..'u12'. Every seed/demo path is gated on this.
 function isRealUser(u) {
   return !!(u && u.id && typeof u.id === 'string' && !u.id.startsWith('u'));
 }
@@ -26,49 +24,73 @@ function loadFromStorage() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function saveToStorage(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
-// Normalize a Supabase event row to the app's event shape
+const DB_TO_UI_EVENT_TYPE = {
+  'dinner_party':      'Dinner Party',
+  'potluck':           'Potluck',
+  'supper_club':       'Supper Club',
+  'brunch':            'Brunch',
+  'cooking_class':     'Cooking Class',
+  'restaurant_outing': 'Restaurant',
+  'restaurant':        'Restaurant',
+  'tasting':           'Tasting',
+  'other':             'Other',
+};
+function displayEventType(dbValue) {
+  if (!dbValue) return 'Dinner Party';
+  return DB_TO_UI_EVENT_TYPE[dbValue] || dbValue;
+}
+
+const VIS_MAP = {
+  'Public':       'public',
+  'public':       'public',
+  'Friends Only': 'friendsOnly',
+  'friendsOnly':  'friendsOnly',
+  'friends_only': 'friendsOnly',
+  'Invite Only':  'inviteOnly',
+  'inviteOnly':   'inviteOnly',
+  'invite_only':  'inviteOnly',
+};
+function normalizeVisibility(rawVis, isPublic) {
+  if (rawVis && VIS_MAP[rawVis]) return VIS_MAP[rawVis];
+  if (rawVis && VIS_MAP[rawVis.trim()]) return VIS_MAP[rawVis.trim()];
+  return isPublic ? 'public' : 'inviteOnly';
+}
+
 function normalizeSupabaseEvent(ev, currentUser) {
   const rsvps = ev.rsvps || [];
   const guests = rsvps.map(r => ({
     id: r.guest_id,
+    rsvpId: r.id,
     n: r.guest?.full_name || 'Guest',
     s: r.status || 'pending',
     initials: (r.guest?.full_name || 'G').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
     color: 'indigo',
     dietaryNote: r.message || '',
   }));
-  // Accept either `visibility` (string) or `is_public` (boolean) from the DB
-  let vis = ev.visibility;
-  if (!vis) vis = ev.is_public ? 'Public' : 'inviteOnly';
+  const vis = normalizeVisibility(ev.visibility, ev.is_public);
+  const coverType = ev.cover_type || (ev.cover_gradient ? 'gradient' : (ev.cover_emoji ? 'emoji' : 'gradient'));
+  const coverValue = ev.cover_value || ev.cover_gradient || 'linear-gradient(135deg, #6C5DD3, #2D2550)';
   return {
     id: ev.id,
     title: ev.title || '',
-    type: ev.type || 'Dinner Party',
+    type: displayEventType(ev.event_type || ev.type),
     date: ev.date ? ev.date.split('T')[0] : null,
     time: ev.time || '',
-    loc: ev.location || ev.loc || '',
-    addr: ev.address || ev.addr || '',
+    loc: ev.location_name || ev.location || ev.loc || '',
+    addr: ev.location_address || ev.address || ev.addr || '',
     addrHidden: ev.addr_hidden ?? true,
     cap: ev.capacity || 10,
     vis,
     desc: ev.description || '',
     dressCode: ev.dress_code || '',
-    cover: {
-      type: ev.cover_type || 'gradient',
-      value: ev.cover_value || 'linear-gradient(135deg, #6C5DD3, #2D2550)',
-      emoji: ev.cover_emoji || null,
-    },
+    cover: { type: coverType, value: coverValue, emoji: ev.cover_emoji || null },
     host: ev.host?.full_name || (currentUser ? currentUser.name : 'Host'),
     hostId: ev.host_id || (currentUser ? currentUser.id : null),
     mine: currentUser ? ev.host_id === currentUser.id : false,
@@ -92,9 +114,6 @@ export function AppProvider({ children }) {
     return stored?.user || null;
   });
 
-  // Events initial state:
-  //  - Real logged-in user in storage: keep their persisted events (DB load will refresh), fall back to examples only
-  //  - Seed/demo user or anonymous: use stored events or full seed set (includes examples)
   const [events, setEvents] = useState(() => {
     const stored = loadFromStorage();
     if (isRealUser(stored?.user)) {
@@ -113,14 +132,9 @@ export function AppProvider({ children }) {
     return stored?.following || [];
   });
 
-  // Friends initial state:
-  //  - Real logged-in user: DO NOT inject SEED_FRIENDSHIPS. Start with whatever's persisted for THIS user, else empty. DB load will populate.
-  //  - Seed/demo user or anonymous: seed friendships for demo realism.
   const [friends, setFriends] = useState(() => {
     const stored = loadFromStorage();
-    if (isRealUser(stored?.user)) {
-      return stored?.friends || [];
-    }
+    if (isRealUser(stored?.user)) return stored?.friends || [];
     if (!stored?.friends) return SEED_FRIENDSHIPS;
     const storedIds = stored.friends.map(f => f.userId);
     const seedNotInStored = SEED_FRIENDSHIPS.filter(sf => !storedIds.includes(sf.userId));
@@ -133,25 +147,22 @@ export function AppProvider({ children }) {
   });
 
   const addToast = useCallback((msg, type = '') => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setToasts(t => [...t, { id, msg, type }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
   }, []);
 
-  // ── Load all data from Supabase when user logs in ─────────────────────────
   useEffect(() => {
     if (!isRealUser(user)) return;
-
     const loadAllData = async () => {
       try {
         const [hosted, rsvpd, publicEvts, friendshipsData] = await Promise.allSettled([
           getHostEvents(user.id),
           getGuestRsvps(user.id),
-          getPublicEvents({ city: user.city || 'Chicago' }),
+          getPublicEvents({}),
           getFriendships(user.id),
         ]);
 
-        // Log each result so we can diagnose cross-account visibility
         console.log('[Supabase load] hosted:', hosted.status, hosted.status === 'fulfilled' ? (hosted.value?.length || 0) + ' events' : hosted.reason?.message);
         console.log('[Supabase load] rsvps:', rsvpd.status, rsvpd.status === 'fulfilled' ? (rsvpd.value?.length || 0) + ' rsvps' : rsvpd.reason?.message);
         console.log('[Supabase load] public:', publicEvts.status, publicEvts.status === 'fulfilled' ? (publicEvts.value?.length || 0) + ' public events' : publicEvts.reason?.message);
@@ -160,13 +171,28 @@ export function AppProvider({ children }) {
         const hostedEvents = (hosted.status === 'fulfilled' ? hosted.value : [])
           .map(ev => ({ ...normalizeSupabaseEvent(ev, user), mine: true }));
 
+        // getGuestRsvps doesn't nest rsvps on the joined event, so guests comes back [].
+        // Inject the current user with their own rsvpId + status so myGuest() lookups work.
         const attendingEvents = (rsvpd.status === 'fulfilled' ? rsvpd.value : [])
           .filter(r => r.event)
-          .map(r => ({ ...normalizeSupabaseEvent(r.event, user), isInvitedTo: true, mine: false }));
+          .map(r => {
+            const base = normalizeSupabaseEvent(r.event, user);
+            const me = {
+              id: user.id,
+              rsvpId: r.id,
+              n: user.name || 'You',
+              s: r.status || 'pending',
+              initials: user.initials || 'U',
+              color: 'indigo',
+              dietaryNote: r.message || '',
+            };
+            const others = (base.guests || []).filter(g => g.id !== user.id);
+            return { ...base, guests: [...others, me], isInvitedTo: true, mine: false };
+          });
 
         const publicEvents = (publicEvts.status === 'fulfilled' ? publicEvts.value : [])
           .map(ev => normalizeSupabaseEvent(ev, user))
-          .filter(ev => ev.hostId !== user.id); // exclude own events (already in hosted)
+          .filter(ev => ev.hostId !== user.id);
 
         const exampleSeedEvents = SEED_EVENTS.filter(e => e.isExample);
 
@@ -181,11 +207,8 @@ export function AppProvider({ children }) {
           ...uniquePublic,
           ...exampleSeedEvents,
         ];
-
         setEvents(merged);
 
-        // Friends: ALWAYS replace with DB result for real users, even if empty.
-        // This is what clears the seed friends for a fresh account.
         if (friendshipsData.status === 'fulfilled') {
           const dbFriends = (friendshipsData.value || []).map(f => ({
             userId: f.friend_id,
@@ -195,32 +218,52 @@ export function AppProvider({ children }) {
           }));
           setFriends(dbFriends);
         } else {
-          // Don't leave stale seed friends on error — start clean.
           setFriends([]);
-          console.warn('[Supabase load] friendships error — cleared to empty:', friendshipsData.reason?.message);
         }
 
+        // Derive notifications from loaded data.
+        // Host: every pending RSVP on my events -> "someone wants to join"
+        // Guest: my RSVPs that are now approved -> "you were approved"
+        const hostNotifs = hostedEvents.flatMap(ev =>
+          (ev.guests || [])
+            .filter(g => g.s === 'pending' && g.id !== user.id)
+            .map(g => ({
+              id: 'rsvp-req-' + ev.id + '-' + g.id,
+              type: 'rsvp_request',
+              message: (g.n || 'Someone') + ' requested to join ' + ev.title,
+              eventId: ev.id,
+              read: false,
+              createdAt: new Date().toISOString(),
+            }))
+        );
+        const guestNotifs = attendingEvents
+          .filter(ev => (ev.guests || []).find(g => g.id === user.id && g.s === 'approved'))
+          .map(ev => ({
+            id: 'rsvp-approved-' + ev.id,
+            type: 'rsvp_approved',
+            message: 'You were approved for ' + ev.title,
+            eventId: ev.id,
+            read: false,
+            createdAt: new Date().toISOString(),
+          }));
+        setNotifications([...hostNotifs, ...guestNotifs]);
       } catch (err) {
         console.error('[Supabase load] top-level error:', err);
         addToast('Data load failed — some info may be stale', 'error');
       }
     };
-
     loadAllData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // ── Persist state to localStorage ────────────────────────────────────────
   useEffect(() => {
     saveToStorage({ user, events, following, friends, followedHosts });
   }, [user, events, following, friends, followedHosts]);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
   const login = useCallback(async (email, password, session) => {
     let authUser;
-    if (session) {
-      authUser = session.user;
-    } else {
+    if (session) authUser = session.user;
+    else {
       const data = await supabaseSignIn(email, password);
       authUser = data.user;
     }
@@ -245,11 +288,7 @@ export function AppProvider({ children }) {
       dietaryRestrictions: profile.dietary_restrictions || [],
       color: 'indigo',
     };
-    // On login as a real user, clear any leftover seed friends immediately.
-    // The DB load effect will populate the real friends (even if empty) right after.
-    if (isRealUser(newUser)) {
-      setFriends([]);
-    }
+    if (isRealUser(newUser)) setFriends([]);
     setUser(newUser);
     return true;
   }, []);
@@ -264,53 +303,35 @@ export function AppProvider({ children }) {
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     setEvents(SEED_EVENTS.filter(e => e.isExample));
     setFriends([]);
+    setNotifications([]);
   }, []);
 
-  // ── Events ────────────────────────────────────────────────────────────────
   const createEvent = useCallback(async (evt) => {
     const localId = 'evt-user-' + Date.now();
-    // Defensively derive the public flag. Accept multiple possible inputs so
-    // the UI layer doesn't need to know the exact DB column.
     const visStr = evt.vis || 'inviteOnly';
-    const isPublic = visStr === 'Public' || evt.isPublic === true || evt.is_public === true;
-
+    const isPublic = visStr === 'Public' || visStr === 'public' || evt.isPublic === true || evt.is_public === true;
     const newEvt = {
-      ...evt,
-      id: localId,
-      mine: true,
-      hostId: user?.id || 'u1',
-      host: user?.name || CURRENT_USER.name,
-      guests: [],
-      photoGallery: [],
-      eventComments: [],
-      pinnedQuotes: [],
-      isEnded: false,
-      isExample: false,
-      experienceTags: evt.experienceTags || [],
+      ...evt, id: localId, mine: true,
+      hostId: user?.id || 'u1', host: user?.name || CURRENT_USER.name,
+      guests: [], photoGallery: [], eventComments: [], pinnedQuotes: [],
+      isEnded: false, isExample: false, experienceTags: evt.experienceTags || [],
     };
     setEvents(e => [newEvt, ...e]);
-
     if (isRealUser(user)) {
       const payload = {
-        title: evt.title,
-        type: evt.type,
-        date: evt.date || null,
-        time: evt.time || null,
+        title: evt.title, type: evt.type,
+        date: evt.date || null, time: evt.time || null,
         location: evt.loc || evt.location || '',
         address: evt.addr || '',
         addr_hidden: evt.addrHidden ?? true,
         capacity: evt.cap || 10,
-        // Send BOTH. Whichever column the DB has will take; the other is
-        // harmless (extra keys on insert get ignored if not a column).
-        visibility: visStr,
-        is_public: isPublic,
+        visibility: visStr, is_public: isPublic,
         description: evt.desc || '',
         dress_code: evt.dressCode || '',
         cover_type: evt.cover?.type || 'gradient',
         cover_value: evt.cover?.value || '',
         cover_emoji: evt.cover?.emoji || null,
-        host_id: user.id,
-        status: 'published',
+        host_id: user.id, status: 'published',
         city: user.city || 'Chicago',
       };
       console.log('[createEvent] sending to Supabase:', payload);
@@ -319,16 +340,13 @@ export function AppProvider({ children }) {
         console.log('[createEvent] Supabase response:', created);
         if (created?.id) {
           setEvents(e => e.map(ev => ev.id === localId ? { ...ev, id: created.id } : ev));
-          addToast('Event saved ✓', 'success');
+          addToast('Event saved \u2713', 'success');
         } else {
-          console.error('[createEvent] Supabase returned no id:', created);
-          addToast('Event saved locally — database did not confirm the write', 'error');
+          addToast('Event saved locally \u2014 database did not confirm the write', 'error');
         }
       } catch (err) {
-        // SURFACE the error. Do not swallow silently.
         console.error('[createEvent] Supabase error:', err);
-        const msg = err?.message || err?.error_description || 'Unknown Supabase error';
-        addToast('Database save failed: ' + msg, 'error');
+        addToast('Database save failed: ' + (err?.message || 'unknown'), 'error');
       }
     }
     return newEvt;
@@ -350,26 +368,57 @@ export function AppProvider({ children }) {
   function markAllNotifsRead() { setNotifications(prev => prev.map(n => ({ ...n, read: true }))); }
 
   function approveRSVP(eventId, guestId, guestName) {
-    setEvents(prev => prev.map(ev => ev.id !== eventId ? ev : {
-      ...ev, guests: (ev.guests || []).map(g => g.id === guestId ? { ...g, s: 'approved' } : g)
+    let rsvpId = null;
+    setEvents(prev => prev.map(ev => {
+      if (ev.id !== eventId) return ev;
+      const g = (ev.guests || []).find(x => x.id === guestId);
+      if (g) rsvpId = g.rsvpId;
+      return { ...ev, guests: (ev.guests || []).map(x => x.id === guestId ? { ...x, s: 'approved' } : x) };
     }));
+    if (rsvpId && isRealUser(user)) {
+      updateRsvpStatus(rsvpId, 'approved').catch(err => {
+        console.error('[approveRSVP] DB update failed:', err);
+        addToast('Approve failed to save: ' + (err?.message || 'unknown'), 'error');
+      });
+    } else if (!rsvpId && isRealUser(user)) {
+      console.warn('[approveRSVP] no rsvpId for guest', guestId, '\u2014 skipping DB update');
+    }
     addNotification(makeNotif('rsvp_approved', guestName + ' approved for your event', eventId));
-    addToast(guestName + ' approved 🎉', 'success');
+    addToast(guestName + ' approved \ud83c\udf89', 'success');
   }
 
   function declineRSVP(eventId, guestId, guestName) {
-    setEvents(prev => prev.map(ev => ev.id !== eventId ? ev : {
-      ...ev, guests: (ev.guests || []).map(g => g.id === guestId ? { ...g, s: 'declined' } : g)
+    let rsvpId = null;
+    setEvents(prev => prev.map(ev => {
+      if (ev.id !== eventId) return ev;
+      const g = (ev.guests || []).find(x => x.id === guestId);
+      if (g) rsvpId = g.rsvpId;
+      return { ...ev, guests: (ev.guests || []).map(x => x.id === guestId ? { ...x, s: 'declined' } : x) };
     }));
+    if (rsvpId && isRealUser(user)) {
+      updateRsvpStatus(rsvpId, 'declined').catch(err => {
+        console.error('[declineRSVP] DB update failed:', err);
+        addToast('Decline failed to save: ' + (err?.message || 'unknown'), 'error');
+      });
+    }
     addToast(guestName + ' declined', 'info');
   }
 
   function reviveRSVP(eventId, guestId, guestName) {
-    setEvents(prev => prev.map(ev => ev.id !== eventId ? ev : {
-      ...ev, guests: (ev.guests || []).map(g => g.id === guestId ? { ...g, s: 'approved' } : g)
+    let rsvpId = null;
+    setEvents(prev => prev.map(ev => {
+      if (ev.id !== eventId) return ev;
+      const g = (ev.guests || []).find(x => x.id === guestId);
+      if (g) rsvpId = g.rsvpId;
+      return { ...ev, guests: (ev.guests || []).map(x => x.id === guestId ? { ...x, s: 'approved' } : x) };
     }));
+    if (rsvpId && isRealUser(user)) {
+      updateRsvpStatus(rsvpId, 'approved').catch(err => {
+        console.error('[reviveRSVP] DB update failed:', err);
+      });
+    }
     addNotification(makeNotif('rsvp_approved', guestName + ' accepted after all', eventId));
-    addToast(guestName + ' accepted 🎉', 'success');
+    addToast(guestName + ' accepted \ud83c\udf89', 'success');
   }
 
   const rsvpEvent = useCallback(async (eventId, status, dietaryNote) => {
@@ -384,12 +433,13 @@ export function AppProvider({ children }) {
     }));
     if (isRealUser(user)) {
       try {
-        await createRsvp(eventId, user.id, dietaryNote || '');
+        await createRsvp(eventId, user.id, dietaryNote || '', status);
       } catch (err) {
-        console.warn('Supabase rsvp failed:', err.message);
+        console.error('[rsvpEvent] Supabase rsvp failed:', err);
+        addToast('RSVP failed to save: ' + (err?.message || 'unknown'), 'error');
       }
     }
-  }, [user]);
+  }, [user, addToast]);
 
   const claimPotluckItem = useCallback((eventId, itemId) => {
     setEvents(e => e.map(ev => {
@@ -426,11 +476,8 @@ export function AppProvider({ children }) {
   const addComment = useCallback(async (eventId, comment) => {
     setEvents(e => e.map(ev => ev.id !== eventId ? ev : { ...ev, eventComments: [...(ev.eventComments || []), comment] }));
     if (isRealUser(user)) {
-      try {
-        await sbAddMoment(eventId, user.id, null, comment.text || comment);
-      } catch (err) {
-        console.warn('Supabase addMoment failed:', err.message);
-      }
+      try { await sbAddMoment(eventId, user.id, null, comment.text || comment); }
+      catch (err) { console.warn('Supabase addMoment failed:', err.message); }
     }
   }, [user]);
 
@@ -442,19 +489,14 @@ export function AppProvider({ children }) {
     }));
   }, []);
 
-  // ── Profile ───────────────────────────────────────────────────────────────
   const updateProfile = useCallback(async (patch) => {
     setUser(u => ({ ...u, ...patch }));
     if (isRealUser(user)) {
-      try {
-        await sbUpdateProfile(user.id, patch);
-      } catch (err) {
-        console.warn('Supabase updateProfile failed:', err.message);
-      }
+      try { await sbUpdateProfile(user.id, patch); }
+      catch (err) { console.warn('Supabase updateProfile failed:', err.message); }
     }
   }, [user]);
 
-  // ── Friends ───────────────────────────────────────────────────────────────
   const sendFriendRequest = useCallback(async (userId) => {
     setFriends(f => {
       if (f.find(fr => fr.userId === userId)) return f;

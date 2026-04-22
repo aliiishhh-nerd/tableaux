@@ -276,7 +276,7 @@ export default function AppShell() {
   if (!user) return <AuthPage />;
 
   const invitePending = events.filter(
-    e => e.isInvitedTo && e.guests?.find(g => g.id === 'u1' && g.s === 'pending')
+    e => e.isInvitedTo && e.guests?.find(g => g.id === user.id && g.s === 'pending')
   ).length;
 
   const hasAnyActivity = events.some(e => e.mine || e.isInvitedTo);

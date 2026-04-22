@@ -446,7 +446,7 @@ function EventCard({ event, onClick, isFollowingHost, isExample }) {
           {isExample && (
             <span className="chip" style={{ background: 'rgba(255,255,255,0.92)', color: '#854F0B', fontWeight: 600, fontSize: 10 }}>Example</span>
           )}
-          {!isExample && event.vis === 'Public' && (
+          {!isExample && event.vis === 'public' && (
             <span className="chip" style={{ background: 'rgba(255,255,255,.22)', color: 'white', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.3)' }}>Public</span>
           )}
           {!isExample && isFollowingHost && (

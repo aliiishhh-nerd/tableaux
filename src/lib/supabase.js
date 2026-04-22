@@ -208,10 +208,10 @@ export const updateEvent = async (eventId, updates) => {
   return data;
 };
 
-export const createRsvp = async (eventId, guestId, message = '') => {
+export const createRsvp = async (eventId, guestId, message = '', status = 'pending') => {
   const { data, error } = await supabase
     .from('rsvps')
-    .upsert({ event_id: eventId, guest_id: guestId, message, status: 'pending' }, { onConflict: 'event_id,guest_id' })
+    .upsert({ event_id: eventId, guest_id: guestId, message, status }, { onConflict: 'event_id,guest_id' })
     .select().single();
   if (error) throw error;
   return data;
