@@ -94,6 +94,24 @@ export const getHostEvents = async (hostId) => {
   return data || [];
 };
 
+// UI visibility labels (as sent by the select element) -> canonical storage value.
+// Canonical = the lowercase enum FeedPage filters on: 'public' | 'friendsOnly' | 'inviteOnly'.
+// Accept legacy / variant spellings too so any caller shape works.
+const VISIBILITY_MAP = {
+  'Public':       'public',
+  'public':       'public',
+  'Friends Only': 'friendsOnly',
+  'friendsOnly':  'friendsOnly',
+  'friends_only': 'friendsOnly',
+  'Invite Only':  'inviteOnly',
+  'inviteOnly':   'inviteOnly',
+  'invite_only':  'inviteOnly',
+};
+function normalizeVisibility(v) {
+  if (!v) return 'inviteOnly';
+  return VISIBILITY_MAP[v] || VISIBILITY_MAP[v.trim()] || 'inviteOnly';
+}
+
 // Translates the app's event shape to the actual DB column names.
 // Accepts whatever useApp sends; filters to only known columns.
 
@@ -160,7 +178,7 @@ function mapEventToDb(evt) {
   // Post-migration columns
   if (evt.addr_hidden !== undefined)      out.addr_hidden = evt.addr_hidden;
   if (evt.dress_code !== undefined)       out.dress_code = evt.dress_code;
-  if (evt.visibility !== undefined)       out.visibility = evt.visibility;
+  if (evt.visibility !== undefined)       out.visibility = normalizeVisibility(evt.visibility);
   if (evt.city !== undefined)             out.city = evt.city;
 
   return out;

@@ -60,6 +60,26 @@ function displayEventType(dbValue) {
   return DB_TO_UI_EVENT_TYPE[dbValue] || dbValue;
 }
 
+// DB / UI visibility values -> canonical UI enum used by FeedPage filters.
+// Seed events use lowercase 'public' / 'inviteOnly' / 'friendsOnly'.
+// DB stores whatever the Create Event select sent ('Public', 'Friends Only', 'Invite Only').
+// Normalize everything to lowercase on the read path so filters match.
+const VIS_MAP = {
+  'Public':       'public',
+  'public':       'public',
+  'Friends Only': 'friendsOnly',
+  'friendsOnly':  'friendsOnly',
+  'friends_only': 'friendsOnly',
+  'Invite Only':  'inviteOnly',
+  'inviteOnly':   'inviteOnly',
+  'invite_only':  'inviteOnly',
+};
+function normalizeVisibility(rawVis, isPublic) {
+  if (rawVis && VIS_MAP[rawVis]) return VIS_MAP[rawVis];
+  if (rawVis && VIS_MAP[rawVis.trim()]) return VIS_MAP[rawVis.trim()];
+  return isPublic ? 'public' : 'inviteOnly';
+}
+
 // Translate a DB row to the app's in-memory event shape.
 // Reads from the REAL schema column names (location_name, location_address, event_type, etc.)
 // Also accepts a few legacy fields for resilience.
@@ -73,7 +93,7 @@ function normalizeSupabaseEvent(ev, currentUser) {
     color: 'indigo',
     dietaryNote: r.message || '',
   }));
-  const vis = ev.visibility || (ev.is_public ? 'Public' : 'inviteOnly');
+  const vis = normalizeVisibility(ev.visibility, ev.is_public);
   const coverType =
     ev.cover_type ||
     (ev.cover_gradient ? 'gradient' : (ev.cover_emoji ? 'emoji' : 'gradient'));
