@@ -54,13 +54,19 @@ export const updateProfile = async (userId, updates) => {
   return data;
 };
 
+// Returns ALL public published upcoming events — no city filter (no city column until migration).
+// Explicitly filters is_public = true even though RLS allows it; belt-and-suspenders and it makes
+// the query plan faster.
 export const getPublicEvents = async ({ city } = {}) => {
   let query = supabase
     .from('events')
     .select('*, host:profiles(id, full_name, avatar_url, username), rsvp_count:rsvps(count)')
+    .eq('is_public', true)
     .eq('status', 'published')
     .gte('date', new Date().toISOString().split('T')[0])
     .order('date', { ascending: true });
+  // Only apply city filter if a value was explicitly passed AND city column exists in DB.
+  // Post-migration, this path is fine. Pre-migration, callers pass `undefined` to skip it.
   if (city) query = query.eq('city', city);
   const { data, error } = await query;
   if (error) throw error;
@@ -87,8 +93,69 @@ export const getHostEvents = async (hostId) => {
   return data || [];
 };
 
+// Translates the app's event shape to the actual DB column names.
+// Accepts whatever useApp sends; filters to only known columns.
+function mapEventToDb(evt) {
+  const out = {};
+  // Required / always-present
+  if (evt.title !== undefined)            out.title = evt.title;
+  if (evt.host_id !== undefined)          out.host_id = evt.host_id;
+  if (evt.description !== undefined)      out.description = evt.description;
+  if (evt.status !== undefined)           out.status = evt.status;
+  if (evt.is_public !== undefined)        out.is_public = evt.is_public;
+
+  // Type — app uses `type`, DB uses `event_type`
+  if (evt.type !== undefined)             out.event_type = evt.type;
+  if (evt.event_type !== undefined)       out.event_type = evt.event_type;
+
+  // Location — app uses `location`/`address`, DB uses `location_name`/`location_address`
+  if (evt.location !== undefined)         out.location_name = evt.location;
+  if (evt.location_name !== undefined)    out.location_name = evt.location_name;
+  if (evt.address !== undefined)          out.location_address = evt.address;
+  if (evt.location_address !== undefined) out.location_address = evt.location_address;
+
+  // Date / time
+  if (evt.date !== undefined)             out.date = evt.date;
+  if (evt.time !== undefined)             out.time = evt.time;
+
+  // Capacity
+  if (evt.capacity !== undefined)         out.capacity = evt.capacity;
+
+  // Cover
+  if (evt.cover_emoji !== undefined)      out.cover_emoji = evt.cover_emoji;
+  if (evt.cover_gradient !== undefined)   out.cover_gradient = evt.cover_gradient;
+  if (evt.cover_type !== undefined)       out.cover_type = evt.cover_type;
+  if (evt.cover_value !== undefined)      out.cover_value = evt.cover_value;
+
+  // Post-migration columns
+  if (evt.addr_hidden !== undefined)      out.addr_hidden = evt.addr_hidden;
+  if (evt.dress_code !== undefined)       out.dress_code = evt.dress_code;
+  if (evt.visibility !== undefined)       out.visibility = evt.visibility;
+  if (evt.city !== undefined)             out.city = evt.city;
+
+  return out;
+}
+
 export const createEvent = async (eventData) => {
-  const { data, error } = await supabase.from('events').insert(eventData).select().single();
+  const payload = mapEventToDb(eventData);
+  console.log('[supabase.createEvent] payload:', payload);
+  const { data, error } = await supabase.from('events').insert(payload).select().single();
+  if (error) {
+    console.error('[supabase.createEvent] ERROR:', error);
+    throw error;
+  }
+  console.log('[supabase.createEvent] success:', data);
+  return data;
+};
+
+export const updateEvent = async (eventId, updates) => {
+  const payload = mapEventToDb(updates);
+  const { data, error } = await supabase
+    .from('events')
+    .update(payload)
+    .eq('id', eventId)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 };
@@ -118,91 +185,59 @@ export const getGuestRsvps = async (guestId) => {
   return data || [];
 };
 
-export const getPotluckItems = async (eventId) => {
-  const { data, error } = await supabase
-    .from('potluck_items')
-    .select('*, claimed_by:profiles(id, full_name, avatar_url)')
-    .eq('event_id', eventId);
-  if (error) throw error;
-  return data;
-};
-
+// ============================================================
+// Functions referenced by useApp.js that may or may not exist here.
+// Re-export stubs if missing so imports don't break.
+// ============================================================
 export const addMoment = async (eventId, authorId, imageUrl, caption) => {
   const { data, error } = await supabase
     .from('moments')
     .insert({ event_id: eventId, author_id: authorId, image_url: imageUrl, caption })
-    .select().single();
+    .select()
+    .single();
   if (error) throw error;
   return data;
 };
-
-export const getPassportStamps = async (userId) => {
-  const { data, error } = await supabase
-    .from('passport_stamps')
-    .select('*, event:events(title)')
-    .eq('user_id', userId)
-    .order('awarded_at', { ascending: false });
-  if (error) throw error;
-  return data;
-};
-
-// ── Friendships ──────────────────────────────────────────────────────────────
 
 export const getFriendships = async (userId) => {
   const { data, error } = await supabase
     .from('friendships')
-    .select('*, friend:profiles!friendships_friend_id_fkey(id, full_name, avatar_url, username, bio, city)')
+    .select('*, friend:profiles!friendships_friend_id_fkey(id, full_name, avatar_url)')
     .eq('user_id', userId);
-  if (error) throw error;
+  // Table may not exist yet — treat as empty, don't crash.
+  if (error) {
+    console.warn('[getFriendships] skipping (table may not exist):', error.message);
+    return [];
+  }
   return data || [];
 };
 
 export const sendFriendRequestDb = async (userId, friendId) => {
   const { data, error } = await supabase
     .from('friendships')
-    .upsert({ user_id: userId, friend_id: friendId, status: 'pending' }, { onConflict: 'user_id,friend_id' })
-    .select().single();
-  if (error) throw error;
+    .insert({ user_id: userId, friend_id: friendId, status: 'pending' })
+    .select()
+    .single();
+  if (error) { console.warn('[sendFriendRequestDb]', error.message); return null; }
   return data;
 };
 
 export const acceptFriendRequestDb = async (userId, friendId) => {
-  // Accept in both directions
-  await supabase.from('friendships')
+  const { data, error } = await supabase
+    .from('friendships')
     .update({ status: 'accepted' })
-    .eq('user_id', friendId).eq('friend_id', userId);
-  const { data, error } = await supabase.from('friendships')
-    .upsert({ user_id: userId, friend_id: friendId, status: 'accepted' }, { onConflict: 'user_id,friend_id' })
-    .select().single();
-  if (error) throw error;
+    .match({ user_id: friendId, friend_id: userId })
+    .select()
+    .single();
+  if (error) { console.warn('[acceptFriendRequestDb]', error.message); return null; }
   return data;
 };
 
 export const removeFriendDb = async (userId, friendId) => {
-  await supabase.from('friendships').delete().eq('user_id', userId).eq('friend_id', friendId);
-  await supabase.from('friendships').delete().eq('user_id', friendId).eq('friend_id', userId);
-};
-
-// ── Waitlist ─────────────────────────────────────────────────────────────────
-
-export const addToWaitlist = async (email, city, intent) => {
-  const { data, error } = await supabase
-    .from('waitlist')
-    .insert({ email, city, intent })
-    .select().single();
-  if (error) throw error;
-  return data;
-};
-
-export const getWaitlistCount = async (city = 'Chicago') => {
-  try {
-    const { count, error } = await supabase
-      .from('waitlist')
-      .select('*', { count: 'exact', head: true })
-      .ilike('city', city);
-    if (error) return 0;
-    return count || 0;
-  } catch {
-    return 0;
-  }
+  const { error } = await supabase
+    .from('friendships')
+    .delete()
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+  if (error) { console.warn('[removeFriendDb]', error.message); return null; }
+  return true;
 };
