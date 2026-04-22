@@ -43,6 +43,23 @@ function saveToStorage(data) {
   } catch {}
 }
 
+// DB enum values -> UI display labels
+const DB_TO_UI_EVENT_TYPE = {
+  'dinner_party':      'Dinner Party',
+  'potluck':           'Potluck',
+  'supper_club':       'Supper Club',
+  'brunch':            'Brunch',
+  'cooking_class':     'Cooking Class',
+  'restaurant_outing': 'Restaurant',
+  'restaurant':        'Restaurant',
+  'tasting':           'Tasting',
+  'other':             'Other',
+};
+function displayEventType(dbValue) {
+  if (!dbValue) return 'Dinner Party';
+  return DB_TO_UI_EVENT_TYPE[dbValue] || dbValue;
+}
+
 // Translate a DB row to the app's in-memory event shape.
 // Reads from the REAL schema column names (location_name, location_address, event_type, etc.)
 // Also accepts a few legacy fields for resilience.
@@ -67,7 +84,7 @@ function normalizeSupabaseEvent(ev, currentUser) {
   return {
     id: ev.id,
     title: ev.title || '',
-    type: ev.event_type || ev.type || 'Dinner Party',
+    type: displayEventType(ev.event_type || ev.type),
     date: ev.date ? ev.date.split('T')[0] : null,
     time: ev.time || '',
     loc: ev.location_name || ev.location || ev.loc || '',

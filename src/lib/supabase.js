@@ -95,6 +95,35 @@ export const getHostEvents = async (hostId) => {
 
 // Translates the app's event shape to the actual DB column names.
 // Accepts whatever useApp sends; filters to only known columns.
+
+// UI event type labels -> DB enum values
+// DB allows: dinner_party, potluck, supper_club, brunch, cooking_class,
+//            restaurant_outing, restaurant, tasting, other
+const EVENT_TYPE_MAP = {
+  'Dinner Party':     'dinner_party',
+  'dinner_party':     'dinner_party',
+  'Potluck':          'potluck',
+  'potluck':          'potluck',
+  'Supper Club':      'supper_club',
+  'supper_club':      'supper_club',
+  'Brunch':           'brunch',
+  'brunch':           'brunch',
+  'Cooking Class':    'cooking_class',
+  'cooking_class':    'cooking_class',
+  'Restaurant':       'restaurant',
+  'restaurant':       'restaurant',
+  'Restaurant Outing':'restaurant_outing',
+  'restaurant_outing':'restaurant_outing',
+  'Tasting':          'tasting',
+  'tasting':          'tasting',
+  'Other':            'other',
+  'other':            'other',
+};
+function normalizeEventType(t) {
+  if (!t) return 'other';
+  return EVENT_TYPE_MAP[t] || EVENT_TYPE_MAP[t.trim()] || 'other';
+}
+
 function mapEventToDb(evt) {
   const out = {};
   // Required / always-present
@@ -104,9 +133,9 @@ function mapEventToDb(evt) {
   if (evt.status !== undefined)           out.status = evt.status;
   if (evt.is_public !== undefined)        out.is_public = evt.is_public;
 
-  // Type — app uses `type`, DB uses `event_type`
-  if (evt.type !== undefined)             out.event_type = evt.type;
-  if (evt.event_type !== undefined)       out.event_type = evt.event_type;
+  // Type — app uses `type`, DB uses `event_type`, with strict check constraint
+  if (evt.type !== undefined)             out.event_type = normalizeEventType(evt.type);
+  if (evt.event_type !== undefined)       out.event_type = normalizeEventType(evt.event_type);
 
   // Location — app uses `location`/`address`, DB uses `location_name`/`location_address`
   if (evt.location !== undefined)         out.location_name = evt.location;
