@@ -58,15 +58,16 @@ export const updateProfile = async (userId, updates) => {
 // Explicitly filters is_public = true even though RLS allows it; belt-and-suspenders and it makes
 // the query plan faster.
 export const getPublicEvents = async ({ city } = {}) => {
+  const today = new Date().toISOString().split('T')[0];
+  // Include date polls (date IS NULL) AND upcoming events (date >= today).
+  // PostgREST .or() takes a comma-separated list inside parentheses.
   let query = supabase
     .from('events')
     .select('*, host:profiles(id, full_name, avatar_url, username), rsvp_count:rsvps(count)')
     .eq('is_public', true)
     .eq('status', 'published')
-    .gte('date', new Date().toISOString().split('T')[0])
-    .order('date', { ascending: true });
-  // Only apply city filter if a value was explicitly passed AND city column exists in DB.
-  // Post-migration, this path is fine. Pre-migration, callers pass `undefined` to skip it.
+    .or(`date.is.null,date.gte.${today}`)
+    .order('date', { ascending: true, nullsFirst: false });
   if (city) query = query.eq('city', city);
   const { data, error } = await query;
   if (error) throw error;
