@@ -68,7 +68,12 @@ const QUOTE_STYLES = [
 ];
 
 export default function EventDetailModal({ event, onClose, onEdit }) {
-  const { user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote, approveRSVP, declineRSVP, reviveRSVP, updateEvent } = useApp();
+  const { events, user, rsvpEvent, claimPotluckItem, unclaimPotluckItem, addPhoto, tagPhoto, addToast, addComment, pinQuote, approveRSVP, declineRSVP, reviveRSVP, updateEvent } = useApp();
+  // Read the CURRENT event from useApp so RSVP approvals, decluttering,
+  // and status changes reflect immediately. The `event` prop is a React
+  // state snapshot from click time and goes stale when useApp mutates.
+  // eslint-disable-next-line no-param-reassign
+  event = events.find(e => e.id === event?.id) || event;
   const [tab, setTab] = useState(event.isEnded ? 'photos' : 'overview');
   const [editConfirm, setEditConfirm] = React.useState(null);
   const [uploading, setUploading] = useState(false);

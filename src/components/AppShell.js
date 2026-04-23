@@ -205,7 +205,7 @@ function PublicEventPage() {
 }
 
 
-function NotifBell({ notifications, unreadCount, markAllNotifsRead, markNotifRead }) {
+function NotifBell({ notifications, unreadCount, markAllNotifsRead, markNotifRead, onNotifClick }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef();
   React.useEffect(() => {
@@ -233,7 +233,7 @@ function NotifBell({ notifications, unreadCount, markAllNotifsRead, markNotifRea
           ) : (
             <div style={{ maxHeight: 320, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
               {notifications.slice(0, 20).map(n => (
-                <div key={n.id} onClick={() => markNotifRead(n.id)}
+                <div key={n.id} onClick={() => { markNotifRead(n.id); if (onNotifClick) onNotifClick(n); }}
                   style={{ padding: '11px 16px', borderBottom: '1px solid var(--border)', background: n.read ? 'transparent' : 'var(--indigo-light, #f0eeff)', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, lineHeight: 1.5 }}>{n.message}</div>
@@ -364,7 +364,12 @@ export default function AppShell() {
             <Link to="/invites" className="icon-btn always-show" title="Invitations" style={{ position: 'relative' }}>
               ✉️{invitePending > 0 && <span className="notif-dot" />}
             </Link>
-            <NotifBell notifications={notifications || []} unreadCount={unreadCount} markAllNotifsRead={markAllNotifsRead} markNotifRead={markNotifRead} />
+            <NotifBell notifications={notifications || []} unreadCount={unreadCount} markAllNotifsRead={markAllNotifsRead} markNotifRead={markNotifRead} onNotifClick={(n) => {
+              // Route by notification type. rsvp_request = host got a request -> My Events
+              // rsvp_approved = guest was approved -> Invitations > Accepted tab
+              if (n.type === 'rsvp_request') window.location.href = '/events';
+              else if (n.type === 'rsvp_approved') window.location.href = '/invites';
+            }} />
             <Link to="/profile" className="topnav-avatar-link" title="My Profile">
               <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>
             </Link>

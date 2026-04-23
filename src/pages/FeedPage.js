@@ -104,6 +104,18 @@ export default function FeedPage() {
   // Separate upcoming real events from example events for display
   const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo && !e.isExample);
   const exampleUpcoming = events.filter(e => e.isExample && !e.isEnded && !e.isPast);
+  // Stat card uses a looser filter: include events I'm hosting AND events I
+  // accepted an invite to (myGuest status is approved). Discovery grid still
+  // uses `upcoming` above so RSVPs don't clutter Explore.
+  const myUpcoming = events.filter(e => {
+    if (e.isEnded || e.isPast || e.isExample) return false;
+    if (e.mine) return true;
+    if (e.isInvitedTo) {
+      const myGuest = (e.guests || []).find(g => g.id === user?.id);
+      if (myGuest && myGuest.s === 'approved') return true;
+    }
+    return false;
+  });
 
   const searchedCity = (() => {
     if (!citySearch) return null;
@@ -138,7 +150,7 @@ export default function FeedPage() {
   });
 
   const stats = [
-    { icon: '🗓️', color: 'purple', val: upcoming.length, label: 'Upcoming', badge: '+2 this month', badgeColor: 'green', dark: false, action: () => navigate('/events') },
+    { icon: '🗓️', color: 'purple', val: myUpcoming.length, label: 'Upcoming', badge: '+2 this month', badgeColor: 'green', dark: false, action: () => navigate('/events') },
     { icon: '👥', color: 'teal', val: friends.filter(f => f.status === 'accepted').length, label: 'In Network', badge: 'Avg 7 per event', badgeColor: 'blue', dark: false, action: () => navigate('/profile') },
     { icon: '🥂', color: 'amber', val: events.filter(e => (e.isEnded || e.isPast) && !e.isExample).length, label: 'Past Dinners', badge: '92% accepted', badgeColor: 'green', dark: false, action: () => navigate('/events') },
     { icon: '🔔', color: 'coral', val: allBanners.length, label: 'Wrap-ups',

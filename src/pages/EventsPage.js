@@ -18,8 +18,19 @@ export default function EventsPage() {
   const [fabVisible, setFabVisible] = useState(true);
   const topBtnRef = useRef(null);
 
+  // Upcoming = events I host OR events I accepted an invite to
+  // Past = events I hosted (accepted past events covered by wrap-ups flow later)
+  const myUser = useApp().user;
+  const upcoming = events.filter(e => {
+    if (e.isEnded || e.isPast || e.isExample) return false;
+    if (e.mine) return true;
+    if (e.isInvitedTo) {
+      const g = (e.guests || []).find(x => x.id === myUser?.id);
+      if (g && g.s === 'approved') return true;
+    }
+    return false;
+  });
   const mine = events.filter(e => e.mine);
-  const upcoming = mine.filter(e => !e.isEnded && !e.isPast && !e.isExample);
   const past = mine.filter(e => (e.isEnded || e.isPast) && !e.isExample);
   const examplePast = mine.filter(e => (e.isEnded || e.isPast) && e.isExample);
 

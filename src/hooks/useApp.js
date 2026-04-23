@@ -149,7 +149,7 @@ export function AppProvider({ children }) {
   const addToast = useCallback((msg, type = '') => {
     const id = Date.now() + Math.random();
     setToasts(t => [...t, { id, msg, type }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 5000);
   }, []);
 
   useEffect(() => {
