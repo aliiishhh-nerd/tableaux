@@ -110,7 +110,8 @@ function InviteCard({ event, myStatus, onView, onAccept, onDecline, userId }) {
           <div style={{ flexShrink: 0 }}>
             {myStatus === 'approved' && <span className="chip chip-teal">✓ Going</span>}
             {myStatus === 'declined' && <span className="chip chip-coral">✕ Declined</span>}
-            {myStatus === 'pending' && <span className="chip chip-amber">⏳ Pending</span>}
+            {myStatus === 'pending' && event.vis === 'public' && <span className="chip chip-amber">⏳ Awaiting host approval</span>}
+              {myStatus === 'pending' && event.vis !== 'public' && <span className="chip chip-amber">⏳ Pending</span>}
           </div>
         </div>
 
@@ -141,12 +142,12 @@ function InviteCard({ event, myStatus, onView, onAccept, onDecline, userId }) {
 
       <div className="invite-actions">
         <button className="btn btn-ghost btn-sm" onClick={onView}>View Details</button>
-        {myStatus === 'pending' && (
-          <>
-            <button className="btn btn-primary btn-sm" onClick={onAccept}>✓ Accept</button>
-            <button className="btn btn-ghost btn-sm" onClick={onDecline} style={{ color: 'var(--coral)' }}>✕ Decline</button>
-          </>
-        )}
+        {myStatus === 'pending' && event.vis !== 'public' && (
+                <>
+                  <button className="btn btn-primary btn-sm" onClick={onAccept}>✓ Accept</button>
+                  <button className="btn btn-ghost btn-sm" onClick={onDecline} style={{ color: 'var(--coral)' }}>✕ Decline</button>
+                </>
+              )}
         {myStatus === 'approved' && isPotluck && (
           <button className="btn btn-primary btn-sm" onClick={onView}>
             {myPotluckItems.length ? '✏️ Update Dish' : '🥘 Add Your Dish'}

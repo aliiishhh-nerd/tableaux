@@ -383,12 +383,9 @@ export function AppProvider({ children }) {
   function markNotifRead(notifId) { setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n)); }
   function markAllNotifsRead() { setNotifications(prev => prev.map(n => ({ ...n, read: true }))); }
 
-  function approveRSVP(eventId, guestId, guestName) {
-    let rsvpId = null;
+  function approveRSVP(eventId, guestId, guestName, rsvpId) {
     setEvents(prev => prev.map(ev => {
       if (ev.id !== eventId) return ev;
-      const g = (ev.guests || []).find(x => x.id === guestId);
-      if (g) rsvpId = g.rsvpId;
       return { ...ev, guests: (ev.guests || []).map(x => x.id === guestId ? { ...x, s: 'approved' } : x) };
     }));
     if (rsvpId && isRealUser(user)) {
@@ -397,18 +394,15 @@ export function AppProvider({ children }) {
         addToast('Approve failed to save: ' + (err?.message || 'unknown'), 'error');
       });
     } else if (!rsvpId && isRealUser(user)) {
-      console.warn('[approveRSVP] no rsvpId for guest', guestId, '\u2014 skipping DB update');
+      console.warn('[approveRSVP] no rsvpId passed for guest', guestId);
     }
     addNotification(makeNotif('rsvp_approved', guestName + ' approved for your event', eventId));
-    addToast(guestName + ' approved \ud83c\udf89', 'success');
+    addToast(guestName + ' approved 🎉', 'success');
   }
 
-  function declineRSVP(eventId, guestId, guestName) {
-    let rsvpId = null;
+  function declineRSVP(eventId, guestId, guestName, rsvpId) {
     setEvents(prev => prev.map(ev => {
       if (ev.id !== eventId) return ev;
-      const g = (ev.guests || []).find(x => x.id === guestId);
-      if (g) rsvpId = g.rsvpId;
       return { ...ev, guests: (ev.guests || []).map(x => x.id === guestId ? { ...x, s: 'declined' } : x) };
     }));
     if (rsvpId && isRealUser(user)) {
@@ -416,25 +410,27 @@ export function AppProvider({ children }) {
         console.error('[declineRSVP] DB update failed:', err);
         addToast('Decline failed to save: ' + (err?.message || 'unknown'), 'error');
       });
+    } else if (!rsvpId && isRealUser(user)) {
+      console.warn('[declineRSVP] no rsvpId passed for guest', guestId);
     }
     addToast(guestName + ' declined', 'info');
   }
 
-  function reviveRSVP(eventId, guestId, guestName) {
-    let rsvpId = null;
+  function reviveRSVP(eventId, guestId, guestName, rsvpId) {
     setEvents(prev => prev.map(ev => {
       if (ev.id !== eventId) return ev;
-      const g = (ev.guests || []).find(x => x.id === guestId);
-      if (g) rsvpId = g.rsvpId;
       return { ...ev, guests: (ev.guests || []).map(x => x.id === guestId ? { ...x, s: 'approved' } : x) };
     }));
     if (rsvpId && isRealUser(user)) {
       updateRsvpStatus(rsvpId, 'approved').catch(err => {
         console.error('[reviveRSVP] DB update failed:', err);
+        addToast('Accept failed to save: ' + (err?.message || 'unknown'), 'error');
       });
+    } else if (!rsvpId && isRealUser(user)) {
+      console.warn('[reviveRSVP] no rsvpId passed for guest', guestId);
     }
     addNotification(makeNotif('rsvp_approved', guestName + ' accepted after all', eventId));
-    addToast(guestName + ' accepted \ud83c\udf89', 'success');
+    addToast(guestName + ' accepted 🎉', 'success');
   }
 
   const rsvpEvent = useCallback(async (eventId, status, dietaryNote) => {

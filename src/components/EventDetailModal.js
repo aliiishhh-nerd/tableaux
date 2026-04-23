@@ -628,8 +628,8 @@ function HostToolsTab({ event, reminders, setReminders, reminderSaved, onSaveRem
                 <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20, background: 'var(--amber-light)', color: '#633806', border: '0.5px solid var(--amber)' }}>Requested</span>
               </div>
               <div style={{ display: 'flex', gap: 7 }}>
-                <button className="btn btn-primary" style={{ flex: 1, fontSize: 12, padding: '7px 0', minHeight: 36 }} onClick={() => approveRSVP && approveRSVP(event.id, g.id, g.n || g.name)}>Approve</button>
-                <button className="btn" style={{ flex: 1, fontSize: 12, padding: '7px 0', minHeight: 36, background: '#FFEDED', color: 'var(--coral)', border: '1px solid #FFEDED' }} onClick={() => declineRSVP && declineRSVP(event.id, g.id, g.n || g.name)}>Decline</button>
+                <button className="btn btn-primary" style={{ flex: 1, fontSize: 12, padding: '7px 0', minHeight: 36 }} onClick={() => approveRSVP && approveRSVP(event.id, g.id, g.n || g.name, g.rsvpId)}>Approve</button>
+                <button className="btn" style={{ flex: 1, fontSize: 12, padding: '7px 0', minHeight: 36, background: '#FFEDED', color: 'var(--coral)', border: '1px solid #FFEDED' }} onClick={() => declineRSVP && declineRSVP(event.id, g.id, g.n || g.name, g.rsvpId)}>Decline</button>
               </div>
             </div>
           ))}
@@ -670,7 +670,7 @@ function HostToolsTab({ event, reminders, setReminders, reminderSaved, onSaveRem
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20, background: '#FFEDED', color: 'var(--coral)', border: '0.5px solid #FFEDED' }}>Declined</span>
               </div>
-              <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px', minHeight: 34 }} onClick={() => reviveRSVP && reviveRSVP(event.id, g.id, g.n || g.name)}>Accept after all</button>
+              <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px', minHeight: 34 }} onClick={() => reviveRSVP && reviveRSVP(event.id, g.id, g.n || g.name, g.rsvpId)}>Accept after all</button>
             </div>
           ))}
         </div>

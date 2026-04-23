@@ -21,10 +21,25 @@ export function useRealtime({ user, addToast, addNotification, setEvents }) {
           event: 'INSERT',
           schema: 'public',
           table: 'rsvps',
-          filter: `event_id=in.(select id from events where host_id=eq.${user.id})`,
+          // no SQL filter — Supabase realtime does not support subqueries.
+          // RLS + host_id check below ensures we only act on our own events.
         },
         async (payload) => {
           const rsvp = payload.new;
+          if (!rsvp || rsvp.guest_id === user.id) return;
+
+          // Verify I'm the host of this event
+          let evData = null;
+          try {
+            const { data } = await supabase
+              .from('events')
+              .select('host_id, title')
+              .eq('id', rsvp.event_id)
+              .single();
+            evData = data;
+          } catch (_) {}
+          if (!evData || evData.host_id !== user.id) return;
+
           // Fetch guest name
           let guestName = 'A guest';
           try {
@@ -33,34 +48,36 @@ export function useRealtime({ user, addToast, addNotification, setEvents }) {
               .select('full_name')
               .eq('id', rsvp.guest_id)
               .single();
-            if (data?.full_name) guestName = data.full_name;
-          } catch {}
+            if (data && data.full_name) guestName = data.full_name;
+          } catch (_) {}
 
-          addToast(`${guestName} requested to join your event 🔔`, 'info');
+          if (typeof addToast === 'function') {
+            addToast(guestName + ' requested to join your event \ud83d\udd14', 'info');
+          }
           if (typeof addNotification === 'function') {
             addNotification({
-              id: 'rt-' + Date.now(),
-              type: 'new_rsvp',
-              message: `${guestName} requested to join your event`,
+              id: 'n_' + rsvp.id,
+              type: 'rsvp_request',
+              text: guestName + ' requested to join ' + (evData.title || 'your event'),
               eventId: rsvp.event_id,
               read: false,
-              createdAt: new Date().toISOString(),
+              ts: Date.now(),
             });
           }
-
-          // Update guest list in local state
           if (typeof setEvents === 'function') {
             setEvents(prev => prev.map(ev => {
               if (ev.id !== rsvp.event_id) return ev;
               const exists = (ev.guests || []).find(g => g.id === rsvp.guest_id);
               if (exists) return ev;
+              const initials = guestName.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
               return {
                 ...ev,
                 guests: [...(ev.guests || []), {
                   id: rsvp.guest_id,
+                  rsvpId: rsvp.id,
                   n: guestName,
                   s: rsvp.status || 'pending',
-                  initials: guestName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+                  initials,
                   color: 'indigo',
                 }],
               };
