@@ -400,10 +400,14 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
               {(() => {
                 const vis = (event.vis || event.visibility || '').toLowerCase().replace(/\s/g, '');
                 const isPublicEvent = vis === 'public' && !event.isExample;
-                if (!isPublicEvent || isHost || !!myGuest || isInvited) return null;
+                if (!isPublicEvent || isHost) return null;
+                // Stay visible during 'pending' so the guest sees
+                // "Request sent — waiting for host approval". Hide once
+                // approved or declined (status shows in blocks below).
+                if (myGuest && myGuest.s !== 'pending') return null;
                 return <PublicRSVPBlock event={event} addToast={addToast} rsvpEvent={rsvpEvent} user={user} />;
               })()}
-              {isInvited && myGuest?.s === 'pending' && (
+              {isInvited && myGuest?.s === 'pending' && getVis(event) !== 'public' && (
                 <div style={{ marginTop: 16, padding: 16, border: '1.5px solid var(--indigo)', borderRadius: 12, background: 'var(--indigo-light)' }}>
                   <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--indigo)' }}>You are invited!</div>
                   <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 12 }}>Will you join {event.host} for {event.title}?</div>

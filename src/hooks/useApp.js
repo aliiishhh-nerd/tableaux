@@ -146,6 +146,11 @@ export function AppProvider({ children }) {
     return stored?.followedHosts || [];
   });
 
+  // Tick counter bumped whenever the tab regains visibility. Used as
+  // a dep on the load effect to force a fresh data pull after the user
+  // has been away (e.g., approving RSVPs in another account/tab).
+  const [refreshTick, setRefreshTick] = useState(0);
+
   const addToast = useCallback((msg, type = '') => {
     const id = Date.now() + Math.random();
     setToasts(t => [...t, { id, msg, type }]);
@@ -254,7 +259,18 @@ export function AppProvider({ children }) {
     };
     loadAllData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, refreshTick]);
+
+  // Refresh from DB whenever the tab becomes visible again. Covers
+  // the common case where Alicia switches to Test3's incognito window,
+  // does something, and switches back to Test1 expecting fresh state.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') setRefreshTick(t => t + 1);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
 
   useEffect(() => {
     saveToStorage({ user, events, following, friends, followedHosts });
