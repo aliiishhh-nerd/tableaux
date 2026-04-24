@@ -10,6 +10,7 @@ Sentry.init({
   enabled: !!process.env.REACT_APP_SENTRY_DSN && process.env.NODE_ENV === 'production',
   tracesSampleRate: 0,
 });
+window.__SENTRY_INITIALIZED__ = '2026-04-24';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<React.StrictMode><App /></React.StrictMode>);
