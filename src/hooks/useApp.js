@@ -158,9 +158,11 @@ export function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    console.log('[diag] load-effect fired', { userIsTruthy: !!user, userId: user?.id, isRealUser: typeof isRealUser === 'function' ? isRealUser(user) : 'fn-missing' });
     if (!isRealUser(user)) return;
     const loadAllData = async () => {
       try {
+        console.log('[diag] loadAllData running — about to fire 4 Supabase calls');
         const [hosted, rsvpd, publicEvts, friendshipsData] = await Promise.allSettled([
           getHostEvents(user.id),
           getGuestRsvps(user.id),
@@ -168,6 +170,7 @@ export function AppProvider({ children }) {
           getFriendships(user.id),
         ]);
 
+        console.log('[diag] Promise.allSettled resolved', { hosted: hosted?.status, rsvpd: rsvpd?.status, publicEvts: publicEvts?.status, friendshipsData: friendshipsData?.status });
         console.log('[Supabase load] hosted:', hosted.status, hosted.status === 'fulfilled' ? (hosted.value?.length || 0) + ' events' : hosted.reason?.message);
         console.log('[Supabase load] rsvps:', rsvpd.status, rsvpd.status === 'fulfilled' ? (rsvpd.value?.length || 0) + ' rsvps' : rsvpd.reason?.message);
         console.log('[Supabase load] public:', publicEvts.status, publicEvts.status === 'fulfilled' ? (publicEvts.value?.length || 0) + ' public events' : publicEvts.reason?.message);
