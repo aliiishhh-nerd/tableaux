@@ -262,7 +262,7 @@ export const getFriendships = async (userId) => {
     .eq('user_id', userId);
   // Table may not exist yet — treat as empty, don't crash.
   if (error) {
-    console.warn('[getFriendships] skipping (table may not exist):', error.message);
+    console.warn('[getFriendships] error:', error.message);
     return [];
   }
   return data || [];
