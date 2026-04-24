@@ -4,7 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Disable gotrue's navigator.locks usage. It caused parallel data fetches
+// (Promise.allSettled with 3-4 concurrent calls) to reject with
+// "Lock was released because another request stole it". Single-tab usage
+// + idempotent server-side refresh makes cross-tab races a non-concern here.
+const noopLock = async (_name, _acquireTimeout, fn) => fn();
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { lock: noopLock },
+});
 
 export const signIn = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
