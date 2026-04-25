@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../hooks/useApp';
 import { fmtDate, fmtTime } from '../data/utils';
 import { FriendButton } from '../pages/ProfilePage';
@@ -86,6 +86,13 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const [taggingPhoto, setTaggingPhoto] = useState(null);
   const [tagInput, setTagInput] = useState('');
   const fileRef = useRef();
+  const [withdrawArmed, setWithdrawArmed] = useState(false);
+  const withdrawTimerRef = useRef(null);
+  useEffect(() => {
+    return () => {
+      if (withdrawTimerRef.current) clearTimeout(withdrawTimerRef.current);
+    };
+  }, []);
 
   if (!event) return null;
   // Wrap onEdit to show confirm modal if event has confirmed guests
@@ -174,6 +181,25 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
     const active = REMINDER_OPTIONS.filter(r => reminders[r.key]).map(r => r.label);
     if (active.length === 0) addToast('Reminders cleared', '');
     else addToast(`Reminders set: ${active.join(', ')} ✓`, 'success');
+  }
+
+  function handleWithdrawClick() {
+    if (withdrawArmed) {
+      // Second tap — execute the withdrawal.
+      if (withdrawTimerRef.current) clearTimeout(withdrawTimerRef.current);
+      withdrawTimerRef.current = null;
+      setWithdrawArmed(false);
+      rsvpEvent(event.id, 'declined');
+      addToast('RSVP withdrawn', '');
+    } else {
+      // First tap — arm + 4s auto-revert.
+      setWithdrawArmed(true);
+      if (withdrawTimerRef.current) clearTimeout(withdrawTimerRef.current);
+      withdrawTimerRef.current = setTimeout(() => {
+        setWithdrawArmed(false);
+        withdrawTimerRef.current = null;
+      }, 4000);
+    }
   }
 
   function handleNudge(guestId, guestName) {
@@ -441,6 +467,15 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                       ))}
                     </div>
                     <button className={`btn btn-sm ${reminderSaved ? 'btn-ghost' : 'btn-primary'}`} style={{ width: '100%' }} onClick={handleSaveReminders}>{reminderSaved ? '✓ Reminders saved' : 'Save reminders'}</button>
+                  </div>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', color: withdrawArmed ? 'var(--coral)' : 'var(--ink3)' }}
+                      onClick={handleWithdrawClick}
+                    >
+                      {withdrawArmed ? '✕ Tap again to confirm' : 'Can no longer make it'}
+                    </button>
                   </div>
                 </div>
               )}
