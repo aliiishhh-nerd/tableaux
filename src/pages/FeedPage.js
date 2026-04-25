@@ -150,9 +150,9 @@ export default function FeedPage() {
   });
 
   const stats = [
-    { icon: '🗓️', color: 'purple', val: myUpcoming.length, label: 'Upcoming', badge: '+2 this month', badgeColor: 'green', dark: false, action: () => navigate('/events') },
-    { icon: '👥', color: 'teal', val: friends.filter(f => f.status === 'accepted').length, label: 'In Network', badge: 'Avg 7 per event', badgeColor: 'blue', dark: false, action: () => navigate('/profile') },
-    { icon: '🥂', color: 'amber', val: events.filter(e => (e.isEnded || e.isPast) && !e.isExample).length, label: 'Past Dinners', badge: '92% accepted', badgeColor: 'green', dark: false, action: () => navigate('/events') },
+    { icon: '🗓️', color: 'purple', val: myUpcoming.length, label: 'Upcoming', dark: false, action: () => navigate('/events') },
+    { icon: '👥', color: 'teal', val: friends.filter(f => f.status === 'accepted').length, label: 'In Network', dark: false, action: () => navigate('/profile') },
+    { icon: '🥂', color: 'amber', val: events.filter(e => (e.isEnded || e.isPast) && !e.isExample).length, label: 'Past Dinners', dark: false, action: () => navigate('/events') },
     { icon: '🔔', color: 'coral', val: allBanners.length, label: 'Wrap-ups',
       badge: allBanners.length > 0 ? 'tap to view' : 'all clear',
       badgeColor: allBanners.length > 0 ? 'amber' : 'green',
@@ -178,7 +178,7 @@ export default function FeedPage() {
             <div className={`stat-icon-circle ${s.color}`} style={s.dark ? { background: 'rgba(255,255,255,.12)' } : {}}>{s.icon}</div>
             <div className="stat-val" style={s.dark ? { color: 'white' } : {}}>{s.val}</div>
             <div className="stat-label" style={s.dark ? { color: 'rgba(255,255,255,.6)' } : {}}>{s.label}</div>
-            <span className={`stat-badge ${s.badgeColor}`} style={s.dark ? { background: 'rgba(255,255,255,.15)', color: 'rgba(255,255,255,.85)' } : {}}>{s.badge}</span>
+            {s.badge && <span className={`stat-badge ${s.badgeColor}`} style={s.dark ? { background: 'rgba(255,255,255,.15)', color: 'rgba(255,255,255,.85)' } : {}}>{s.badge}</span>}
           </div>
         ))}
       </div>
@@ -389,14 +389,7 @@ export default function FeedPage() {
             </div>
             <div className="invite-friend-cta">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ display: 'flex' }}>
-                  {['AL','MR','JW'].map((ini, i) => (
-                    <div key={i} className={`av av-sm av-${['indigo','teal','amber'][i]}`}
-                      style={{ marginLeft: i > 0 ? -8 : 0, border: '2px solid white', zIndex: 3 - i }}>{ini}</div>
-                  ))}
-                  <div className="av av-sm" style={{ marginLeft: -8, background: 'var(--border)', color: 'var(--ink3)', border: '2px solid white', fontSize: 14, zIndex: 0 }}>+</div>
-                </div>
-                <div>
+                  <div>
                   <div className="invite-friend-title">Invite friends</div>
                   <div className="invite-friend-sub">Good meals are better shared</div>
                 </div>
