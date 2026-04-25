@@ -58,10 +58,10 @@ export function useRealtime({ user, addToast, addNotification, setEvents }) {
             addNotification({
               id: 'n_' + rsvp.id,
               type: 'rsvp_request',
-              text: guestName + ' requested to join ' + (evData.title || 'your event'),
+              message: guestName + ' requested to join ' + (evData.title || 'your event'),
               eventId: rsvp.event_id,
               read: false,
-              ts: Date.now(),
+              createdAt: new Date().toISOString(),
             });
           }
           if (typeof setEvents === 'function') {
