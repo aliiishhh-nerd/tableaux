@@ -102,11 +102,18 @@ export default function FeedPage() {
   }, [showCitySearch]);
 
   // Separate upcoming real events from example events for display
-  const upcoming = events.filter(e => !e.isEnded && !e.isPast && !e.isInvitedTo && !e.isExample);
+  const upcoming = events.filter(e => {
+    if (e.isEnded || e.isPast || e.isExample) return false;
+    // Hide events the user has explicitly declined; show approved/pending so
+    // they see their own RSVP'd events in Explore with a status chip.
+    const myGuest = (e.guests || []).find(g => g.id === user?.id);
+    return myGuest?.s !== 'declined';
+  });
   const exampleUpcoming = events.filter(e => e.isExample && !e.isEnded && !e.isPast);
   // Stat card uses a looser filter: include events I'm hosting AND events I
-  // accepted an invite to (myGuest status is approved). Discovery grid still
-  // uses `upcoming` above so RSVPs don't clutter Explore.
+  // accepted an invite to (myGuest status is approved). Discovery grid uses
+  // `upcoming` above which includes approved/pending RSVPs (rendered with a
+  // status chip in EventCard) and excludes declined.
   const myUpcoming = events.filter(e => {
     if (e.isEnded || e.isPast || e.isExample) return false;
     if (e.mine) return true;
@@ -324,7 +331,7 @@ export default function FeedPage() {
             return (
               <div className="feed-grid">
                 {displayEvents.map(evt => (
-                  <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} isFollowingHost={isFollowingHost(evt.hostId)} />
+                  <EventCard key={evt.id} event={evt} onClick={() => setSelected(evt)} isFollowingHost={isFollowingHost(evt.hostId)} myStatus={(evt.guests || []).find(g => g.id === user?.id)?.s} />
                 ))}
               </div>
             );
@@ -431,7 +438,7 @@ function PostEventBanner({ event, onView, onDismiss }) {
   );
 }
 
-function EventCard({ event, onClick, isFollowingHost, isExample }) {
+function EventCard({ event, onClick, isFollowingHost, isExample, myStatus }) {
   const cover = event.cover || {};
   const hasImg = cover.type === 'image' || event.img;
   const coverBg = cover.type === 'gradient' ? cover.value
@@ -456,6 +463,12 @@ function EventCard({ event, onClick, isFollowingHost, isExample }) {
           )}
           {!isExample && isFollowingHost && (
             <span className="chip" style={{ background: 'rgba(255,255,255,.22)', color: 'white', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.3)' }}>🔔 Following</span>
+          )}
+          {!isExample && myStatus === 'approved' && (
+            <span className="chip" style={{ background: 'rgba(46, 196, 182, 0.88)', color: 'white', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.3)', fontWeight: 600 }}>✓ Going</span>
+          )}
+          {!isExample && myStatus === 'pending' && (
+            <span className="chip" style={{ background: 'rgba(239, 159, 39, 0.88)', color: '#3a2400', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,.3)', fontWeight: 600 }}>⏳ Pending</span>
           )}
         </div>
       </div>
