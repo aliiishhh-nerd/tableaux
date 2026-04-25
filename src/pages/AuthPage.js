@@ -14,6 +14,7 @@ export default function AuthPage() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [handle, setHandle] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signup') {
-        const signUpData = await supabaseSignUp(email, password, name || email.split('@')[0]);
+        const signUpData = await supabaseSignUp(email, password, name || email.split('@')[0], handle.trim() || undefined);
         // Supabase v2 enumeration protection: a duplicate email returns a
         // success-shaped response with user.identities = []. Detect and
         // surface the real error so the user isn't told to check an inbox
@@ -88,6 +89,18 @@ export default function AuthPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 12, fontSize: 14, fontFamily: 'inherit' }}
+            />
+          )}
+          {mode === 'signup' && (
+            <input
+              type="text"
+              placeholder="@handle (optional)"
+              value={handle}
+              onChange={(e) => setHandle(e.target.value)}
+              pattern="^[a-zA-Z0-9_-]{3,30}$"
+              title="3–30 characters: letters, numbers, hyphens, underscores"
+              autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false"
               style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 12, fontSize: 14, fontFamily: 'inherit' }}
             />
           )}
@@ -158,7 +171,7 @@ export default function AuthPage() {
             <>
               Don't have an account?{' '}
               <button
-                onClick={() => { setMode('signup'); setError(''); setName(''); }}
+                onClick={() => { setMode('signup'); setError(''); setName(''); setHandle(''); }}
                 style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
               >
                 Sign up
@@ -168,7 +181,7 @@ export default function AuthPage() {
             <>
               Already have an account?{' '}
               <button
-                onClick={() => { setMode('login'); setError(''); setName(''); }}
+                onClick={() => { setMode('login'); setError(''); setName(''); setHandle(''); }}
                 style={{ color: 'var(--indigo)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
               >
                 Sign in
