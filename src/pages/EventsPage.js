@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../hooks/useApp';
+import { useOpenEventFromQuery } from '../hooks/useOpenEventFromQuery';
 import { fmtDate, fmtTime, getEventMonthsAgo, getEventYear } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
 import CreateEventModal from '../components/CreateEventModal';
@@ -17,6 +18,7 @@ export default function EventsPage() {
   const [pastSearch, setPastSearch] = useState('');
   const [fabVisible, setFabVisible] = useState(true);
   const topBtnRef = useRef(null);
+  useOpenEventFromQuery(events, setSelected);
 
   // Upcoming = events I host OR events I accepted an invite to
   // Past = events I hosted (accepted past events covered by wrap-ups flow later)

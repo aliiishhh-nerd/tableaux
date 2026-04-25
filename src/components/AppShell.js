@@ -263,6 +263,7 @@ export default function AppShell() {
     return () => window.removeEventListener('tablefolk:createEvent', handler);
   }, []);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Public routes — no login required
   if (location.pathname === '/') {
@@ -365,10 +366,15 @@ export default function AppShell() {
               ✉️{invitePending > 0 && <span className="notif-dot" />}
             </Link>
             <NotifBell notifications={notifications || []} unreadCount={unreadCount} markAllNotifsRead={markAllNotifsRead} markNotifRead={markNotifRead} onNotifClick={(n) => {
-              // Route by notification type. rsvp_request = host got a request -> My Events
-              // rsvp_approved = guest was approved -> Invitations > Accepted tab
-              if (n.type === 'rsvp_request') window.location.href = '/events';
-              else if (n.type === 'rsvp_approved') window.location.href = '/invites';
+              // Route by notification type. rsvp_request -> /events (host);
+              // rsvp_approved -> /invites (guest). The destination page reads
+              // ?openEvent=<id> via useOpenEventFromQuery and auto-opens that
+              // event's detail modal.
+              const path = n.type === 'rsvp_request' ? '/events'
+                         : n.type === 'rsvp_approved' ? '/invites'
+                         : null;
+              if (!path) return;
+              navigate(n.eventId ? `${path}?openEvent=${n.eventId}` : path);
             }} />
             <Link to="/profile" className="topnav-avatar-link" title="My Profile">
               <div className={`av av-sm av-${user.color || 'indigo'}`}>{user.initials}</div>

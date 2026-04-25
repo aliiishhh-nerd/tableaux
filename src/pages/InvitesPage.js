@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp';
+import { useOpenEventFromQuery } from '../hooks/useOpenEventFromQuery';
 import { fmtDate, fmtTime } from '../data/utils';
 import EventDetailModal from '../components/EventDetailModal';
 
@@ -7,6 +8,7 @@ export default function InvitesPage() {
   const { events, rsvpEvent, addToast, user } = useApp();
   const [selected, setSelected] = useState(null);
   const [tab, setTab] = useState('pending');
+  useOpenEventFromQuery(events, setSelected);
 
   const invites = events.filter(e => e.isInvitedTo);
   const myGuest = (e) => e.guests?.find(g => g.id === (user?.id || 'u1'));
