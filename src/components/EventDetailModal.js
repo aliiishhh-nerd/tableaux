@@ -107,7 +107,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
   const passportStamped = myComment?.passportStamped;
   const isConfirmed = myGuest?.s === 'approved';
   const isConfirmedGuest = isConfirmed;
-  const showFullAddr = !event.addrHidden || isHost || isConfirmedGuest || event.type === 'Restaurant';
+  const showFullAddr = !event.addrHidden || isHost || isConfirmedGuest || event.type === 'Restaurant' || getVis(event) === 'public';
   function getVis(e) {
     const raw = (e.vis || e.visibility || '').toLowerCase().replace(/\s/g, '');
     if (raw === 'public') return 'public';
@@ -343,7 +343,7 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                         <div style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 500 }}>{event.addr}</div>
                       )}
                     </div>
-                    {!isHost && isConfirmed && event.addrHidden && (
+                    {!isHost && isConfirmed && event.addrHidden && getVis(event) !== 'public' && (
                       <span className="chip chip-teal" style={{ fontSize: 11 }}>✓ Unlocked</span>
                     )}
                   </div>
