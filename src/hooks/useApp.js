@@ -118,7 +118,7 @@ export function AppProvider({ children }) {
     const stored = loadFromStorage();
     if (isRealUser(stored?.user)) {
       if (stored?.events && stored.events.length > 0) return stored.events;
-      return SEED_EVENTS.filter(e => e.isExample);
+      return SEED_EVENTS.filter(e => e.isExample).map(e => ({ ...e, mine: false }));
     }
     if (stored?.events && stored.events.length > 0) return stored.events;
     return SEED_EVENTS;
@@ -199,7 +199,7 @@ export function AppProvider({ children }) {
           .map(ev => normalizeSupabaseEvent(ev, user))
           .filter(ev => ev.hostId !== user.id);
 
-        const exampleSeedEvents = SEED_EVENTS.filter(e => e.isExample);
+        const exampleSeedEvents = SEED_EVENTS.filter(e => e.isExample).map(e => ({ ...e, mine: false }));
 
         const uniquePublic = publicEvents.filter(e =>
           !hostedEvents.find(h => h.id === e.id) &&
