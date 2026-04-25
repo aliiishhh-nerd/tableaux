@@ -13,6 +13,7 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +23,15 @@ export default function AuthPage() {
     try {
       if (mode === 'signup') {
         const signUpData = await supabaseSignUp(email, password, name || email.split('@')[0]);
+        // Supabase v2 enumeration protection: a duplicate email returns a
+        // success-shaped response with user.identities = []. Detect and
+        // surface the real error so the user isn't told to check an inbox
+        // for an email that won't arrive.
+        if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
+          setError('An account with this email already exists. Try signing in instead.');
+          setLoading(false);
+          return;
+        }
         if (signUpData.user && !signUpData.session) {
           setSuccess('Account created! Check your email to confirm, then sign in.');
           setMode('login');
@@ -42,7 +52,6 @@ export default function AuthPage() {
         }
       }
     } catch (err) {
-      console.error('[auth] err:', err);
       // Handle specific error messages
       if (err.message?.includes('Email not confirmed')) {
         setError('Welcome to TableFolk! We sent a confirmation link to ' + email + '. Please check your inbox and click the link to activate your account.');
@@ -91,16 +100,30 @@ export default function AuthPage() {
             required
             style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 12, fontSize: 14, fontFamily: 'inherit' }}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-            minLength={6}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', marginBottom: 16, fontSize: 14, fontFamily: 'inherit' }}
-          />
+          <div style={{ position: 'relative', marginBottom: 16 }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              minLength={6}
+              style={{ width: '100%', padding: '12px 44px 12px 16px', borderRadius: 8, border: '1px solid var(--stroke)', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(s => !s)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: 'var(--ink3)', display: 'flex', alignItems: 'center' }}
+            >
+              {showPassword ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              )}
+            </button>
+          </div>
           
           {success && <div style={{ color: "var(--teal)", fontSize: 13, marginBottom: 10, textAlign: "center", padding: "10px 14px", background: "var(--teal-light,#e6faf8)", borderRadius: 8 }}>{success}</div>}
           {error && (
