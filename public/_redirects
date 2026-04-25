@@ -1,10 +1,11 @@
-# Root redirect to waitlist
-/    /waitlist.html    302!
+# Root redirect to home
+/    /home.html    302!
 
 # Netlify SPA redirect — sends all routes to index.html for React Router
 /*    /index.html   200
 
 # Serve public HTML pages directly
+/home.html    /home.html    200
 /waitlist.html    /waitlist.html    200
 /privacy.html     /privacy.html     200
 /terms.html       /terms.html       200

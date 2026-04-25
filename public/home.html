@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="TableFolk is the social dining app where hosts build communities and guests discover supper clubs, potlucks, tastings, brunches and more — in your city. Free to join.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://tablefolk.club/">
+
+<!-- Open Graph -->
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://tablefolk.club/">
+<meta property="og:title"       content="TableFolk — Your table. Their memory.">
+<meta property="og:description" content="Discover supper clubs, potlucks, tastings and brunches hosted by real people in your city. Free to join and attend.">
+<meta property="og:image"       content="https://tablefolk.club/og-image.jpg">
+<meta property="og:image:width"  content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="TableFolk — Your table. Their memory.">
+<meta name="twitter:description" content="Discover supper clubs, potlucks, tastings and brunches hosted by real people in your city.">
+<meta name="twitter:image"       content="https://tablefolk.club/og-image.jpg">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "TableFolk",
+  "url": "https://tablefolk.club",
+  "description": "Social dining platform where hosts build communities and guests discover dining events.",
+  "applicationCategory": "SocialNetworkingApplication",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "operatingSystem": "Web, iOS, Android"
+}
+</script>
+
+<title>TableFolk — Your table. Their memory.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ── RESET & BASE ─────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  color: #1C1B35;
+  background: #FAF9F7;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; height: auto; display: block; }
+
+/* ── SKIP LINK (accessibility) ─────────────────── */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #6B5CE7;
+  color: #fff;
+  padding: 8px 16px;
+  z-index: 999;
+  border-radius: 0 0 8px 0;
+  font-size: 14px;
+  transition: top .2s;
+}
+.skip-link:focus { top: 0; }
+
+/* ── NAV ─────────────────────────────────────── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(250,249,247,.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(28,27,53,.08);
+  height: 60px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: #1C1B35;
+}
+.logo span { color: #6B5CE7; font-style: italic; }
+.nav-cta {
+  background: #6B5CE7;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity .2s;
+}
+.nav-cta:hover { opacity: .88; }
+
+/* ── HERO SECTION ────────────────────────────── */
+.hero-wrap {
+  padding-top: 60px;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+}
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 5% 56px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: center;
+  width: 100%;
+}
+.hero-copy { }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(107,92,231,.07);
+  border: 1px solid rgba(107,92,231,.18);
+  color: #6B5CE7;
+  padding: 7px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+.pill-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #6B5CE7;
+  animation: blink 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+
+/* h1 is the SEO anchor — always visible, never JS-only */
+h1 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 800;
+  line-height: 1.07;
+  letter-spacing: -.02em;
+  color: #1C1B35;
+  margin-bottom: 18px;
+  transition: opacity .2s;
+}
+h1 em { color: #6B5CE7; font-style: italic; }
+
+.hero-sub {
+  font-size: clamp(15px, 2vw, 17px);
+  color: #6B6882;
+  line-height: 1.65;
+  margin-bottom: 28px;
+  max-width: 440px;
+  transition: opacity .2s;
+}
+
+.scarcity {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #4A4862;
+  background: rgba(107,92,231,.06);
+  border: 1px solid rgba(107,92,231,.14);
+  border-radius: 30px;
+  padding: 8px 16px;
+}
+.scarcity-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #6B5CE7;
+  animation: blink 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ── FORM CARD ───────────────────────────────── */
+.form-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid rgba(28,27,53,.09);
+  width: 100%;
+}
+.form-badge {
+  background: #F0FDF4;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+.form-field { margin-bottom: 16px; }
+.form-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #9490B0;
+  margin-bottom: 7px;
+}
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid #E2E0F0;
+  border-radius: 10px;
+  font-size: 16px; /* 16px prevents iOS zoom */
+  font-family: inherit;
+  color: #1C1B35;
+  background: #FAFAFE;
+  transition: border-color .2s;
+  min-height: 48px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-field input:focus,
+.form-field select:focus {
+  outline: 3px solid rgba(107,92,231,.3);
+  outline-offset: 0;
+  border-color: #6B5CE7;
+}
+
+/* Intent grid — 3 clickable cards */
+.intent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.intent-btn {
+  padding: 13px 8px;
+  border: 1.5px solid #E2E0F0;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: #FAFAFE;
+  color: #4A4862;
+  line-height: 1.35;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.intent-btn .ei { font-size: 20px; }
+.intent-btn strong { font-size: 12px; font-weight: 600; color: #1C1B35; display: block; }
+.intent-btn small  { font-size: 10px; color: #9490B0; display: block; }
+.intent-btn:hover  { border-color: #B8B0F5; background: #F8F7FF; }
+.intent-btn.active {
+  border-color: #6B5CE7;
+  background: #F3F1FF;
+  color: #3C3489;
+}
+.intent-btn.active strong { color: #3C3489; }
+
+.submit-btn {
+  width: 100%;
+  background: #6B5CE7;
+  color: #fff;
+  border: none;
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  font-family: inherit;
+  min-height: 52px;
+  transition: opacity .2s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.submit-btn:hover  { opacity: .9; }
+.submit-btn:active { transform: scale(.98); }
+.form-note {
+  text-align: center;
+  font-size: 12px;
+  color: #9490B0;
+  margin-top: 10px;
+}
+
+/* ── DYNAMIC CONTENT AREA ────────────────────── */
+#dynamic {
+  transition: opacity .28s ease;
+}
+#dynamic.fading { opacity: 0; pointer-events: none; }
+
+/* ── BENEFITS ────────────────────────────────── */
+.benefits {
+  padding: 64px 5%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.sec-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #9490B0;
+  margin-bottom: 8px;
+}
+.sec-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(26px, 3.5vw, 34px);
+  font-weight: 800;
+  color: #1C1B35;
+  margin-bottom: 10px;
+  line-height: 1.15;
+}
+.sec-sub {
+  font-size: 15px;
+  color: #6B6882;
+  max-width: 520px;
+  margin-bottom: 36px;
+  line-height: 1.65;
+}
+.ben-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.ben {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(28,27,53,.07);
+}
+.ben-icon  { font-size: 28px; margin-bottom: 12px; }
+.ben-title { font-size: 15px; font-weight: 600; color: #1C1B35; margin-bottom: 7px; }
+.ben-body  { font-size: 13px; color: #6B6882; line-height: 1.6; }
+
+/* ── EVENT CHIPS BAR ─────────────────────────── */
+.chips-bar {
+  border-top: 1px solid rgba(28,27,53,.07);
+  border-bottom: 1px solid rgba(28,27,53,.07);
+  padding: 20px 5%;
+}
+.chips-bar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chips-bar-lbl {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9490B0;
+  margin-right: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.echip {
+  padding: 7px 14px;
+  border-radius: 30px;
+  border: 1.5px solid rgba(28,27,53,.1);
+  font-size: 13px;
+  color: #4A4862;
+  background: #fff;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.echip.hi { border-color: #6B5CE7; background: #F3F1FF; color: #3C3489; }
+
+/* ── PROOF ───────────────────────────────────── */
+.proof {
+  padding: 56px 5%;
+  background: #F3F1FF;
+}
+.proof-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.proof-quote {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-style: italic;
+  color: #1C1B35;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.proof-author { font-size: 13px; color: #9490B0; font-weight: 500; }
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.stat {
+  background: #fff;
+  border: 1px solid rgba(107,92,231,.1);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.stat-num   { font-family: "Playfair Display", serif; font-size: 30px; font-weight: 800; margin-bottom: 3px; }
+.stat-label { font-size: 12px; color: #6B6882; line-height: 1.4; }
+
+/* ── CROSS-PROMO ─────────────────────────────── */
+.cross {
+  background: #1C1B35;
+  padding: 48px 5%;
+}
+.cross-inner { max-width: 1200px; margin: 0 auto; }
+.cross-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 18px;
+}
+.cc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.cc {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 16px;
+}
+.cc-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+.cc-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+.cc-dot.h { background:#9B8FFF; }
+.cc-dot.g { background:#34D399; }
+.cc-dot.r { background:#FBBF24; }
+.cc-type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: rgba(255,255,255,.38);
+}
+.cc-body { font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.5; margin-bottom: 6px; }
+.cc-time { font-size: 11px; color: rgba(255,255,255,.28); font-style: italic; }
+.cross-note {
+  font-size: 14px;
+  color: rgba(255,255,255,.38);
+  text-align: center;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+.cross-note strong { color: rgba(255,255,255,.72); }
+
+/* ── STATIC FEATURES ─────────────────────────── */
+.feats {
+  padding: 64px 5%;
+  background: #FAF9F7;
+}
+.feats-inner { max-width: 1200px; margin: 0 auto; }
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 36px;
+}
+.feat {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(28,27,53,.07);
+}
+.feat-icon  { font-size: 26px; margin-bottom: 11px; }
+.feat-title { font-size: 15px; font-weight: 600; color: #1C1B35; margin-bottom: 7px; }
+.feat-body  { font-size: 13px; color: #6B6882; line-height: 1.6; }
+
+/* ── TAGLINE BAND ────────────────────────────── */
+.tl-band {
+  background: #1C1B35;
+  padding: 52px 5%;
+  text-align: center;
+}
+.tl-band p {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(22px, 3vw, 30px);
+  font-style: italic;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.tl-band small { font-size: 13px; color: rgba(255,255,255,.35); }
+
+/* ── FOOTER ──────────────────────────────────── */
+footer {
+  background: #1C1B35;
+  border-top: 1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.35);
+  text-align: center;
+  padding: 24px 5%;
+  font-size: 13px;
+}
+footer a { color: rgba(255,255,255,.35); transition: color .2s; }
+footer a:hover { color: #fff; }
+
+/* ── TRANSITIONS ─────────────────────────────── */
+.swap-text { transition: opacity .2s; }
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — mobile first
+   ════════════════════════════════════════════════ */
+
+/* 900px — tablet breakpoint */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; gap: 36px; padding: 36px 5% 48px; }
+  .proof-inner { grid-template-columns: 1fr; gap: 28px; }
+  .ben-grid, .feat-grid, .cc-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* 600px — large phone */
+@media (max-width: 600px) {
+  .hero { padding: 28px 4% 40px; }
+  .form-card { padding: 24px 20px; }
+  .intent-grid { grid-template-columns: 1fr; gap: 8px; }
+  .intent-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 14px 16px;
+    gap: 12px;
+    min-height: 56px;
+  }
+  .intent-btn .ei { font-size: 22px; flex-shrink: 0; }
+  .ben-grid, .feat-grid { grid-template-columns: 1fr; }
+  .cc-grid { grid-template-columns: 1fr 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .chips-bar-inner { gap: 8px; }
+  .echip { font-size: 12px; padding: 6px 12px; }
+}
+
+/* 400px — small phone (iPhone SE, Galaxy A) */
+@media (max-width: 400px) {
+  nav { padding: 0 4%; }
+  .nav-cta { padding: 9px 16px; font-size: 13px; }
+  .form-card { padding: 20px 16px; border-radius: 16px; }
+  .cc-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .hero { padding: 24px 4% 36px; }
+}
+
+/* safe area inset for notched phones */
+@supports (padding: max(0px)) {
+  nav { padding-left: max(5%, env(safe-area-inset-left)); padding-right: max(5%, env(safe-area-inset-right)); }
+  footer { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<nav aria-label="Main navigation">
+  <a href="/" class="logo" aria-label="TableFolk home">Table<span>Folk</span></a>
+  <a href="#waitlist" class="nav-cta" aria-label="Join the waitlist">Join waitlist</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO — h1 always in DOM for SEO, content swaps via JS
+     ═══════════════════════════════════════════════════ -->
+<main id="main">
+<div class="hero-wrap">
+<div class="hero">
+
+  <div class="hero-copy">
+    <div class="pill" role="status" aria-live="polite">
+      <span class="pill-dot" aria-hidden="true"></span>
+      Now accepting waitlist signups
+    </div>
+    <!-- h1 is ALWAYS in the DOM — Google indexes this on first crawl -->
+    <h1 id="hero-hl">Your table.<br><em>Their memory.</em></h1>
+    <p class="hero-sub" id="hero-sub">
+      Discover dining events near you, host your own, or get your people together around good food and good company.
+    </p>
+    <div class="scarcity" aria-label="Scarcity indicator">
+      <span class="scarcity-dot" aria-hidden="true"></span>
+      <span><strong>64 spots left in Chicago</strong> — join free before they're gone</span>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card" id="waitlist" role="region" aria-label="Join the waitlist">
+    <div class="form-badge" aria-label="Free to join">✓ Always free to join &amp; attend</div>
+    <form onsubmit="handleSubmit(event)" novalidate aria-label="Waitlist signup form">
+
+      <div class="form-field">
+        <label for="email-input">Your email</label>
+        <input type="email" id="email-input" name="email"
+               placeholder="you@example.com"
+               autocomplete="email"
+               inputmode="email"
+               required
+               aria-required="true">
+      </div>
+
+      <div class="form-field" role="group" aria-labelledby="intent-legend">
+        <label id="intent-legend">I want to</label>
+        <div class="intent-grid" role="radiogroup" aria-label="Select your intent">
+          <div class="intent-btn" id="btn-host"
+               role="radio" aria-checked="false" tabindex="0"
+               onclick="selectIntent('host')"
+               onkeydown="if(event.key==='Enter'||event.key===' ')selectIntent('host')">
+            <span class="ei" aria-hidden="true">🕯️</span>
+            <strong>Host events</strong>
+            <small>Create &amp; invite guests</small>
+          </div>
+          <div class="intent-btn" id="btn-guest"
+               role="radio" aria-checked="false" tabindex="0"
+               onclick="selectIntent('guest')"
+               onkeydown="if(event.key==='Enter'||event.key===' ')selectIntent('guest')">
+            <span class="ei" aria-hidden="true">🍷</span>
+            <strong>Dine &amp; discover</strong>
+            <small>Find events near me</small>
+          </div>
+          <div class="intent-btn" id="btn-rec"
+               role="radio" aria-checked="false" tabindex="0"
+               onclick="selectIntent('rec')"
+               onkeydown="if(event.key==='Enter'||event.key===' ')selectIntent('rec')">
+            <span class="ei" aria-hidden="true">🥂</span>
+            <strong>Get my people together</strong>
+            <small>Plan a gathering</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="city-select">Your city</label>
+        <select id="city-select" name="city" required aria-required="true">
+          <option value="">Choose your city...</option>
+          <option>Chicago, IL</option>
+          <option>New York, NY</option>
+          <option>Los Angeles, CA</option>
+          <option>San Diego, CA</option>
+          <option>Seattle, WA</option>
+          <option>Austin, TX</option>
+          <option>Other — notify me when we expand</option>
+        </select>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">
+        Reserve my spot →
+      </button>
+      <p class="form-note" aria-live="polite">No payment required. Ever.</p>
+    </form>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     DYNAMIC AREA — swaps on intent selection
+     SEO note: default content rendered in noscript
+     ═══════════════════════════════════════════ -->
+<noscript>
+  <!-- Static fallback for crawlers and no-JS users -->
+  <section style="padding:64px 5%;max-width:1200px;margin:0 auto">
+    <h2>Everything at the table</h2>
+    <p>TableFolk supports dinner parties, supper clubs, potlucks, tastings, brunches, restaurant nights, and more — in Chicago, New York, Los Angeles, San Diego, Seattle, and Austin.</p>
+    <p>For hosts: build your community, manage guest lists, coordinate potlucks, and host any dining format with ease.</p>
+    <p>For guests: discover supper clubs, tastings, brunches and pop-ups hosted by real people in your city. Free to join and attend.</p>
+    <p>For your crew: get your people together around good food — brunch, drinks, a cheese board, a proper meal. Any occasion, any vibe.</p>
+  </section>
+</noscript>
+
+<div id="dynamic" aria-live="polite" aria-label="Content tailored to your selection">
+
+  <section class="benefits" aria-labelledby="ben-title">
+    <div class="sec-label" id="ben-label">Everything at the table</div>
+    <h2 class="sec-title" id="ben-title">Built for every kind of gathering</h2>
+    <p class="sec-sub" id="ben-sub">Whether you're discovering new events, hosting your own, or getting your people together — TableFolk works for any food occasion.</p>
+    <div class="ben-grid" id="ben-grid" role="list"></div>
+  </section>
+
+  <div class="chips-bar" aria-label="Supported event types">
+    <div class="chips-bar-inner">
+      <span class="chips-bar-lbl" id="chips-lbl">Any occasion:</span>
+      <span class="echip" id="c-dinner"  role="listitem">🍷 Dinner Party</span>
+      <span class="echip" id="c-supper"  role="listitem">🕯️ Supper Club</span>
+      <span class="echip" id="c-potluck" role="listitem">🥘 Potluck</span>
+      <span class="echip" id="c-tasting" role="listitem">🍾 Tasting</span>
+      <span class="echip" id="c-brunch"  role="listitem">☕ Brunch</span>
+      <span class="echip" id="c-rest"    role="listitem">🍽️ Restaurant</span>
+      <span class="echip" id="c-other"   role="listitem">🎉 Other</span>
+    </div>
+  </div>
+
+  <section class="proof" aria-label="Social proof">
+    <div class="proof-inner">
+      <div>
+        <blockquote class="proof-quote" id="proof-q">"The miso black cod was transcendent. But honestly — the people at that table are who I remember most."</blockquote>
+        <cite class="proof-author" id="proof-a">Sarah M. · Guest · Chicago Supper Club</cite>
+      </div>
+      <div class="stat-grid" id="stat-grid" role="list"></div>
+    </div>
+  </section>
+
+  <div class="cross" aria-label="Community activity">
+    <div class="cross-inner">
+      <div class="cross-lbl" id="cross-lbl">Live on TableFolk right now</div>
+      <div class="cc-grid" id="cc-grid"></div>
+      <p class="cross-note" id="cross-note">Every host needs guests. Every guest needs a host. <strong>TableFolk connects both.</strong></p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     STATIC FEATURES — always in DOM, SEO visible
+     ═══════════════════════════════════════════ -->
+<section class="feats" aria-labelledby="feat-title">
+  <div class="feats-inner">
+    <div style="text-align:center;max-width:560px;margin:0 auto">
+      <div class="sec-label">Platform features</div>
+      <h2 class="sec-title" id="feat-title" style="text-align:center">Everything you need at the table</h2>
+      <p style="font-size:15px;color:#6B6882;margin-top:8px">From intimate supper clubs to casual get-togethers — all in one place.</p>
+    </div>
+    <div class="feat-grid" role="list">
+      <article class="feat" role="listitem">
+        <div class="feat-icon" aria-hidden="true">🗺️</div>
+        <h3 class="feat-title">Dining Passport</h3>
+        <p class="feat-body">Every event stamps your personal passport. Build your food story one gathering at a time.</p>
+      </article>
+      <article class="feat" role="listitem">
+        <div class="feat-icon" aria-hidden="true">🔒</div>
+        <h3 class="feat-title">Trusted &amp; private</h3>
+        <p class="feat-body">Host approval before anyone gets your address. Verified profiles. Your home, your rules.</p>
+      </article>
+      <article class="feat" role="listitem">
+        <div class="feat-icon" aria-hidden="true">👥</div>
+        <h3 class="feat-title">Social discovery</h3>
+        <p class="feat-body">Friends-of-friends events. A dining social graph built around the table, not the algorithm.</p>
+      </article>
+      <article class="feat" role="listitem">
+        <div class="feat-icon" aria-hidden="true">🥘</div>
+        <h3 class="feat-title">Potluck coordination</h3>
+        <p class="feat-body">Assign dishes and drinks. Guests claim their item before the event — no doubles.</p>
+      </article>
+      <article class="feat" role="listitem">
+        <div class="feat-icon" aria-hidden="true">📸</div>
+        <h3 class="feat-title">Moments &amp; memories</h3>
+        <p class="feat-body">Share post-event photos and let the best moments live long after the last bite.</p>
+      </article>
+      <article class="feat" role="listitem">
+        <div class="feat-icon" aria-hidden="true">🎯</div>
+        <h3 class="feat-title">Visibility control</h3>
+        <p class="feat-body">Public, friends-only, or invite-only. You choose exactly who discovers your event.</p>
+      </article>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="tl-band" role="complementary">
+  <p>Food is the reason. People are the point.</p>
+  <small>Your table. Their memory.</small>
+</div>
+
+<footer role="contentinfo">
+  <p>© 2026 TableFolk ·
+     <a href="/privacy">Privacy</a> ·
+     <a href="/terms">Terms</a> ·
+     <a href="mailto:hello@tablefolk.club">hello@tablefolk.club</a>
+  </p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════
+   CONTENT DATA
+   ═══════════════════════════════════════ */
+const D = {
+  default: {
+    hl:'Your table.<br><em>Their memory.</em>',
+    sub:'Discover dining events near you, host your own, or get your people together around good food and good company.',
+    label:'Everything at the table', title:'Built for every kind of gathering',
+    blurb:'Whether you\'re discovering new events, hosting your own, or getting your people together — TableFolk works for any food occasion.',
+    benefits:[
+      {icon:'🕯️',t:'Host any event',b:'Supper clubs, brunches, potlucks, pop-ups, restaurant nights. Build your profile and grow a community around your table.'},
+      {icon:'🍷',t:'Discover events near you',b:'Find dining experiences hosted by real people in your city. Any format, any vibe — all you have to do is show up.'},
+      {icon:'🥂',t:'Get your people together',b:'Stop postponing plans. TableFolk makes it easy to organise any gathering with the people you\'ve been meaning to see.'},
+    ],
+    chips:[],
+    quote:'"The miso black cod was transcendent. But honestly — the people at that table are who I remember most."',
+    author:'Sarah M. · Guest · Chicago Supper Club',
+    stats:[
+      {n:'6',l:'Event types supported',c:'#6B5CE7'},
+      {n:'3',l:'Ways to use TableFolk',c:'#1DB87A'},
+      {n:'64',l:'Spots left in Chicago',c:'#F59E0B'},
+      {n:'∞',l:'Memories at the table',c:'#1C1B35'},
+    ],
+    crossLbl:'Live on TableFolk right now',
+    crossNote:'Every host needs guests. Every guest needs a host. <strong>TableFolk connects both.</strong>',
+    cards:[
+      {dot:'h',type:'New event posted',body:'Yuki just posted a 10-course Japanese supper club in Chicago',time:'Today · 6 spots'},
+      {dot:'g',type:'New RSVP',body:'Priya K. just requested a spot at a rooftop brunch',time:'2 min ago'},
+      {dot:'r',type:'Crew gathered',body:'Jamie finally organised that dinner with college friends — 8 showed up',time:'Last weekend'},
+      {dot:'h',type:'Host milestone',body:'Marco hosted his 10th event — same guests keep coming back',time:'Loyal community'},
+    ],
+  },
+  host:{
+    hl:'Be known for<br><em>your table.</em>',
+    sub:'Build a real community around food. Host supper clubs, brunches, potlucks, pop-ups, or restaurant nights — your format, your guest list, your rules.',
+    label:'For hosts', title:'Your table.\nYour community.',
+    blurb:'TableFolk is built for the version of you who believes food is how you connect.',
+    benefits:[
+      {icon:'🎯',t:'Your guest list, your call',b:'Review every RSVP before confirming. Your address stays private until you approve. Host with full confidence.'},
+      {icon:'📈',t:'Turn one event into a following',b:'Build your hosting profile, collect genuine reviews, and grow a community of guests who keep coming back to your table.'},
+      {icon:'🥘',t:'Zero coordination headaches',b:'RSVPs, dish assignments, potluck lists, dietary summaries — TableFolk handles logistics so you can focus on the food.'},
+    ],
+    chips:['c-supper','c-potluck','c-brunch','c-dinner','c-rest'],
+    quote:'"I\'ve hosted supper clubs for years but TableFolk is the first platform that actually treats me like a real host, not just a listing."',
+    author:'Marco R. · Host · Chicago',
+    stats:[
+      {n:'10+',l:'Events hosted by top Chicago hosts',c:'#6B5CE7'},
+      {n:'64',l:'Guests waiting in Chicago alone',c:'#1DB87A'},
+      {n:'4.9',l:'Average host rating',c:'#F59E0B'},
+      {n:'3×',l:'Guests who come back again',c:'#1C1B35'},
+    ],
+    crossLbl:'Guests are looking for tables like yours right now',
+    crossNote:'Real guests are waiting. <strong>Your table is what they\'re looking for.</strong>',
+    cards:[
+      {dot:'g',type:'New RSVP request',body:'Priya K. just requested a spot at a Chicago supper club',time:'2 min ago'},
+      {dot:'g',type:'Event filling fast',body:'Italian Supper Club · 3 of 8 spots left this Saturday',time:'Chicago · This Sat'},
+      {dot:'g',type:'Repeat guest',body:'Tanya just booked her third event with the same host',time:'Loyal guest'},
+      {dot:'g',type:'Waitlist join',body:'14 new people joined the Chicago waitlist today',time:'Today'},
+    ],
+  },
+  guest:{
+    hl:'Find your people.<br><em>One meal at a time.</em>',
+    sub:'Discover supper clubs, tastings, brunches, potlucks and restaurant nights hosted by real people in your city — then show up.',
+    label:'For guests', title:'Your next great experience\nis out there.',
+    blurb:'Real hosts. Real homes. Real food. TableFolk connects you with the people and events that make dining worth it.',
+    benefits:[
+      {icon:'🗺️',t:'Experiences worth showing up for',b:'Browse supper clubs, tastings, potlucks, brunch pop-ups, and restaurant nights hosted by real people in your city.'},
+      {icon:'👥',t:'Meet people worth knowing',b:'No awkward mixers. No forced networking. Just a table worth sitting at and people who love food as much as you do.'},
+      {icon:'🔒',t:'Trust built in',b:'Verified host profiles and genuine guest reviews mean you know whose table you\'re sitting at before you show up.'},
+    ],
+    chips:['c-supper','c-tasting','c-brunch','c-potluck','c-rest','c-dinner'],
+    quote:'"I went to a 10-course supper club in someone\'s apartment and left with three new friends. There\'s nothing else like TableFolk."',
+    author:'Priya K. · Guest · New York',
+    stats:[
+      {n:'7',l:'Event types to explore',c:'#1DB87A'},
+      {n:'6',l:'Cities and growing',c:'#6B5CE7'},
+      {n:'64',l:'Spots left in Chicago',c:'#F59E0B'},
+      {n:'✓',l:'Always free to attend',c:'#1C1B35'},
+    ],
+    crossLbl:'Hosts are setting tables right now',
+    crossNote:'Real people. Real events. Real food. <strong>Your table is out there.</strong>',
+    cards:[
+      {dot:'h',type:'New event posted',body:'Yuki just posted a 10-course Japanese supper club in Chicago',time:'Today · 6 spots'},
+      {dot:'h',type:'Brunch pop-up',body:'Sunday brunch at Marco\'s · Shakshuka & fresh bread',time:'This Sunday · 4 left'},
+      {dot:'h',type:'Wine tasting',body:'Natural wine night · 6 bottles, 8 guests, one great evening',time:'Friday · 2 left'},
+      {dot:'h',type:'Potluck',body:'Aisha\'s neighbourhood potluck · bring something from your culture',time:'Next Sat · Open'},
+    ],
+  },
+  rec:{
+    hl:'Stop saying<br><em>"we should hang."</em>',
+    sub:'TableFolk makes it easy to actually get together — drinks, brunch, a cheese board, a proper meal. Any food. Any occasion. Your people.',
+    label:'For your crew', title:'From the group chat\nto an actual plan.',
+    blurb:'You don\'t need a special occasion. You just need a date, a plan, and something good to eat.',
+    benefits:[
+      {icon:'📅',t:'From "soon" to an actual date',b:'Pick a date, share the plan, see who\'s in. No more back-and-forth. No more rain checks. A get-together that actually happens.'},
+      {icon:'🥘',t:'Coordinate without the chaos',b:'Potluck? Assign dishes and drinks. Dinner out? Coordinate who\'s coming. Works for any food occasion, any group size.'},
+      {icon:'📸',t:'The moments last longer',b:'Share photos after, react to each other\'s Moments, and build a shared food story with the people you keep meaning to see.'},
+    ],
+    chips:['c-potluck','c-brunch','c-dinner','c-other'],
+    quote:'"We\'d been saying we need to do a proper dinner for two years. TableFolk made us actually do it. Now it\'s a monthly thing."',
+    author:'Jamie T. · Chicago',
+    stats:[
+      {n:'✓',l:'Free to plan and attend',c:'#F59E0B'},
+      {n:'∞',l:'Occasions food can create',c:'#6B5CE7'},
+      {n:'1',l:'Plan to finally make it happen',c:'#1DB87A'},
+      {n:'64',l:'Spots left in Chicago',c:'#1C1B35'},
+    ],
+    crossLbl:'TableFolk is already bringing people together',
+    crossNote:'Whether you host, discover, or reconnect — <strong>everyone belongs at this table.</strong>',
+    cards:[
+      {dot:'r',type:'Crew gathered',body:'Jamie finally organised that dinner with college friends — 8 showed up',time:'Last weekend · Chicago'},
+      {dot:'g',type:'New connections',body:'3 strangers met at a supper club and are planning a potluck together',time:'This week'},
+      {dot:'h',type:'Host milestone',body:'Yuki just hosted her 10th event — same 4 guests keep coming back',time:'Loyal community'},
+      {dot:'r',type:'One-on-one',body:'Two friends who hadn\'t caught up in years finally made a plan',time:'This morning'},
+    ],
+  },
+};
+
+/* ═══════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════ */
+function render(c) {
+  /* hero copy */
+  document.getElementById('hero-hl').innerHTML  = c.hl;
+  document.getElementById('hero-sub').textContent = c.sub;
+
+  /* benefits */
+  document.getElementById('ben-label').textContent = c.label;
+  document.getElementById('ben-title').textContent = c.title;
+  document.getElementById('ben-sub').textContent   = c.blurb;
+  document.getElementById('ben-grid').innerHTML = c.benefits.map(b=>
+    `<article class="ben" role="listitem">
+       <div class="ben-icon" aria-hidden="true">${b.icon}</div>
+       <h3 class="ben-title">${b.t}</h3>
+       <p class="ben-body">${b.b}</p>
+     </article>`
+  ).join('');
+
+  /* chips */
+  ['c-dinner','c-supper','c-potluck','c-tasting','c-brunch','c-rest','c-other'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('hi', c.chips.includes(id));
+  });
+
+  /* proof */
+  document.getElementById('proof-q').textContent = c.quote;
+  document.getElementById('proof-a').textContent = c.author;
+  document.getElementById('stat-grid').innerHTML = c.stats.map(s=>
+    `<div class="stat" role="listitem">
+       <div class="stat-num" style="color:${s.c}">${s.n}</div>
+       <div class="stat-label">${s.l}</div>
+     </div>`
+  ).join('');
+
+  /* cross-promo */
+  document.getElementById('cross-lbl').textContent = c.crossLbl;
+  document.getElementById('cross-note').innerHTML  = c.crossNote;
+  document.getElementById('cc-grid').innerHTML = c.cards.map(card=>
+    `<div class="cc">
+       <div class="cc-top">
+         <span class="cc-dot ${card.dot}" aria-hidden="true"></span>
+         <span class="cc-type">${card.type}</span>
+       </div>
+       <p class="cc-body">${card.body}</p>
+       <span class="cc-time">${card.time}</span>
+     </div>`
+  ).join('');
+}
+
+/* ═══════════════════════════════════════
+   SELECT INTENT
+   ═══════════════════════════════════════ */
+function selectIntent(key) {
+  /* update buttons */
+  ['host','guest','rec'].forEach(k=>{
+    const btn = document.getElementById('btn-'+k);
+    btn.classList.toggle('active', k===key);
+    btn.setAttribute('aria-checked', k===key ? 'true' : 'false');
+  });
+
+  /* fade swap */
+  const dyn = document.getElementById('dynamic');
+  dyn.classList.add('fading');
+  setTimeout(()=>{ render(D[key]); dyn.classList.remove('fading'); }, 260);
+}
+
+/* ═══════════════════════════════════════
+   URL PARAMETER — for ad landing pages
+   ?for=host | ?for=guest | ?for=rec
+   ═══════════════════════════════════════ */
+function initFromURL() {
+  const param = new URLSearchParams(window.location.search).get('for');
+  if (param && D[param]) {
+    selectIntent(param);
+    /* smooth scroll to form on mobile when coming from an ad */
+    if (window.innerWidth < 900) {
+      setTimeout(()=>{
+        document.getElementById('waitlist').scrollIntoView({behavior:'smooth',block:'start'});
+      }, 400);
+    }
+  } else {
+    render(D.default);
+  }
+}
+
+/* ═══════════════════════════════════════
+   FORM SUBMIT
+   ═══════════════════════════════════════ */
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Reserving...';
+  btn.disabled = true;
+  setTimeout(()=>{
+    document.getElementById('waitlist').innerHTML = `
+      <div style="text-align:center;padding:52px 20px" role="alert" aria-live="assertive">
+        <div style="font-size:48px;margin-bottom:18px" aria-hidden="true">✓</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:24px;color:#1C1B35;margin-bottom:8px">
+          You're on the list
+        </h3>
+        <p style="color:#6B6882;font-size:15px;line-height:1.65">
+          We'll reach out when TableFolk opens near you.<br>
+          <em style="color:#9490B0">Until then — set a beautiful table.</em>
+        </p>
+      </div>`;
+  }, 600);
+}
+
+/* init */
+initFromURL();
+</script>
+</body>
+</html>
