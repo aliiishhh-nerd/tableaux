@@ -42,6 +42,7 @@ export default function AuthPage() {
         }
       }
     } catch (err) {
+      console.error('[auth] err:', err);
       // Handle specific error messages
       if (err.message?.includes('Email not confirmed')) {
         setError('Welcome to TableFolk! We sent a confirmation link to ' + email + '. Please check your inbox and click the link to activate your account.');
