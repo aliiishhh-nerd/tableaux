@@ -269,6 +269,7 @@ export default function CreateEventModal({ event, onClose }) {
     dietaryNotes: event?.dietaryNotes || '',
     hostNote: event?.hostNote || '',
     otherNotes: event?.otherNotes || '',
+    notificationPrefs: event?.notification_prefs || { rsvpApproved: true, reminder24h: true, morningOf: false },
   });
   const [cover, setCover] = useState(event?.cover || { type: 'gradient', value: GRADIENT_COVERS[0].value });
   const [coverTab, setCoverTab] = useState(event?.cover?.type === 'image' ? 'image' : event?.cover?.type === 'emoji' ? 'emoji' : 'gradient');
@@ -318,6 +319,9 @@ export default function CreateEventModal({ event, onClose }) {
       menuCourses: f.menuCourses.map((c, j) => j === i ? { ...c, [key]: val } : c),
     }));
   }
+  function setNotifPref(key, val) {
+    setForm(f => ({ ...f, notificationPrefs: { ...f.notificationPrefs, [key]: val } }));
+  }
   function handleAddressSelect(item) {
     const addr = item.address || {};
     const nb = addr.neighbourhood || addr.suburb || addr.quarter || '';
@@ -335,6 +339,7 @@ export default function CreateEventModal({ event, onClose }) {
       price: form.isPaid ? parseFloat(form.price) : null,
       payment_methods: form.isPaid ? form.paymentMethods.filter(m => m.enabled) : null,
       payment_notes: form.isPaid ? form.paymentNotes : null,
+      notification_prefs: form.notificationPrefs,
       invites: [
         ...selectedFriends.map(uid => { const f = (friends||[]).find(f=>f.userId===uid); return {userId:uid,name:f?.name||'Friend'}; }),
         ...emailInvites.map(e=>({email:e,name:e.split('@')[0]})),
@@ -393,69 +398,6 @@ export default function CreateEventModal({ event, onClose }) {
         <div className="modal-body">
         {step === 1 && <>
           <div className="form-group">
-            <label className="form-label">Cover</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              {['gradient','emoji','image'].map(t => (
-                <button key={t} className={'filter-btn ' + (coverTab === t ? 'active' : '')} style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => setCoverTab(t)}>
-                  {t === 'gradient' ? '🎨 Gradient' : t === 'emoji' ? '✨ Emoji' : '📷 Photo'}
-                </button>
-              ))}
-            </div>
-            {coverTab === 'gradient' && (
-              <div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                  {GRADIENT_COVERS.filter(g => g.label && g.value && g.value.startsWith('linear-gradient')).map(g => (
-                    <div key={g.label} title={g.label} onClick={() => { setCover({ type: 'gradient', value: g.value }); setCustomHex(''); }}
-                      style={{ width: 44, height: 44, borderRadius: 10, cursor: 'pointer', background: g.value, border: cover.value === g.value && !customHex ? '3px solid var(--indigo)' : '3px solid transparent', flexShrink: 0 }} />
-                  ))}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: customHex ? 'linear-gradient(135deg, #111, ' + customHex + ')' : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)', border: customHex ? '3px solid var(--indigo)' : '2px solid var(--border)', flexShrink: 0 }} />
-                  <input className="form-input" value={customHex} onChange={e => { const v = e.target.value; setCustomHex(v); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setCover({ type: 'gradient', value: 'linear-gradient(135deg, #111, ' + v + ')' }); }} placeholder="Custom hex e.g. #FF6B6B" style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }} maxLength={7} />
-                </div>
-              </div>
-            )}
-            {coverTab === 'emoji' && (
-              <div>
-                <div style={{ marginBottom: 8, fontSize: 13, color: 'var(--ink2)' }}>Pick a background color, then an animated icon:</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-                  {GRADIENT_COVERS.map(g => (
-                    <div key={g.label} onClick={() => setCover(c => ({ ...c, type: 'emoji', bg: g.value }))}
-                      style={{ width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', background: g.value, border: cover.bg === g.value ? '3px solid var(--indigo)' : '2px solid transparent', flexShrink: 0 }} />
-                  ))}
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                  {Object.keys(EMOJI_ANIM_MAP).map(em => {
-                    const anim = EMOJI_ANIM_MAP[em];
-                    const isSelected = cover.emoji === em;
-                    return (
-                      <button key={em} onClick={() => setCover(c => ({ ...c, type: 'emoji', emoji: em, bg: c.bg || '#1A1A2E' }))}
-                        style={{ width: 44, height: 44, borderRadius: 10, fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)', border: isSelected ? '2.5px solid var(--indigo)' : '1px solid var(--border)' }}>
-                        <span className={isSelected ? 'em-' + anim : ''} style={{ display: 'inline-block' }}>{em}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {cover.emoji && (
-                  <div style={{ width: 80, height: 80, borderRadius: 12, background: cover.bg || '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
-                    <span className={'em-' + (EMOJI_ANIM_MAP[cover.emoji] || 'pulse')} style={{ display: 'inline-block' }}>{cover.emoji}</span>
-                  </div>
-                )}
-              </div>
-            )}
-            {coverTab === 'image' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                {SEED_IMAGES.map(img => (
-                  <div key={img.u} onClick={() => setCover({ type: 'image', value: img.u })}
-                    style={{ aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', border: cover.value === img.u ? '3px solid var(--indigo)' : '3px solid transparent' }}>
-                    <img src={img.u} alt={img.l} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="divider" />
-          <div className="form-group">
             <label className="form-label">Event Title</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input className="form-input" value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. An Evening of Provençal Cuisine" style={{ flex: 1 }} />
@@ -512,41 +454,12 @@ export default function CreateEventModal({ event, onClose }) {
             <AddressAutocomplete value={form.addr} onChange={val => set('addr', val)} onSelect={handleAddressSelect} />
             {form.addrHidden && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink3)', display: 'flex', alignItems: 'center', gap: 5 }}>🔐 Guests see only your location name until their RSVP is accepted.</div>}
           </div>
-          <div className="form-row">
-            <div className="form-group"><label className="form-label">Dress Code</label><StyledSelect value={form.dressCode} onChange={val => set('dressCode', val)} options={DRESS_CODES} /></div>
-            <div className="form-group" />
-          </div>
           <div className="form-group">
             <label className="form-label">Description</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <textarea className="form-textarea" value={form.desc} onChange={e => set('desc', e.target.value)} placeholder="Tell guests what to expect..." style={{ flex: 1 }} />
               <EmojiTrigger onSelect={em => appendToField('desc', em)} above />
             </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Invitation Header</label>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input className="form-input" value={form.invH} onChange={e => set('invH', e.target.value)} placeholder="You're Invited!" style={{ flex: 1 }} />
-              <EmojiTrigger onSelect={em => appendToField('invH', em)} />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Invitation Accent Color</label>
-            <ColorPicker value={form.invBg} onChange={val => set('invBg', val)} />
-            <div style={{ marginTop: 10, borderRadius: 10, background: form.invBg, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 18 }}>✉️</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'white', textShadow: '0 1px 3px rgba(0,0,0,.3)' }}>{form.invH || "You're Invited"}</span>
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">🎵 Event Playlist <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-              {PLAYLIST_PLATFORMS.map(p => (
-                <button key={p.key} className={'filter-btn ' + (form.playlist?.platform === p.key ? 'active' : '')} style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setPlaylist('platform', p.key)}>{p.icon} {p.label}</button>
-              ))}
-            </div>
-            <input className="form-input" value={form.playlist?.url || ''} onChange={e => setPlaylist('url', e.target.value)} placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'} />
-            {form.playlist?.url?.trim() && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>✓ Playlist shown to guests</div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--page)', borderRadius: 10, marginTop: 8 }}>
             <div>
@@ -557,11 +470,121 @@ export default function CreateEventModal({ event, onClose }) {
               <div style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: form.galleryEnabled ? 23 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
             </div>
           </div>
+          <div style={{ background: 'var(--page)', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)', marginBottom: 4 }}>🔔 Guest notifications</div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)', marginBottom: 12 }}>Automatically notify guests:</div>
+            {[
+              { key: 'rsvpApproved', label: 'RSVP approved', sub: 'Guest gets a confirmation when you approve them' },
+              { key: 'reminder24h', label: '24-hour reminder', sub: 'Reminder email the day before the event' },
+              { key: 'morningOf', label: 'Morning-of reminder', sub: 'Day-of reminder email for confirmed guests' },
+            ].map(({ key, label, sub }, i, arr) => (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: i === 0 ? 0 : 10, paddingBottom: i === arr.length - 1 ? 0 : 10, borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border)' }}>
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--ink)' }}>{label}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{sub}</div>
+                </div>
+                <div onClick={() => setNotifPref(key, !form.notificationPrefs[key])} style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0, background: form.notificationPrefs[key] ? 'var(--indigo)' : 'var(--border)', position: 'relative' }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 7, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: form.notificationPrefs[key] ? 19 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </>}
 
         {/* ── STEP 2: INVITES ── */}
         {step === 2 && (
           <div>
+            <div className="form-group">
+              <label className="form-label">Cover</label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                {['gradient','emoji','image'].map(t => (
+                  <button key={t} className={'filter-btn ' + (coverTab === t ? 'active' : '')} style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => setCoverTab(t)}>
+                    {t === 'gradient' ? '🎨 Gradient' : t === 'emoji' ? '✨ Emoji' : '📷 Photo'}
+                  </button>
+                ))}
+              </div>
+              {coverTab === 'gradient' && (
+                <div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {GRADIENT_COVERS.filter(g => g.label && g.value && g.value.startsWith('linear-gradient')).map(g => (
+                      <div key={g.label} title={g.label} onClick={() => { setCover({ type: 'gradient', value: g.value }); setCustomHex(''); }}
+                        style={{ width: 44, height: 44, borderRadius: 10, cursor: 'pointer', background: g.value, border: cover.value === g.value && !customHex ? '3px solid var(--indigo)' : '3px solid transparent', flexShrink: 0 }} />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 6, background: customHex ? 'linear-gradient(135deg, #111, ' + customHex + ')' : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)', border: customHex ? '3px solid var(--indigo)' : '2px solid var(--border)', flexShrink: 0 }} />
+                    <input className="form-input" value={customHex} onChange={e => { const v = e.target.value; setCustomHex(v); if (/^#[0-9A-Fa-f]{6}$/.test(v)) setCover({ type: 'gradient', value: 'linear-gradient(135deg, #111, ' + v + ')' }); }} placeholder="Custom hex e.g. #FF6B6B" style={{ flex: 1, fontFamily: 'monospace', fontSize: 13 }} maxLength={7} />
+                  </div>
+                </div>
+              )}
+              {coverTab === 'emoji' && (
+                <div>
+                  <div style={{ marginBottom: 8, fontSize: 13, color: 'var(--ink2)' }}>Pick a background color, then an animated icon:</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+                    {GRADIENT_COVERS.map(g => (
+                      <div key={g.label} onClick={() => setCover(c => ({ ...c, type: 'emoji', bg: g.value }))}
+                        style={{ width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', background: g.value, border: cover.bg === g.value ? '3px solid var(--indigo)' : '2px solid transparent', flexShrink: 0 }} />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                    {Object.keys(EMOJI_ANIM_MAP).map(em => {
+                      const anim = EMOJI_ANIM_MAP[em];
+                      const isSelected = cover.emoji === em;
+                      return (
+                        <button key={em} onClick={() => setCover(c => ({ ...c, type: 'emoji', emoji: em, bg: c.bg || '#1A1A2E' }))}
+                          style={{ width: 44, height: 44, borderRadius: 10, fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)', border: isSelected ? '2.5px solid var(--indigo)' : '1px solid var(--border)' }}>
+                          <span className={isSelected ? 'em-' + anim : ''} style={{ display: 'inline-block' }}>{em}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {cover.emoji && (
+                    <div style={{ width: 80, height: 80, borderRadius: 12, background: cover.bg || '#1A1A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
+                      <span className={'em-' + (EMOJI_ANIM_MAP[cover.emoji] || 'pulse')} style={{ display: 'inline-block' }}>{cover.emoji}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {coverTab === 'image' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                  {SEED_IMAGES.map(img => (
+                    <div key={img.u} onClick={() => setCover({ type: 'image', value: img.u })}
+                      style={{ aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', border: cover.value === img.u ? '3px solid var(--indigo)' : '3px solid transparent' }}>
+                      <img src={img.u} alt={img.l} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Dress Code</label><StyledSelect value={form.dressCode} onChange={val => set('dressCode', val)} options={DRESS_CODES} /></div>
+              <div className="form-group" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Invitation Header</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input className="form-input" value={form.invH} onChange={e => set('invH', e.target.value)} placeholder="You're Invited!" style={{ flex: 1 }} />
+                <EmojiTrigger onSelect={em => appendToField('invH', em)} />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Invitation Accent Color</label>
+              <ColorPicker value={form.invBg} onChange={val => set('invBg', val)} />
+              <div style={{ marginTop: 10, borderRadius: 10, background: form.invBg, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18 }}>✉️</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'white', textShadow: '0 1px 3px rgba(0,0,0,.3)' }}>{form.invH || "You're Invited"}</span>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">🎵 Event Playlist <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                {PLAYLIST_PLATFORMS.map(p => (
+                  <button key={p.key} className={'filter-btn ' + (form.playlist?.platform === p.key ? 'active' : '')} style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setPlaylist('platform', p.key)}>{p.icon} {p.label}</button>
+                ))}
+              </div>
+              <input className="form-input" value={form.playlist?.url || ''} onChange={e => setPlaylist('url', e.target.value)} placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'} />
+              {form.playlist?.url?.trim() && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>✓ Playlist shown to guests</div>}
+            </div>
             <div className="form-group">
               <label className="form-label">Personal Message <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(Optional)</span></label>
               <textarea className="form-textarea" value={form.personalMessage || ''} onChange={e => set('personalMessage', e.target.value)} placeholder="Looking forward to seeing you! 🍷" style={{ minHeight: 70 }} />
