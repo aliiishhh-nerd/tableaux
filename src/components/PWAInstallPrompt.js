@@ -6,7 +6,6 @@ import {
   isPushSupported,
   getPermissionStatus,
   subscribeToPush,
-  unsubscribeFromPush,
 } from '../services/pushNotifications';
 
 // Detect iOS (no native install prompt support)
@@ -85,11 +84,6 @@ export default function PWAInstallPrompt() {
       console.warn('[TableFolk Push]', err.message);
       setPushStatus(Notification.permission);
     }
-  };
-
-  const handleDisablePush = async () => {
-    await unsubscribeFromPush();
-    setPushStatus('default');
   };
 
   if (dismissed) return null;
