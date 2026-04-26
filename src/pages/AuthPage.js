@@ -73,8 +73,8 @@ export default function AuthPage() {
       <div style={{ maxWidth: 400, width: '100%', background: 'var(--panel)', padding: 40, borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
-            {mode === 'login' ? 'Welcome back' : 'Join TableFolk'}
+          <div className={mode === 'signup' ? 'logo-text' : undefined} style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
+            {mode === 'login' ? 'Welcome back' : <>Join Table<span>Folk</span></>}
           </div>
           <div style={{ fontSize: 14, color: 'var(--ink2)' }}>
             {mode === 'login' ? 'Sign in to your account' : 'Create your account to get started'}

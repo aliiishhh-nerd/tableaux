@@ -67,8 +67,18 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 17px; flex-shrink: 0;
 }
-.logo-text { font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; }
-.logo-text span { color: var(--indigo); }
+.logo-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.logo-text span {
+  color: var(--indigo);
+  font-style: italic;
+  font-weight: 600;
+}
 
 .sb-nav { padding: 10px 10px; flex: 1; overflow-y: auto; }
 .sb-section { margin-bottom: 4px; }
