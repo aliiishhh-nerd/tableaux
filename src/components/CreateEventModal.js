@@ -250,7 +250,11 @@ export default function CreateEventModal({ event, onClose }) {
     invH: event?.invH || "You're Invited", invBg: event?.invBg || '#6C5DD3',
     galleryEnabled: event?.galleryEnabled ?? true,
     seriesName: event?.seriesName || '', seriesVolume: event?.seriesVolume || 1,
-    playlist: event?.playlist || { platform: 'spotify', url: '' },
+    playlistLinks: event?.playlist_links || PLAYLIST_PLATFORMS.map(p => ({
+      platform: p.key,
+      enabled: event?.playlist?.platform === p.key && !!event?.playlist?.url,
+      url: event?.playlist?.platform === p.key ? (event?.playlist?.url || '') : '',
+    })),
     crowdCheckDates: event?.crowdCheckDates || [], useCrowdCheck: event?.useCrowdCheck ?? false,
     isPaid: !!event?.price,
     price: event?.price || '',
@@ -300,7 +304,12 @@ export default function CreateEventModal({ event, onClose }) {
   function toggleTasting(item) { setTastingItems(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]); }
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
   function appendToField(field, emoji) { setForm(f => ({ ...f, [field]: (f[field] || '') + emoji })); }
-  function setPlaylist(key, val) { setForm(f => ({ ...f, playlist: { ...f.playlist, [key]: val } })); }
+  function togglePlaylistLink(platform) {
+    setForm(f => ({ ...f, playlistLinks: f.playlistLinks.map(p => p.platform === platform ? { ...p, enabled: !p.enabled } : p) }));
+  }
+  function setPlaylistLinkUrl(platform, url) {
+    setForm(f => ({ ...f, playlistLinks: f.playlistLinks.map(p => p.platform === platform ? { ...p, url } : p) }));
+  }
   function togglePaymentMethod(type) {
     setForm(f => ({
       ...f,
@@ -329,13 +338,17 @@ export default function CreateEventModal({ event, onClose }) {
     if (!form.loc && (nb || city)) set('loc', [nb, city].filter(Boolean).join(', '));
   }
   function buildPayload() {
+    const enabledPlaylists = form.playlistLinks
+      .filter(p => p.enabled && p.url?.trim())
+      .map(p => ({ platform: p.platform, url: p.url.trim() }));
     return {
       ...form,
       cover,
       potluck: isPotluck ? { items: potluckItems } : null,
       supperClub: isSupperClub ? scData : null,
       tasting: isTasting ? { items: tastingItems } : null,
-      playlist: form.playlist?.url?.trim() ? form.playlist : null,
+      playlist_links: enabledPlaylists,
+      playlist: enabledPlaylists[0] || null,
       price: form.isPaid ? parseFloat(form.price) : null,
       payment_methods: form.isPaid ? form.paymentMethods.filter(m => m.enabled) : null,
       payment_notes: form.isPaid ? form.paymentNotes : null,
@@ -347,6 +360,7 @@ export default function CreateEventModal({ event, onClose }) {
     };
   }
   function handleSubmit() {
+    // TODO: invite gate — skip if user.is_founding_member === true
     if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
     if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; }
     const payload = buildPayload();
@@ -575,15 +589,27 @@ export default function CreateEventModal({ event, onClose }) {
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'white', textShadow: '0 1px 3px rgba(0,0,0,.3)' }}>{form.invH || "You're Invited"}</span>
               </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">🎵 Event Playlist <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                {PLAYLIST_PLATFORMS.map(p => (
-                  <button key={p.key} className={'filter-btn ' + (form.playlist?.platform === p.key ? 'active' : '')} style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setPlaylist('platform', p.key)}>{p.icon} {p.label}</button>
-                ))}
-              </div>
-              <input className="form-input" value={form.playlist?.url || ''} onChange={e => setPlaylist('url', e.target.value)} placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'} />
-              {form.playlist?.url?.trim() && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>✓ Playlist shown to guests</div>}
+            <div style={{ background: 'var(--page)', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🎵 Event Playlist</div>
+              {PLAYLIST_PLATFORMS.map((p, i, arr) => {
+                const link = form.playlistLinks.find(l => l.platform === p.key) || { enabled: false, url: '' };
+                return (
+                  <div key={p.key} style={{ paddingTop: i === 0 ? 0 : 10, paddingBottom: i === arr.length - 1 ? 0 : 10, borderBottom: i === arr.length - 1 ? 'none' : '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 13, color: 'var(--ink)' }}>{p.icon} {p.label}</div>
+                      <div onClick={() => togglePlaylistLink(p.key)} style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0, background: link.enabled ? 'var(--indigo)' : 'var(--border)', position: 'relative' }}>
+                        <div style={{ width: 14, height: 14, borderRadius: 7, background: 'white', position: 'absolute', top: 3, transition: 'left 0.2s', left: link.enabled ? 19 : 3, boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
+                      </div>
+                    </div>
+                    {link.enabled && (
+                      <div style={{ marginTop: 8 }}>
+                        <input className="form-input" value={link.url} onChange={e => setPlaylistLinkUrl(p.key, e.target.value)} placeholder={p.placeholder} />
+                        {link.url?.trim() && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>✓ Shown to guests</div>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className="form-group">
               <label className="form-label">Personal Message <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(Optional)</span></label>
