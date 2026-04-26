@@ -159,6 +159,8 @@ export default function ProfilePage() {
       favoriteFood: user.favoriteFood || '',
       favoriteRestaurant: user.favoriteRestaurant || '',
       dietaryRestrictions: [...(user.dietaryRestrictions || [])],
+      venmo_handle: user.venmo_handle || '',
+      zelle_contact: user.zelle_contact || '',
     });
     setEditing(true);
   }
@@ -171,6 +173,8 @@ export default function ProfilePage() {
       favoriteFood: draft.favoriteFood,
       favoriteRestaurant: draft.favoriteRestaurant,
       dietaryRestrictions: draft.dietaryRestrictions,
+      venmo_handle: draft.venmo_handle,
+      zelle_contact: draft.zelle_contact,
     });
     setEditing(false);
     addToast('Profile updated ✓', 'success');
@@ -359,6 +363,9 @@ export default function ProfilePage() {
                 )) : <span style={{ fontSize: 12, color: 'var(--ink3)' }}>None set</span>}
               </div>
             </div>
+            <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>💳 Payment Profiles</div>
+            <div className="form-group"><label className="form-label">Venmo handle</label><input className="form-input" value={user.venmo_handle || ''} readOnly placeholder="@username" onClick={startEdit} /></div>
+            <div className="form-group"><label className="form-label">Zelle phone or email</label><input className="form-input" value={user.zelle_contact || ''} readOnly placeholder="phone number or email" onClick={startEdit} /></div>
             <div style={{ fontWeight: 700, fontSize: 14, margin: '20px 0 12px' }}>🔗 Social Accounts</div>
             {SOCIAL_PLATFORMS.map(p => (
               <div key={p.key} className="form-group">
@@ -501,6 +508,9 @@ export default function ProfilePage() {
                   })}
                 </div>
               </div>
+              <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>💳 Payment Profiles</div>
+              <div className="form-group"><label className="form-label">Venmo handle</label><input className="form-input" value={draft.venmo_handle} onChange={e => setDraft(d => ({ ...d, venmo_handle: e.target.value }))} placeholder="@username" /></div>
+              <div className="form-group"><label className="form-label">Zelle phone or email</label><input className="form-input" value={draft.zelle_contact} onChange={e => setDraft(d => ({ ...d, zelle_contact: e.target.value }))} placeholder="phone number or email" /></div>
               <div style={{ fontWeight: 700, fontSize: 14, margin: '16px 0 12px' }}>🔗 Social Accounts</div>
               {SOCIAL_PLATFORMS.map(p => (
                 <div key={p.key} className="form-group">

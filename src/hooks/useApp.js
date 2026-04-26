@@ -302,6 +302,8 @@ export function AppProvider({ children }) {
       favoriteFood: profile.favorite_food || '',
       favoriteRestaurant: profile.favorite_restaurant || '',
       dietaryRestrictions: profile.dietary_restrictions || [],
+      venmo_handle: profile.venmo_handle || '',
+      zelle_contact: profile.zelle_contact || '',
       color: 'indigo',
     };
     if (isRealUser(newUser)) setFriends([]);

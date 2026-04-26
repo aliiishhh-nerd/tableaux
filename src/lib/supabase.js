@@ -60,6 +60,8 @@ export const updateProfile = async (userId, updates) => {
   if (updates.favoriteFood !== undefined)         mapped.favorite_food = updates.favoriteFood;
   if (updates.favoriteRestaurant !== undefined)   mapped.favorite_restaurant = updates.favoriteRestaurant;
   if (updates.dietaryRestrictions !== undefined)  mapped.dietary_restrictions = updates.dietaryRestrictions;
+  if (updates.venmo_handle !== undefined)         mapped.venmo_handle = updates.venmo_handle;
+  if (updates.zelle_contact !== undefined)        mapped.zelle_contact = updates.zelle_contact;
   if (Object.keys(mapped).length === 0) return null;
   const { data, error } = await supabase.from('profiles').update(mapped).eq('id', userId).select().single();
   if (error) throw error;
