@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { SEED_EVENTS, CURRENT_USER, SEED_FRIENDSHIPS } from '../data/seed';
 import {
   signIn as supabaseSignIn, getProfile,
+  supabase,
   createEvent as sbCreateEvent,
   getHostEvents,
   getPublicEvents,
@@ -355,7 +356,29 @@ export function AppProvider({ children }) {
         console.log('[createEvent] Supabase response:', created);
         if (created?.id) {
           setEvents(e => e.map(ev => ev.id === localId ? { ...ev, id: created.id } : ev));
-          addToast('Event saved \u2713', 'success');
+          const emailInvites = (evt.invites || []).filter(i => i?.email);
+          const sendInvites = emailInvites.length > 0 && evt.status !== 'draft';
+          if (!sendInvites) {
+            addToast('Event saved \u2713', 'success');
+          } else {
+            let failures = 0;
+            await Promise.all(emailInvites.map(async (inv) => {
+              try {
+                const { error } = await supabase.functions.invoke('send-event-invite', {
+                  body: { eventId: created.id, email: inv.email, name: inv.name },
+                });
+                if (error) { console.warn('[send-event-invite] failed for', inv.email, error); failures++; }
+              } catch (err) {
+                console.warn('[send-event-invite] failed for', inv.email, err);
+                failures++;
+              }
+            }));
+            if (failures === 0) {
+              addToast('Event saved \u2713', 'success');
+            } else {
+              addToast('Event saved. ' + failures + ' of ' + emailInvites.length + ' invites failed to send.', 'error');
+            }
+          }
         } else {
           addToast('Event saved locally \u2014 database did not confirm the write', 'error');
         }
