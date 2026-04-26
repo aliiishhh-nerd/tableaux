@@ -3,8 +3,8 @@ import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiTrigger } from './EmojiPicker';
 
-const EVENT_TYPES = ['Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Brunch', 'Other'];
-const EVENT_TYPE_ICONS = { 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '🍽️', 'Supper Club': '🕯️', 'Tasting': '🍾', 'Brunch': '🥐', 'Other': '🎉' };
+const EVENT_TYPES = ['Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Other'];
+const EVENT_TYPE_ICONS = { 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '🍽️', 'Supper Club': '🕯️', 'Tasting': '🍾', 'Other': '🎉' };
 const VISIBILITY = ['Public', 'Friends Only', 'Invite Only'];
 const DRESS_CODES = ['No dress code', 'Smart Casual', 'Cocktail Attire', 'Black Tie', 'Themed — see description'];
 const POTLUCK_CATS = [
@@ -285,7 +285,7 @@ export default function CreateEventModal({ event, onClose }) {
   const isPotluck = form.type === 'Potluck';
   const isSupperClub = form.type === 'Supper Club';
   const isTasting = form.type === 'Tasting';
-  const skipsServe = form.type === 'Restaurant' || form.type === 'Brunch';
+  const skipsServe = form.type === 'Restaurant';
   const [step, setStep] = React.useState(1);
   const [tastingItems, setTastingItems] = React.useState(event?.tasting?.items || []);
   const [selectedFriends, setSelectedFriends] = React.useState([]);
@@ -654,7 +654,7 @@ export default function CreateEventModal({ event, onClose }) {
           <div>
             {skipsServe && (
               <div style={{ padding: 24, textAlign: 'center', background: 'var(--page)', borderRadius: 12, color: 'var(--ink2)' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>{form.type === 'Brunch' ? '🥐' : '🍽️'}</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, color: 'var(--ink)' }}>No food details needed</div>
                 <div style={{ fontSize: 13 }}>For {form.type} events, the food is handled at the venue. Tap Next to settle pricing.</div>
               </div>

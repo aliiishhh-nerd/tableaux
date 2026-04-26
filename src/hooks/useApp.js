@@ -35,7 +35,6 @@ const DB_TO_UI_EVENT_TYPE = {
   'dinner_party':      'Dinner Party',
   'potluck':           'Potluck',
   'supper_club':       'Supper Club',
-  'brunch':            'Brunch',
   'cooking_class':     'Cooking Class',
   'restaurant_outing': 'Restaurant',
   'restaurant':        'Restaurant',

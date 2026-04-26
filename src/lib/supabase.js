@@ -128,7 +128,7 @@ function normalizeVisibility(v) {
 // Accepts whatever useApp sends; filters to only known columns.
 
 // UI event type labels -> DB enum values
-// DB allows: dinner_party, potluck, supper_club, brunch, cooking_class,
+// DB allows: dinner_party, potluck, supper_club, cooking_class,
 //            restaurant_outing, restaurant, tasting, other
 const EVENT_TYPE_MAP = {
   'Dinner Party':     'dinner_party',
@@ -137,8 +137,6 @@ const EVENT_TYPE_MAP = {
   'potluck':          'potluck',
   'Supper Club':      'supper_club',
   'supper_club':      'supper_club',
-  'Brunch':           'brunch',
-  'brunch':           'brunch',
   'Cooking Class':    'cooking_class',
   'cooking_class':    'cooking_class',
   'Restaurant':       'restaurant',

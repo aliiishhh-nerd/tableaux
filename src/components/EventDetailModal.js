@@ -28,7 +28,6 @@ function getMealName(event) {
   const hour = event.time ? parseInt(event.time.split(':')[0]) : 19;
   
   // Explicit event types
-  if (type === 'Brunch') return 'brunch';
   if (type === 'Potluck') return 'potluck';
   if (type === 'Supper Club') return 'dinner';
   if (type === 'Tasting') return 'tasting';
