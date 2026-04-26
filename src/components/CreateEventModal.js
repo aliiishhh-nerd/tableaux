@@ -916,6 +916,7 @@ export default function CreateEventModal({ event, onClose }) {
           }}>← Back</button>}
           {step === 1 && <button className="btn btn-ghost" onClick={onClose}>Cancel</button>}
           {step === 2 && <button className="btn btn-ghost" onClick={() => setStep(skipsServe ? 4 : 3)}>Skip</button>}
+          <button className="btn btn-ghost" onClick={handleSaveDraft}>Save Draft</button>
           {step < 4
             ? <button className="btn btn-primary" onClick={() => {
                 if (step === 1) {
@@ -925,10 +926,7 @@ export default function CreateEventModal({ event, onClose }) {
                 if (step === 2 && skipsServe) { setStep(4); return; }
                 setStep(s => s + 1);
               }}>Next →</button>
-            : <>
-                <button className="btn btn-ghost" onClick={handleSaveDraft}>Save Draft</button>
-                <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
-              </>
+            : <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
           }
         </div>
       </div>
