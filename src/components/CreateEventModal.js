@@ -3,8 +3,8 @@ import { useApp } from '../hooks/useApp';
 import { SEED_IMAGES, GRADIENT_COVERS } from '../data/seed';
 import { EmojiTrigger } from './EmojiPicker';
 
-const EVENT_TYPES = ['Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Other'];
-const EVENT_TYPE_ICONS = { 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '🍽️', 'Supper Club': '🕯️', 'Tasting': '🍾', 'Other': '🎉' };
+const EVENT_TYPES = ['Dinner Party', 'Potluck', 'Restaurant', 'Supper Club', 'Tasting', 'Brunch', 'Other'];
+const EVENT_TYPE_ICONS = { 'Dinner Party': '🍷', 'Potluck': '🥘', 'Restaurant': '🍽️', 'Supper Club': '🕯️', 'Tasting': '🍾', 'Brunch': '🥐', 'Other': '🎉' };
 const VISIBILITY = ['Public', 'Friends Only', 'Invite Only'];
 const DRESS_CODES = ['No dress code', 'Smart Casual', 'Cocktail Attire', 'Black Tie', 'Themed — see description'];
 const POTLUCK_CATS = [
@@ -32,7 +32,11 @@ const DEFAULT_POTLUCK = { items: [
   { id: 'pi-4', cat: 'other', emoji: '🧺', name: 'Utensils', claimedBy: null, claimerName: null },
 ]};
 const DEFAULT_SUPPER_CLUB = { hostNote: '', pairing: 'wine', courses: [
-  { num: 1, name: '', desc: '', pairing: '' }, { num: 2, name: '', desc: '', pairing: '' }, { num: 3, name: '', desc: '', pairing: '' },
+  { num: 1, name: '', desc: '', pairing: '' },
+  { num: 2, name: '', desc: '', pairing: '' },
+  { num: 3, name: '', desc: '', pairing: '' },
+  { num: 4, name: '', desc: '', pairing: '' },
+  { num: 5, name: '', desc: '', pairing: '' },
 ]};
 const TASTING_OPTIONS = ['Wine','Champagne','Cognac','Whiskey','Cocktails','Mocktails','Beer & Cider','Sake','Tequila'];
 
@@ -256,6 +260,15 @@ export default function CreateEventModal({ event, onClose }) {
       { type: 'cash',  enabled: false },
     ],
     paymentNotes: event?.payment_notes || '',
+    // Step 3 (Serve) form-state-only fields — not persisted to DB yet.
+    menuCourses: event?.menuCourses || [
+      { course: 'starter', name: '', desc: '' },
+      { course: 'main', name: '', desc: '' },
+      { course: 'dessert', name: '', desc: '' },
+    ],
+    dietaryNotes: event?.dietaryNotes || '',
+    hostNote: event?.hostNote || '',
+    otherNotes: event?.otherNotes || '',
   });
   const [cover, setCover] = useState(event?.cover || { type: 'gradient', value: GRADIENT_COVERS[0].value });
   const [coverTab, setCoverTab] = useState(event?.cover?.type === 'image' ? 'image' : event?.cover?.type === 'emoji' ? 'emoji' : 'gradient');
@@ -267,6 +280,7 @@ export default function CreateEventModal({ event, onClose }) {
   const isPotluck = form.type === 'Potluck';
   const isSupperClub = form.type === 'Supper Club';
   const isTasting = form.type === 'Tasting';
+  const skipsServe = form.type === 'Restaurant' || form.type === 'Brunch';
   const [step, setStep] = React.useState(1);
   const [tastingItems, setTastingItems] = React.useState(event?.tasting?.items || []);
   const [selectedFriends, setSelectedFriends] = React.useState([]);
@@ -296,6 +310,12 @@ export default function CreateEventModal({ event, onClose }) {
     setForm(f => ({
       ...f,
       paymentMethods: f.paymentMethods.map(m => m.type === type ? { ...m, [key]: val } : m),
+    }));
+  }
+  function updateMenuCourse(i, key, val) {
+    setForm(f => ({
+      ...f,
+      menuCourses: f.menuCourses.map((c, j) => j === i ? { ...c, [key]: val } : c),
     }));
   }
   function handleAddressSelect(item) {
@@ -358,11 +378,12 @@ export default function CreateEventModal({ event, onClose }) {
         <div style={{ display: 'flex', padding: '12px 24px', borderBottom: '1px solid var(--border)', gap: 0 }}>
           {[{s:1,label:'Gather'},{s:2,label:'Style'},{s:3,label:'Serve'},{s:4,label:'Settle'}].map(({s,label},i) => {
             const active = step === s; const done = step > s;
+            const skipped = s === 3 && skipsServe;
             return (
               <React.Fragment key={s}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, opacity: skipped ? 0.5 : 1 }}>
                   <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, background: done ? 'var(--teal)' : active ? 'var(--indigo)' : 'var(--border)', color: (done||active) ? 'white' : 'var(--ink3)' }}>{done ? '✓' : s}</div>
-                  <span style={{ fontSize: 12, fontWeight: active ? 600 : 400, color: active ? 'var(--ink)' : 'var(--ink3)', whiteSpace: 'nowrap' }}>{label}</span>
+                  <span style={{ fontSize: 12, fontWeight: active ? 600 : 400, color: active ? 'var(--ink)' : 'var(--ink3)', whiteSpace: 'nowrap', textDecoration: skipped ? 'line-through' : 'none' }}>{skipped ? `${label} (skipped)` : label}</span>
                 </div>
                 {i < 3 && <div style={{ flex: '0 0 20px', height: 2, background: step > s ? 'var(--teal)' : 'var(--border)', alignSelf: 'center', margin: '0 2px', borderRadius: 2 }} />}
               </React.Fragment>
@@ -527,73 +548,6 @@ export default function CreateEventModal({ event, onClose }) {
             <input className="form-input" value={form.playlist?.url || ''} onChange={e => setPlaylist('url', e.target.value)} placeholder={PLAYLIST_PLATFORMS.find(p => p.key === form.playlist?.platform)?.placeholder || 'Paste playlist link...'} />
             {form.playlist?.url?.trim() && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--teal)', display: 'flex', alignItems: 'center', gap: 5 }}>✓ Playlist shown to guests</div>}
           </div>
-          {isSupperClub && (
-            <div style={{ background: 'linear-gradient(135deg, #1A1A2E08, #2D255008)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)', marginTop: 4 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🍽️ Supper Club Menu</div>
-              <div className="form-group">
-                <label className="form-label">Host Note (shown to guests)</label>
-                <textarea className="form-textarea" value={scData.hostNote} onChange={e => setScData(d => ({ ...d, hostNote: e.target.value }))} placeholder="Share your inspiration..." style={{ minHeight: 70 }} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Pairing Style</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {PAIRING_OPTIONS.map(p => (
-                    <button key={p.key} onClick={() => setScData(d => ({ ...d, pairing: p.key }))} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1.5px solid ' + (scData.pairing === p.key ? 'var(--indigo)' : 'var(--border)'), background: scData.pairing === p.key ? 'var(--indigo-light)' : 'var(--surface)', color: scData.pairing === p.key ? 'var(--indigo)' : 'var(--ink2)', fontWeight: scData.pairing === p.key ? 700 : 500, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      {p.icon} {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {scData.courses.map((course, i) => (
-                <div key={i} style={{ background: 'white', borderRadius: 10, padding: '12px', marginBottom: 8, border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--indigo-light)', color: 'var(--indigo)', fontWeight: 800, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{course.num}</div>
-                    <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>Course {course.num}</span>
-                    <button style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--coral)', cursor: 'pointer', fontSize: 14 }} onClick={() => removeCourse(i)}>✕</button>
-                  </div>
-                  <div className="form-row" style={{ marginBottom: 0 }}>
-                    <div className="form-group" style={{ marginBottom: 8 }}><label className="form-label">Dish Name</label><input className="form-input" value={course.name} onChange={e => updateCourse(i, 'name', e.target.value)} placeholder="e.g. Boeuf Bourguignon" /></div>
-                    <div className="form-group" style={{ marginBottom: 8 }}><label className="form-label">{pairingIcon} {pairingLabel} Pairing <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--ink3)' }}>(optional)</span></label><input className="form-input" value={course.pairing || course.wine || ''} onChange={e => updateCourse(i, 'pairing', e.target.value)} placeholder={pairingLabel === 'Wine' ? 'e.g. Pinot Noir 2019' : pairingLabel + ' pairing...'} /></div>
-                  </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label">Description</label><input className="form-input" value={course.desc} onChange={e => updateCourse(i, 'desc', e.target.value)} placeholder="Short dish description..." /></div>
-                </div>
-              ))}
-              <button className="btn btn-ghost btn-sm" onClick={addCourse} style={{ width: '100%', borderStyle: 'dashed' }}>+ Add Course</button>
-            </div>
-          )}
-          {isPotluck && (
-            <div style={{ background: 'linear-gradient(135deg, var(--amber-light), #FFF9F0)', borderRadius: 12, padding: 16, border: '1px solid #FFD080', marginTop: 4 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: '#7A5000', marginBottom: 12 }}>🥘 Potluck Items</div>
-              {POTLUCK_CATS.map(cat => {
-                const catItems = potluckItems.filter(it => it.cat === cat.key);
-                return (
-                  <div key={cat.key} style={{ marginBottom: 16 }}>
-                    <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink2)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cat.label}</div>
-                    {catItems.map(item => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'white', borderRadius: 8, marginBottom: 4, border: '1px solid var(--border)' }}>
-                        <span>{item.emoji}</span><span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
-                        <button style={{ background: 'none', border: 'none', color: 'var(--ink3)', cursor: 'pointer', fontSize: 13 }} onClick={() => removePotluckItem(item.id)}>✕</button>
-                      </div>
-                    ))}
-                    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                      <input className="form-input" style={{ flex: 1, padding: '7px 10px', fontSize: 13 }} value={newItemText[cat.key]} onChange={e => setNewItemText(t => ({ ...t, [cat.key]: e.target.value }))} placeholder={cat.placeholder} onKeyDown={e => e.key === 'Enter' && addPotluckItem(cat.key)} />
-                      <button className="btn btn-ghost btn-sm" onClick={() => addPotluckItem(cat.key)}>+ Add</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {isTasting && (
-            <div style={{ background: 'var(--page)', border: '1px solid var(--indigo-light)', borderRadius: 12, padding: 16, marginTop: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 10 }}>🍾 What are we tasting?</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                {TASTING_OPTIONS.map(item => (
-                  <button key={item} onClick={() => toggleTasting(item)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer', border: tastingItems.includes(item) ? '1.5px solid var(--indigo)' : '1px solid var(--border)', background: tastingItems.includes(item) ? 'var(--indigo-light)' : 'transparent', color: tastingItems.includes(item) ? 'var(--indigo)' : 'var(--ink2)', fontWeight: tastingItems.includes(item) ? 600 : 400, minHeight: 36 }}>{item}</button>
-                ))}
-              </div>
-            </div>
-          )}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--page)', borderRadius: 10, marginTop: 8 }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>📸 Photo Gallery</div>
@@ -646,9 +600,125 @@ export default function CreateEventModal({ event, onClose }) {
           </div>
         )}
 
-        {/* ── STEP 3: REVIEW ── */}
+        {/* ── STEP 3: SERVE — food details by event type ── */}
         {step === 3 && (
           <div>
+            {skipsServe && (
+              <div style={{ padding: 24, textAlign: 'center', background: 'var(--page)', borderRadius: 12, color: 'var(--ink2)' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>{form.type === 'Brunch' ? '🥐' : '🍽️'}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, color: 'var(--ink)' }}>No food details needed</div>
+                <div style={{ fontSize: 13 }}>For {form.type} events, the food is handled at the venue. Tap Next to settle pricing.</div>
+              </div>
+            )}
+
+            {form.type === 'Dinner Party' && (
+              <div style={{ background: 'linear-gradient(135deg, #1A1A2E08, #2D255008)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🍽️ Menu</div>
+                {form.menuCourses.map((c, i) => (
+                  <div key={i} style={{ background: 'white', borderRadius: 10, padding: 12, marginBottom: 8, border: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', marginBottom: 8, textTransform: 'capitalize' }}>{c.course}</div>
+                    <div className="form-group" style={{ marginBottom: 8 }}>
+                      <input className="form-input" value={c.name} onChange={e => updateMenuCourse(i, 'name', e.target.value)} placeholder="Dish name" />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <input className="form-input" value={c.desc} onChange={e => updateMenuCourse(i, 'desc', e.target.value)} placeholder="Brief description" />
+                    </div>
+                  </div>
+                ))}
+                <div className="form-group" style={{ marginTop: 12 }}>
+                  <label className="form-label">Dietary notes <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
+                  <textarea className="form-textarea" value={form.dietaryNotes} onChange={e => set('dietaryNotes', e.target.value)} placeholder="Any allergies or dietary restrictions to flag for guests..." style={{ minHeight: 70 }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Host note <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(shown to guests, optional)</span></label>
+                  <textarea className="form-textarea" value={form.hostNote} onChange={e => set('hostNote', e.target.value)} placeholder="Share what inspired this menu..." style={{ minHeight: 70 }} />
+                </div>
+              </div>
+            )}
+
+            {isSupperClub && (
+              <div style={{ background: 'linear-gradient(135deg, #1A1A2E08, #2D255008)', borderRadius: 12, padding: 16, border: '1px solid var(--indigo-light)', marginTop: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 12 }}>🍽️ Supper Club Menu</div>
+                <div className="form-group">
+                  <label className="form-label">Host Note (shown to guests)</label>
+                  <textarea className="form-textarea" value={scData.hostNote} onChange={e => setScData(d => ({ ...d, hostNote: e.target.value }))} placeholder="Share your inspiration..." style={{ minHeight: 70 }} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Pairing Style</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {PAIRING_OPTIONS.map(p => (
+                      <button key={p.key} onClick={() => setScData(d => ({ ...d, pairing: p.key }))} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1.5px solid ' + (scData.pairing === p.key ? 'var(--indigo)' : 'var(--border)'), background: scData.pairing === p.key ? 'var(--indigo-light)' : 'var(--surface)', color: scData.pairing === p.key ? 'var(--indigo)' : 'var(--ink2)', fontWeight: scData.pairing === p.key ? 700 : 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {p.icon} {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {scData.courses.map((course, i) => (
+                  <div key={i} style={{ background: 'white', borderRadius: 10, padding: '12px', marginBottom: 8, border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--indigo-light)', color: 'var(--indigo)', fontWeight: 800, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{course.num}</div>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>Course {course.num}</span>
+                      <button style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--coral)', cursor: 'pointer', fontSize: 14 }} onClick={() => removeCourse(i)}>✕</button>
+                    </div>
+                    <div className="form-row" style={{ marginBottom: 0 }}>
+                      <div className="form-group" style={{ marginBottom: 8 }}><label className="form-label">Dish Name</label><input className="form-input" value={course.name} onChange={e => updateCourse(i, 'name', e.target.value)} placeholder="e.g. Boeuf Bourguignon" /></div>
+                      <div className="form-group" style={{ marginBottom: 8 }}><label className="form-label">{pairingIcon} {pairingLabel} Pairing <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--ink3)' }}>(optional)</span></label><input className="form-input" value={course.pairing || course.wine || ''} onChange={e => updateCourse(i, 'pairing', e.target.value)} placeholder={pairingLabel === 'Wine' ? 'e.g. Pinot Noir 2019' : pairingLabel + ' pairing...'} /></div>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label">Description</label><input className="form-input" value={course.desc} onChange={e => updateCourse(i, 'desc', e.target.value)} placeholder="Short dish description..." /></div>
+                  </div>
+                ))}
+                <button className="btn btn-ghost btn-sm" onClick={addCourse} style={{ width: '100%', borderStyle: 'dashed' }}>+ Add Course</button>
+              </div>
+            )}
+
+            {isPotluck && (
+              <div style={{ background: 'linear-gradient(135deg, var(--amber-light), #FFF9F0)', borderRadius: 12, padding: 16, border: '1px solid #FFD080', marginTop: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#7A5000', marginBottom: 12 }}>🥘 Potluck Items</div>
+                {POTLUCK_CATS.map(cat => {
+                  const catItems = potluckItems.filter(it => it.cat === cat.key);
+                  return (
+                    <div key={cat.key} style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink2)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cat.label}</div>
+                      {catItems.map(item => (
+                        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'white', borderRadius: 8, marginBottom: 4, border: '1px solid var(--border)' }}>
+                          <span>{item.emoji}</span><span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
+                          <button style={{ background: 'none', border: 'none', color: 'var(--ink3)', cursor: 'pointer', fontSize: 13 }} onClick={() => removePotluckItem(item.id)}>✕</button>
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                        <input className="form-input" style={{ flex: 1, padding: '7px 10px', fontSize: 13 }} value={newItemText[cat.key]} onChange={e => setNewItemText(t => ({ ...t, [cat.key]: e.target.value }))} placeholder={cat.placeholder} onKeyDown={e => e.key === 'Enter' && addPotluckItem(cat.key)} />
+                        <button className="btn btn-ghost btn-sm" onClick={() => addPotluckItem(cat.key)}>+ Add</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {isTasting && (
+              <div style={{ background: 'var(--page)', border: '1px solid var(--indigo-light)', borderRadius: 12, padding: 16, marginTop: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 10 }}>🍾 What are we tasting?</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                  {TASTING_OPTIONS.map(item => (
+                    <button key={item} onClick={() => toggleTasting(item)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer', border: tastingItems.includes(item) ? '1.5px solid var(--indigo)' : '1px solid var(--border)', background: tastingItems.includes(item) ? 'var(--indigo-light)' : 'transparent', color: tastingItems.includes(item) ? 'var(--indigo)' : 'var(--ink2)', fontWeight: tastingItems.includes(item) ? 600 : 400, minHeight: 36 }}>{item}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {form.type === 'Other' && (
+              <div className="form-group">
+                <label className="form-label">Notes <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
+                <textarea className="form-textarea" value={form.otherNotes} onChange={e => set('otherNotes', e.target.value)} placeholder="Anything you want guests to know about food..." style={{ minHeight: 70 }} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── STEP 4: SETTLE — pricing + payment methods ── */}
+        {step === 4 && (
+          <div>
+            {/* Review summary (moved from former step 3) */}
             <div style={{ background: 'var(--page)', padding: 18, borderRadius: 12, marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>{form.title}</div>
               <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.8 }}>
@@ -671,12 +741,7 @@ export default function CreateEventModal({ event, onClose }) {
                 </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* ── STEP 4: SETTLE — pricing + payment methods ── */}
-        {step === 4 && (
-          <div>
             {/* Free / Paid toggle */}
             <div className="form-group">
               <label className="form-label">Pricing</label>
@@ -792,11 +857,21 @@ export default function CreateEventModal({ event, onClose }) {
 
         </div>
         <div className="modal-foot">
-          {step > 1 && <button className="btn btn-ghost" onClick={() => setStep(s => s - 1)}>← Back</button>}
+          {step > 1 && <button className="btn btn-ghost" onClick={() => {
+            if (step === 4 && skipsServe) { setStep(2); return; }
+            setStep(s => s - 1);
+          }}>← Back</button>}
           {step === 1 && <button className="btn btn-ghost" onClick={onClose}>Cancel</button>}
-          {step === 2 && <button className="btn btn-ghost" onClick={() => setStep(3)}>Skip</button>}
+          {step === 2 && <button className="btn btn-ghost" onClick={() => setStep(skipsServe ? 4 : 3)}>Skip</button>}
           {step < 4
-            ? <button className="btn btn-primary" onClick={() => { if (step === 1) { if (!form.title.trim()) { addToast('Event title is required', 'error'); return; } if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; } } setStep(s => s + 1); }}>Next →</button>
+            ? <button className="btn btn-primary" onClick={() => {
+                if (step === 1) {
+                  if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
+                  if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; }
+                }
+                if (step === 2 && skipsServe) { setStep(4); return; }
+                setStep(s => s + 1);
+              }}>Next →</button>
             : <>
                 <button className="btn btn-ghost" onClick={handleSaveDraft}>Save Draft</button>
                 <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
