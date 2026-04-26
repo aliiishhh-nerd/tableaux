@@ -24,6 +24,7 @@ export default function EventsPage() {
   // Past = events I hosted (accepted past events covered by wrap-ups flow later)
   const myUser = useApp().user;
   const upcoming = events.filter(e => {
+    if (e.status === 'draft') return false;
     if (e.isEnded || e.isPast || e.isExample) return false;
     if (e.mine) return true;
     if (e.isInvitedTo) {
@@ -32,7 +33,7 @@ export default function EventsPage() {
     }
     return false;
   });
-  const mine = events.filter(e => e.mine);
+  const mine = events.filter(e => e.mine && e.status !== 'draft');
   const past = mine.filter(e => (e.isEnded || e.isPast) && !e.isExample);
   const examplePast = mine.filter(e => (e.isEnded || e.isPast) && e.isExample);
 
