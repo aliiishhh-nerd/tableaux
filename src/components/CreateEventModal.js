@@ -235,7 +235,7 @@ function CrowdCheckSection({ dates, onChange }) {
 }
 
 export default function CreateEventModal({ event, onClose }) {
-  const { createEvent, updateEvent, addToast } = useApp();
+  const { createEvent, updateEvent, addToast, user } = useApp();
   const isEdit = !!event;
   const [form, setForm] = useState({
     title: event?.title || '', type: event?.type || 'Dinner Party',
@@ -248,6 +248,14 @@ export default function CreateEventModal({ event, onClose }) {
     seriesName: event?.seriesName || '', seriesVolume: event?.seriesVolume || 1,
     playlist: event?.playlist || { platform: 'spotify', url: '' },
     crowdCheckDates: event?.crowdCheckDates || [], useCrowdCheck: event?.useCrowdCheck ?? false,
+    isPaid: !!event?.price,
+    price: event?.price || '',
+    paymentMethods: event?.payment_methods || [
+      { type: 'venmo', enabled: false, handle: user?.venmo_handle || '' },
+      { type: 'zelle', enabled: false, contact: user?.zelle_contact || '' },
+      { type: 'cash',  enabled: false },
+    ],
+    paymentNotes: event?.payment_notes || '',
   });
   const [cover, setCover] = useState(event?.cover || { type: 'gradient', value: GRADIENT_COVERS[0].value });
   const [coverTab, setCoverTab] = useState(event?.cover?.type === 'image' ? 'image' : event?.cover?.type === 'emoji' ? 'emoji' : 'gradient');
@@ -278,18 +286,54 @@ export default function CreateEventModal({ event, onClose }) {
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
   function appendToField(field, emoji) { setForm(f => ({ ...f, [field]: (f[field] || '') + emoji })); }
   function setPlaylist(key, val) { setForm(f => ({ ...f, playlist: { ...f.playlist, [key]: val } })); }
+  function togglePaymentMethod(type) {
+    setForm(f => ({
+      ...f,
+      paymentMethods: f.paymentMethods.map(m => m.type === type ? { ...m, enabled: !m.enabled } : m),
+    }));
+  }
+  function setPaymentMethod(type, key, val) {
+    setForm(f => ({
+      ...f,
+      paymentMethods: f.paymentMethods.map(m => m.type === type ? { ...m, [key]: val } : m),
+    }));
+  }
   function handleAddressSelect(item) {
     const addr = item.address || {};
     const nb = addr.neighbourhood || addr.suburb || addr.quarter || '';
     const city = addr.city || addr.town || addr.village || '';
     if (!form.loc && (nb || city)) set('loc', [nb, city].filter(Boolean).join(', '));
   }
+  function buildPayload() {
+    return {
+      ...form,
+      cover,
+      potluck: isPotluck ? { items: potluckItems } : null,
+      supperClub: isSupperClub ? scData : null,
+      tasting: isTasting ? { items: tastingItems } : null,
+      playlist: form.playlist?.url?.trim() ? form.playlist : null,
+      price: form.isPaid ? parseFloat(form.price) : null,
+      payment_methods: form.isPaid ? form.paymentMethods.filter(m => m.enabled) : null,
+      payment_notes: form.isPaid ? form.paymentNotes : null,
+      invites: [
+        ...selectedFriends.map(uid => { const f = (friends||[]).find(f=>f.userId===uid); return {userId:uid,name:f?.name||'Friend'}; }),
+        ...emailInvites.map(e=>({email:e,name:e.split('@')[0]})),
+      ],
+    };
+  }
   function handleSubmit() {
     if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
     if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; }
-    const payload = { ...form, cover, potluck: isPotluck ? { items: potluckItems } : null, supperClub: isSupperClub ? scData : null, tasting: isTasting ? { items: tastingItems } : null, playlist: form.playlist?.url?.trim() ? form.playlist : null, invites: [...selectedFriends.map(uid => { const f = (friends||[]).find(f=>f.userId===uid); return {userId:uid,name:f?.name||'Friend'}; }), ...emailInvites.map(e=>({email:e,name:e.split('@')[0]}))] };
+    const payload = buildPayload();
     if (isEdit) { updateEvent(event.id, payload); addToast('Event updated ✓', 'success'); }
     else { createEvent(payload); addToast('Event created! 🎉', 'success'); }
+    onClose();
+  }
+  function handleSaveDraft() {
+    if (!form.title.trim()) { addToast('Event title is required', 'error'); return; }
+    const payload = { ...buildPayload(), status: 'draft' };
+    if (isEdit) { updateEvent(event.id, payload); addToast('Draft saved ✓', 'success'); }
+    else { createEvent(payload); addToast('Draft saved ✓', 'success'); }
     onClose();
   }
   function addPotluckItem(cat) {
@@ -312,7 +356,7 @@ export default function CreateEventModal({ event, onClose }) {
         <style>{ANIMATION_CSS}</style>
         {/* Step indicator */}
         <div style={{ display: 'flex', padding: '12px 24px', borderBottom: '1px solid var(--border)', gap: 0 }}>
-          {[{s:1,label:'Details'},{s:2,label:'Invite'},{s:3,label:'Publish'}].map(({s,label},i) => {
+          {[{s:1,label:'Gather'},{s:2,label:'Style'},{s:3,label:'Serve'},{s:4,label:'Settle'}].map(({s,label},i) => {
             const active = step === s; const done = step > s;
             return (
               <React.Fragment key={s}>
@@ -320,7 +364,7 @@ export default function CreateEventModal({ event, onClose }) {
                   <div style={{ width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0, background: done ? 'var(--teal)' : active ? 'var(--indigo)' : 'var(--border)', color: (done||active) ? 'white' : 'var(--ink3)' }}>{done ? '✓' : s}</div>
                   <span style={{ fontSize: 12, fontWeight: active ? 600 : 400, color: active ? 'var(--ink)' : 'var(--ink3)', whiteSpace: 'nowrap' }}>{label}</span>
                 </div>
-                {i < 2 && <div style={{ flex: '0 0 20px', height: 2, background: step > s ? 'var(--teal)' : 'var(--border)', alignSelf: 'center', margin: '0 2px', borderRadius: 2 }} />}
+                {i < 3 && <div style={{ flex: '0 0 20px', height: 2, background: step > s ? 'var(--teal)' : 'var(--border)', alignSelf: 'center', margin: '0 2px', borderRadius: 2 }} />}
               </React.Fragment>
             );
           })}
@@ -630,14 +674,133 @@ export default function CreateEventModal({ event, onClose }) {
           </div>
         )}
 
+        {/* ── STEP 4: SETTLE — pricing + payment methods ── */}
+        {step === 4 && (
+          <div>
+            {/* Free / Paid toggle */}
+            <div className="form-group">
+              <label className="form-label">Pricing</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => set('isPaid', false)}
+                  className={'filter-btn ' + (!form.isPaid ? 'active' : '')}
+                  style={{ flex: 1, padding: '12px', fontSize: 14, minHeight: 48 }}>
+                  🆓 Free event
+                </button>
+                <button onClick={() => set('isPaid', true)}
+                  className={'filter-btn ' + (form.isPaid ? 'active' : '')}
+                  style={{ flex: 1, padding: '12px', fontSize: 14, minHeight: 48 }}>
+                  💵 Paid event
+                </button>
+              </div>
+            </div>
+
+            {form.isPaid && (
+              <>
+                {/* Price */}
+                <div className="form-group">
+                  <label className="form-label">Price per guest</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 18, color: 'var(--ink2)', fontWeight: 600 }}>$</span>
+                    <input className="form-input" type="number" min="0" step="0.01"
+                      value={form.price} onChange={e => set('price', e.target.value)}
+                      placeholder="0.00" style={{ flex: 1 }} />
+                    <span style={{ fontSize: 13, color: 'var(--ink3)' }}>USD</span>
+                  </div>
+                </div>
+
+                {/* Payment methods — three independent toggles */}
+                <div className="form-group">
+                  <label className="form-label">Accepted payment methods</label>
+                  <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 10, lineHeight: 1.5 }}>
+                    Pick one or more. Guests pay you directly — TableFolk doesn't process payments.
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {/* Venmo */}
+                    {(() => {
+                      const m = form.paymentMethods.find(p => p.type === 'venmo') || { enabled: false, handle: '' };
+                      const fromProfile = !!user?.venmo_handle && m.handle === user.venmo_handle;
+                      return (
+                        <div style={{ border: '1px solid ' + (m.enabled ? 'var(--indigo)' : 'var(--border)'), borderRadius: 10, padding: 12, background: m.enabled ? 'var(--indigo-light)' : 'var(--surface)' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={!!m.enabled} onChange={() => togglePaymentMethod('venmo')} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                            <span style={{ fontSize: 18 }}>💸</span>
+                            <span style={{ fontWeight: 600, fontSize: 14 }}>Venmo</span>
+                          </label>
+                          {m.enabled && (
+                            <div style={{ marginTop: 10 }}>
+                              <input className="form-input" value={m.handle || ''}
+                                onChange={e => setPaymentMethod('venmo', 'handle', e.target.value)}
+                                placeholder="@username" style={{ fontSize: 13 }} />
+                              {fromProfile && <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 4 }}>✓ Saved from profile</div>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Zelle */}
+                    {(() => {
+                      const m = form.paymentMethods.find(p => p.type === 'zelle') || { enabled: false, contact: '' };
+                      const fromProfile = !!user?.zelle_contact && m.contact === user.zelle_contact;
+                      return (
+                        <div style={{ border: '1px solid ' + (m.enabled ? 'var(--indigo)' : 'var(--border)'), borderRadius: 10, padding: 12, background: m.enabled ? 'var(--indigo-light)' : 'var(--surface)' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={!!m.enabled} onChange={() => togglePaymentMethod('zelle')} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                            <span style={{ fontSize: 18 }}>📱</span>
+                            <span style={{ fontWeight: 600, fontSize: 14 }}>Zelle</span>
+                          </label>
+                          {m.enabled && (
+                            <div style={{ marginTop: 10 }}>
+                              <input className="form-input" value={m.contact || ''}
+                                onChange={e => setPaymentMethod('zelle', 'contact', e.target.value)}
+                                placeholder="email or phone" style={{ fontSize: 13 }} />
+                              {fromProfile && <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 4 }}>✓ Saved from profile</div>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Cash */}
+                    {(() => {
+                      const m = form.paymentMethods.find(p => p.type === 'cash') || { enabled: false };
+                      return (
+                        <div style={{ border: '1px solid ' + (m.enabled ? 'var(--indigo)' : 'var(--border)'), borderRadius: 10, padding: 12, background: m.enabled ? 'var(--indigo-light)' : 'var(--surface)' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={!!m.enabled} onChange={() => togglePaymentMethod('cash')} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+                            <span style={{ fontSize: 18 }}>💵</span>
+                            <span style={{ fontWeight: 600, fontSize: 14 }}>Cash at event</span>
+                          </label>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Payment notes */}
+                <div className="form-group">
+                  <label className="form-label">Payment notes <span style={{ fontWeight: 400, color: 'var(--ink3)', fontSize: 12 }}>(optional)</span></label>
+                  <textarea className="form-textarea" value={form.paymentNotes}
+                    onChange={e => set('paymentNotes', e.target.value)}
+                    placeholder="e.g. Pay before the event, or settle at the door."
+                    style={{ minHeight: 70 }} />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         </div>
         <div className="modal-foot">
           {step > 1 && <button className="btn btn-ghost" onClick={() => setStep(s => s - 1)}>← Back</button>}
           {step === 1 && <button className="btn btn-ghost" onClick={onClose}>Cancel</button>}
           {step === 2 && <button className="btn btn-ghost" onClick={() => setStep(3)}>Skip</button>}
-          {step < 3
+          {step < 4
             ? <button className="btn btn-primary" onClick={() => { if (step === 1) { if (!form.title.trim()) { addToast('Event title is required', 'error'); return; } if (!form.useCrowdCheck && !form.date) { addToast('Please set a date', 'error'); return; } } setStep(s => s + 1); }}>Next →</button>
-            : <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
+            : <>
+                <button className="btn btn-ghost" onClick={handleSaveDraft}>Save Draft</button>
+                <button className="btn btn-primary" onClick={handleSubmit}>{isEdit ? 'Save Changes' : '🎉 Publish Event'}</button>
+              </>
           }
         </div>
       </div>
