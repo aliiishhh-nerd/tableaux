@@ -34,12 +34,14 @@ export default function EventsPage() {
     return false;
   });
   const mine = events.filter(e => e.mine && e.status !== 'draft');
+  const drafts = events.filter(e => e.mine && e.status === 'draft');
   const past = mine.filter(e => (e.isEnded || e.isPast) && !e.isExample);
   const examplePast = mine.filter(e => (e.isEnded || e.isPast) && e.isExample);
 
   // Auto-open past section if user only has example past events (no real ones yet)
   const hasOnlyExamplePast = past.length === 0 && examplePast.length > 0;
   const [pastOpen, setPastOpen] = useState(hasOnlyExamplePast);
+  const [draftsOpen, setDraftsOpen] = useState(true);
 
   useEffect(() => {
     if (hasOnlyExamplePast) setPastOpen(true);
@@ -163,6 +165,30 @@ export default function EventsPage() {
         )}
       </div>
 
+      {/* Drafts — collapsible section, expanded by default */}
+      {drafts.length > 0 && (
+        <div className="past-events-section">
+          <div className="past-events-header" onClick={() => setDraftsOpen(o => !o)}>
+            <div className="sec-title">Drafts</div>
+            <span className="chip chip-gray">{drafts.length}</span>
+            <span className={`past-events-toggle ${draftsOpen ? 'open' : ''}`}>▶</span>
+          </div>
+          {draftsOpen && (
+            <div className="events-list">
+              {drafts.map(evt => (
+                <EventRow
+                  key={evt.id}
+                  event={evt}
+                  onClick={() => setEditing(evt)}
+                  onDelete={() => { deleteEvent(evt.id); addToast('Draft deleted', ''); }}
+                  draft
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Past Events — real + example combined */}
       {totalPastCount > 0 && (
         <div className="past-events-section">
@@ -274,7 +300,7 @@ export default function EventsPage() {
   );
 }
 
-function EventRow({ event, onClick, onEdit, onDelete, past, isExample }) {
+function EventRow({ event, onClick, onEdit, onDelete, past, isExample, draft }) {
   const cover = event.cover || {};
   const hasImg = cover.type === 'image' || event.img;
 
@@ -305,6 +331,19 @@ function EventRow({ event, onClick, onEdit, onDelete, past, isExample }) {
               Example
             </span>
           )}
+          {draft && (
+            <span style={{
+              fontSize: 10,
+              padding: '2px 7px',
+              borderRadius: 5,
+              background: '#FFF4D1',
+              color: '#997B00',
+              fontWeight: 500,
+              lineHeight: 1.4,
+            }}>
+              Draft
+            </span>
+          )}
         </div>
         <div className="event-row-meta">
           <span>📅 {fmtDate(event.date)}</span>
@@ -322,7 +361,7 @@ function EventRow({ event, onClick, onEdit, onDelete, past, isExample }) {
         {!past && !isExample && onDelete && (
           <button className="btn btn-ghost btn-sm" onClick={onDelete} style={{ color: 'var(--coral)' }}>🗑️</button>
         )}
-        {event.mine && !isExample && (
+        {event.mine && !isExample && !draft && (
           <button
             className="btn btn-ghost btn-sm"
             style={{ fontSize: 11, padding: '3px 8px', color: 'var(--indigo)', border: '1px solid var(--indigo-light)' }}
@@ -330,6 +369,16 @@ function EventRow({ event, onClick, onEdit, onDelete, past, isExample }) {
             title="Host tools"
           >
             🛠️ Host
+          </button>
+        )}
+        {draft && (
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ fontSize: 11, padding: '3px 8px', color: 'var(--indigo)', border: '1px solid var(--indigo-light)' }}
+            onClick={e => { e.stopPropagation(); onClick(); }}
+            title="Continue editing"
+          >
+            ✏️ Continue editing
           </button>
         )}
         {isExample && (
