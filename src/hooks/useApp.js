@@ -358,27 +358,28 @@ export function AppProvider({ children }) {
         console.log('[createEvent] Supabase response:', created);
         if (created?.id) {
           setEvents(e => e.map(ev => ev.id === localId ? { ...ev, id: created.id } : ev));
-          const emailInvites = (evt.invites || []).filter(i => i?.email);
-          const sendInvites = emailInvites.length > 0 && evt.status !== 'draft';
+          const invitesToSend = (evt.invites || []).filter(i => i?.email || i?.userId);
+          const sendInvites = invitesToSend.length > 0 && evt.status !== 'draft';
           if (!sendInvites) {
             addToast('Event saved \u2713', 'success');
           } else {
             let failures = 0;
-            await Promise.all(emailInvites.map(async (inv) => {
+            await Promise.all(invitesToSend.map(async (inv) => {
+              const recipient = inv.email || inv.userId;
               try {
                 const { error } = await supabase.functions.invoke('send-event-invite', {
-                  body: { eventId: created.id, email: inv.email, name: inv.name },
+                  body: { eventId: created.id, email: inv.email, userId: inv.userId, name: inv.name },
                 });
-                if (error) { console.warn('[send-event-invite] failed for', inv.email, error); failures++; }
+                if (error) { console.warn('[send-event-invite] failed for', recipient, error); failures++; }
               } catch (err) {
-                console.warn('[send-event-invite] failed for', inv.email, err);
+                console.warn('[send-event-invite] failed for', recipient, err);
                 failures++;
               }
             }));
             if (failures === 0) {
               addToast('Event saved \u2713', 'success');
             } else {
-              addToast('Event saved. ' + failures + ' of ' + emailInvites.length + ' invites failed to send.', 'error');
+              addToast('Event saved. ' + failures + ' of ' + invitesToSend.length + ' invites failed to send.', 'error');
             }
           }
         } else {
