@@ -35,3 +35,4 @@ RUN_INTEGRATION=true CI=true npm test
 ```
 
 For the full environment-variable reference (prod/Netlify + Supabase Edge Function secrets), see [REQUIRED_ENV_VARS.md](REQUIRED_ENV_VARS.md).
+
