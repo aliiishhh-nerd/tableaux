@@ -407,6 +407,10 @@ body {
 .activity-text strong { color: var(--ink); font-weight: 600; cursor: pointer; }
 .activity-text strong:hover { color: var(--indigo); text-decoration: underline; }
 .activity-time { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+.invite-friend-cta {
+  padding: 14px;
+  border-top: 1px solid var(--border);
+}
 
 /* ---- FILTER BUTTONS ---- */
 .filter-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
