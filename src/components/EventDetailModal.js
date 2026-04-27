@@ -375,19 +375,26 @@ export default function EventDetailModal({ event, onClose, onEdit }) {
                 </div>
               )}
 
-              {/* Playlist */}
-              {event.playlist?.url && (
-                <div style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--page)', borderRadius: 10, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: PLATFORM_ICONS[event.playlist.platform]?.color || 'var(--indigo)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                    {PLATFORM_ICONS[event.playlist.platform]?.icon || '🎵'}
+              {/* Playlist — multi-link via playlist_links, legacy fallback to single playlist */}
+              {(() => {
+                const links = event.playlist_links?.length > 0
+                  ? event.playlist_links
+                  : (event.playlist?.url ? [event.playlist] : []);
+                if (links.length === 0) return null;
+                const showSubtitle = links.length === 1;
+                return links.map((link, i) => (
+                  <div key={i} style={{ marginBottom: 16, padding: '12px 14px', background: 'var(--page)', borderRadius: 10, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: PLATFORM_ICONS[link.platform]?.color || 'var(--indigo)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                      {PLATFORM_ICONS[link.platform]?.icon || '🎵'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 2 }}>{PLATFORM_ICONS[link.platform]?.label || 'Playlist'}{showSubtitle ? ' · Tonight\'s Vibe' : ''}</div>
+                      <div style={{ fontSize: 13, color: 'var(--indigo)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{link.url}</div>
+                    </div>
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ flexShrink: 0 }} onClick={e => e.stopPropagation()}>Listen →</a>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 2 }}>{PLATFORM_ICONS[event.playlist.platform]?.label || 'Playlist'} · Tonight's Vibe</div>
-                    <div style={{ fontSize: 13, color: 'var(--indigo)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{event.playlist.url}</div>
-                  </div>
-                  <a href={event.playlist.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ flexShrink: 0 }} onClick={e => e.stopPropagation()}>Listen →</a>
-                </div>
-              )}
+                ));
+              })()}
 
               {event.desc && (
                 <div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, padding: '14px', background: 'var(--page)', borderRadius: 10, marginBottom: 16 }}>{event.desc}</div>
