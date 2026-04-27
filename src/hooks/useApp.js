@@ -349,7 +349,7 @@ export function AppProvider({ children }) {
         cover_type: evt.cover?.type || 'gradient',
         cover_value: evt.cover?.value || '',
         cover_emoji: evt.cover?.emoji || null,
-        host_id: user.id, status: 'published',
+        host_id: user.id, status: evt.status || 'published',
         city: user.city || 'Chicago',
       };
       console.log('[createEvent] sending to Supabase:', payload);
