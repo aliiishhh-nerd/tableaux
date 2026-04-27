@@ -1,13 +1,16 @@
 // supabase/functions/send-event-invite/index.ts
-// Sends a "You're invited" email to a single email address.
-// Called by the client after a host publishes an event with email invites.
+// Sends a "You're invited" email to a single recipient identified either by
+// email address (manually-entered invite) or userId (selected friend from the
+// host's friends list). Called by the client after a host publishes an event.
 //
 // Auth: deployed WITH JWT verification (i.e., NOT --no-verify-jwt). Supabase's
 // gateway validates the caller's JWT before invoking. Inside, we additionally
 // verify auth.uid() === event.host_id to prevent any logged-in user from
 // spamming arbitrary events.
 //
-// Request body: { eventId: string, email: string, name?: string }
+// Request body: { eventId: string, email?: string, userId?: string, name?: string }
+// Exactly one of email/userId is required. If userId is provided without email,
+// the function looks up the user's email via auth.admin.getUserById (service-role).
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -70,19 +73,25 @@ serve(async (req: Request) => {
     }
     const callerId = userData.user.id;
 
-    // 2) Parse + validate the body.
-    let body: { eventId?: string; email?: string; name?: string };
+    // 2) Parse + validate the body. Accept email OR userId — at least one required.
+    let body: { eventId?: string; email?: string; userId?: string; name?: string };
     try {
       body = await req.json();
     } catch {
       return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: corsHeaders });
     }
-    const { eventId, email, name } = body;
+    const { eventId, email, userId, name } = body;
     if (!eventId || typeof eventId !== 'string') {
       return new Response(JSON.stringify({ error: 'eventId required' }), { status: 400, headers: corsHeaders });
     }
-    if (!email || typeof email !== 'string' || !EMAIL_RE.test(email)) {
+    if (!email && !userId) {
+      return new Response(JSON.stringify({ error: 'email or userId required' }), { status: 400, headers: corsHeaders });
+    }
+    if (email && (typeof email !== 'string' || !EMAIL_RE.test(email))) {
       return new Response(JSON.stringify({ error: 'valid email required' }), { status: 400, headers: corsHeaders });
+    }
+    if (userId && typeof userId !== 'string') {
+      return new Response(JSON.stringify({ error: 'userId must be a string' }), { status: 400, headers: corsHeaders });
     }
 
     // 3) Look up the event via service-role (bypasses RLS so we can verify
@@ -100,6 +109,19 @@ serve(async (req: Request) => {
     // 4) Authorize — caller must be the event's host.
     if (event.host_id !== callerId) {
       return new Response(JSON.stringify({ error: 'Forbidden — not host' }), { status: 403, headers: corsHeaders });
+    }
+
+    // 5) Resolve the recipient email. If only userId was provided, look it up
+    //    via the auth admin API (requires service-role; profiles table has no
+    //    email column — emails live in auth.users only).
+    let resolvedEmail = email;
+    if (!resolvedEmail && userId) {
+      const { data: friendUser, error: lookupErr } = await adminClient.auth.admin.getUserById(userId);
+      if (lookupErr || !friendUser?.user?.email) {
+        console.error('userId email lookup failed:', lookupErr);
+        return new Response(JSON.stringify({ error: 'Could not resolve email for userId' }), { status: 404, headers: corsHeaders });
+      }
+      resolvedEmail = friendUser.user.email;
     }
 
     // PostgREST many-to-one usually returns an object, but some supabase-js
@@ -171,7 +193,7 @@ serve(async (req: Request) => {
       },
       body: JSON.stringify({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to: [email],
+        to: [resolvedEmail],
         subject,
         html,
       }),
